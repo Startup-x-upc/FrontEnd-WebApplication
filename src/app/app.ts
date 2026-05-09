@@ -1,12 +1,16 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  protected readonly title = signal('FrontEnd-WebApplication');
-}
+/**
+ * @summary Root application component. Renders the router outlet only.
+ * All UI is delegated to routed components (LoginForm, dashboards, etc.).
+ * @author Jesús Iván Castillo Vidal
+ */
+export class App {}

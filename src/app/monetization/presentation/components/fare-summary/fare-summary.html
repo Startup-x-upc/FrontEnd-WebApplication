@@ -1,0 +1,36 @@
+<mat-card class="fare-card">
+  <mat-card-content>
+    <div class="title">Resumen del viaje</div>
+
+    @if (store.isLoading()) {
+      <div class="loading">
+        <mat-spinner diameter="24"></mat-spinner>
+        <span>Calculando...</span>
+      </div>
+    } @else if (store.error()) {
+      <div class="error">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ store.error() }}</span>
+      </div>
+    } @else if (store.farePolicy() && store.estimatedFare() !== null) {
+      <div class="row">
+        <div>
+          <div class="label">Precio del viaje</div>
+          <div class="fare">S/{{ formattedFare() }}</div>
+        </div>
+        <div>
+          <div class="label">Distancia</div>
+          <div class="distance">{{ formattedDistance() }} km</div>
+        </div>
+      </div>
+      <div class="breakdown">
+        Tarifa base S/{{ store.farePolicy()!.baseFare.toFixed(2) }}
+        + (S/{{ store.farePolicy()!.pricePerKm.toFixed(2) }} × {{ formattedDistance() }} km)
+        = S/{{ subtotal() }}.
+        @if (minimumApplied()) {
+          Precio mínimo S/{{ store.farePolicy()!.minimumFare.toFixed(2) }} aplicado.
+        }
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

@@ -31,6 +31,16 @@ export const routes: Routes = [
         (m) => m.AdminDashboard,
       ),
   },
+  {
+    path: 'monetization/fare-demo',
+    loadComponent: () =>
+      import('./monetization/presentation/views/fare-demo/fare-demo').then((m) => m.FareDemo),
+  },
+  {
+    path: 'monetization/wallet-demo',
+    loadComponent: () =>
+      import('./monetization/presentation/views/wallet-demo/wallet-demo').then((m) => m.WalletDemo),
+  },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' },
 ];

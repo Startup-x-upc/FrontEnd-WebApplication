@@ -1,0 +1,41 @@
+<div class="header">
+  @if (store.isLoading()) {
+    <div class="loading">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (store.error()) {
+    <div class="error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ store.error() }}</span>
+    </div>
+  } @else if (store.wallet()) {
+    <div class="balance-section">
+      <div class="label">Saldo disponible</div>
+      <div class="balance">S/{{ formattedBalance() }}</div>
+      <div class="status-row">
+        @if (isActive()) {
+          <span class="badge active">
+            <span class="dot"></span>
+            Activo
+          </span>
+        } @else {
+          <span class="badge blocked">
+            <mat-icon>lock</mat-icon>
+            Bloqueado
+          </span>
+        }
+        <span class="updated">Actualizado ahora</span>
+      </div>
+    </div>
+
+    @if (isLowBalance()) {
+      <div class="warning">
+        <mat-icon>flag</mat-icon>
+        <div>
+          <strong>Saldo bajo.</strong>
+          Recarga tu wallet para seguir activo y recibir solicitudes
+        </div>
+      </div>
+    }
+  }
+</div>

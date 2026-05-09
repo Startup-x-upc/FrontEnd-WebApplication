@@ -1,0 +1,54 @@
+.fare-card {
+  min-width: 280px;
+  padding: 8px;
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.fare {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a73e8;
+}
+
+.distance {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.breakdown {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 8px;
+}
+
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.error {
+  color: #b71c1c;
+}

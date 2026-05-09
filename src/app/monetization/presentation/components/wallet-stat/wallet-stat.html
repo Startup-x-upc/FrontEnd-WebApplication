@@ -1,0 +1,13 @@
+@if (store.isLoading()) {
+  <div class="loading">
+    <mat-spinner diameter="20"></mat-spinner>
+  </div>
+} @else if (store.error()) {
+  <div class="error">
+    <mat-icon>error_outline</mat-icon>
+    <span>Error</span>
+  </div>
+} @else if (store.wallet()) {
+  <div class="amount">S/ {{ formattedBalance() }}</div>
+  <div class="label">Wallet</div>
+}

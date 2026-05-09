@@ -1,0 +1,17 @@
+{
+  "users": [],
+  "profiles": [],
+  "drivers": [],
+  "driverAvailability": [],
+  "rideRequests": [],
+  "rides": [],
+  "wallets": [],
+  "fareConfig": [
+    {
+      "id": 1,
+      "baseFare": 2.5,
+      "pricePerKm": 1.2,
+      "minimumFare": 4.0
+    }
+  ]
+}

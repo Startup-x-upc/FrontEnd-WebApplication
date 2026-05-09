@@ -11,7 +11,7 @@ export class DriverDocument implements BaseEntity {
   fileUrl: string = '';
   status: DocumentStatus = 'PENDING';
 
-  getId(): number                          { return this.id; }
+  getId(): number                         { return this.id; }
   setId(v: number): void                  { this.id = v; }
   getDriverId(): number                   { return this.driverId; }
   setDriverId(v: number): void            { this.driverId = v; }

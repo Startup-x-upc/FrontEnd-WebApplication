@@ -1,0 +1,7 @@
+export enum RideStatus {
+  PENDING   = 'PENDING',
+  ACCEPTED  = 'ACCEPTED',
+  STARTED   = 'STARTED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}

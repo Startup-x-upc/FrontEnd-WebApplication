@@ -1,0 +1,149 @@
+<!-- Login Page — Two-column layout matching ChapaTuRuta design -->
+<div class="login-page" role="main">
+
+  <!-- ── Left: brand panel ────────────────────────────────────── -->
+  <div class="brand-panel" aria-label="ChapaTuRuta branding">
+
+    <div class="brand-logo">
+      <h1>Chapa<span>Tu</span>Ruta</h1>
+    </div>
+
+    <p class="brand-tagline">
+      Tu mototaxi en un toque.<br>
+      Disponible en ciudades intermedias del Perú.
+    </p>
+
+    <div class="features-list">
+      <div class="feature-item">
+        <div class="feature-icon orange" aria-hidden="true">🛺</div>
+        <span class="feature-label">Conductores verificados</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon green" aria-hidden="true">💰</div>
+        <span class="feature-label">Precio estimado antes del viaje</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon blue" aria-hidden="true">⭐</div>
+        <span class="feature-label">Sistema de calificaciones</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right: login card ──────────────────────────────────────── -->
+  <div class="form-panel">
+    <div class="login-card" role="region" aria-label="Formulario de inicio de sesión">
+
+      <!-- App icon -->
+      <img
+        class="app-icon"
+        src="https://em-content.zobj.net/source/google/387/automobile_1f697.png"
+        alt="Ícono de ChapaTuRuta"
+      />
+
+      <h2 class="card-title">Bienvenido</h2>
+      <p class="card-subtitle">Inicia sesión para continuar</p>
+
+      <!-- Form -->
+      <form
+        class="login-form"
+        [formGroup]="loginForm"
+        (ngSubmit)="onSubmit()"
+        novalidate
+        aria-label="Formulario de inicio de sesión"
+      >
+        <!-- Email field -->
+        <mat-form-field appearance="outline">
+          <mat-label>Correo o teléfono</mat-label>
+          <mat-icon matPrefix>email</mat-icon>
+          <input
+            matInput
+            type="email"
+            id="login-email"
+            formControlName="email"
+            placeholder="maria@correo.com"
+            autocomplete="email"
+            aria-label="Correo electrónico"
+            aria-required="true"
+          />
+          @if (emailControl.invalid && emailControl.touched) {
+            <mat-error>Ingresa un correo válido</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Password field -->
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input
+            matInput
+            [type]="passwordVisible ? 'text' : 'password'"
+            id="login-password"
+            formControlName="password"
+            placeholder="••••••••••••••"
+            autocomplete="current-password"
+            aria-label="Contraseña"
+            aria-required="true"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <mat-icon>{{ passwordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordControl.invalid && passwordControl.touched) {
+            <mat-error>La contraseña es requerida</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Error banner -->
+        @if (store.error()) {
+          <div class="error-banner" role="alert" aria-live="polite">
+            <mat-icon aria-hidden="true">cancel</mat-icon>
+            <div class="error-text">
+              <span class="error-title">Credenciales incorrectas.</span>
+              <span class="error-detail">Verifica tu correo y contraseña.</span>
+            </div>
+          </div>
+        }
+
+        <!-- Forgot password -->
+        <button
+          type="button"
+          class="forgot-link"
+          aria-label="Recuperar contraseña olvidada"
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+
+        <!-- Submit -->
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          class="submit-btn"
+          id="login-submit-btn"
+          [disabled]="store.isLoading() || loginForm.invalid"
+          aria-label="Iniciar sesión"
+        >
+          @if (store.isLoading()) {
+            Cargando...
+          } @else {
+            Iniciar sesión
+          }
+        </button>
+
+      </form>
+
+      <!-- Register prompt -->
+      <p class="register-prompt">
+        ¿No tienes cuenta?
+        <a class="register-link" role="button" aria-label="Ir a registro">Regístrate</a>
+      </p>
+
+    </div>
+  </div>
+
+</div>

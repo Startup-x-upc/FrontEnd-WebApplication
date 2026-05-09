@@ -1,0 +1,236 @@
+/* =========================================================
+   Login Form — Presentation Layer
+   Follows the ChapaTuRuta login design (two-column layout)
+   ========================================================= */
+
+/* ── Page shell ─────────────────────────────────────── */
+.login-page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f0f2f5;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+/* ── Left panel: brand + features ──────────────────── */
+.brand-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 4rem;
+  gap: 2.5rem;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.brand-logo h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.brand-logo h1 span {
+  color: #f5a623;
+}
+
+.brand-tagline {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 320px;
+}
+
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.feature-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.feature-icon.orange { background-color: #fff3e0; }
+.feature-icon.green  { background-color: #e8f5e9; }
+.feature-icon.blue   { background-color: #e3f2fd; }
+
+.feature-label {
+  font-size: 0.95rem;
+  color: #444;
+  font-weight: 400;
+}
+
+/* ── Right panel: login card ────────────────────────── */
+.form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  flex: 1;
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: 0.875rem;
+  color: #888;
+  margin: 0 0 1rem;
+}
+
+/* ── Form fields ─────────────────────────────────────── */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.login-form mat-form-field {
+  width: 100%;
+}
+
+/* ── Error banner ────────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background-color: #fff0f0;
+  border: 1px solid #f5c6c6;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.error-banner mat-icon {
+  color: #e53935;
+  font-size: 1.1rem;
+  height: 1.1rem;
+  width: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.error-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.error-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e53935;
+}
+
+.error-detail {
+  font-size: 0.8rem;
+  color: #c62828;
+}
+
+/* ── Forgot password link ───────────────────────────── */
+.forgot-link {
+  align-self: flex-end;
+  font-size: 0.85rem;
+  color: #3b82f6;
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Submit button ───────────────────────────────────── */
+.submit-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px !important;
+  margin-top: 0.25rem;
+}
+
+/* ── Register prompt ─────────────────────────────────── */
+.register-prompt {
+  font-size: 0.875rem;
+  color: #888;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.register-link {
+  color: #3b82f6;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.register-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive: stack on small screens ─────────────── */
+@media (max-width: 768px) {
+  .login-page {
+    flex-direction: column;
+  }
+
+  .brand-panel {
+    padding: 2rem 1.5rem 1rem;
+    gap: 1.5rem;
+  }
+
+  .brand-logo h1 {
+    font-size: 1.75rem;
+  }
+}

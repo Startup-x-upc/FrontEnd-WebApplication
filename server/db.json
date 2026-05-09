@@ -1,11 +1,68 @@
 {
-  "users": [],
-  "profiles": [],
-  "drivers": [],
+  "users": [
+    {
+      "id": "u-001",
+      "email": "pasajero@correo.com",
+      "password": "pass123",
+      "role": "PASSENGER"
+    },
+    {
+      "id": "u-002",
+      "email": "conductor@correo.com",
+      "password": "pass123",
+      "role": "DRIVER"
+    },
+    {
+      "id": "u-003",
+      "email": "admin@correo.com",
+      "password": "admin123",
+      "role": "ADMIN"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "p-001",
+      "accountId": "u-001",
+      "fullName": "María Quispe",
+      "email": "pasajero@correo.com",
+      "photoUrl": "https://i.pravatar.cc/150?img=47"
+    },
+    {
+      "id": "p-002",
+      "accountId": "u-002",
+      "fullName": "Carlos Mendoza",
+      "email": "conductor@correo.com",
+      "photoUrl": "https://i.pravatar.cc/150?img=33"
+    },
+    {
+      "id": "p-003",
+      "accountId": "u-003",
+      "fullName": "Admin Sistema",
+      "email": "admin@correo.com",
+      "photoUrl": "https://i.pravatar.cc/150?img=12"
+    }
+  ],
+  "drivers": [
+    {
+      "id": "d-001",
+      "accountId": "u-002",
+      "fullName": "Carlos Mendoza",
+      "vehicleType": "Mototaxi",
+      "verificationStatus": "APPROVED",
+      "operationalStatus": "ENABLED"
+    }
+  ],
   "driverAvailability": [],
   "rideRequests": [],
   "rides": [],
-  "wallets": [],
+  "wallets": [
+    {
+      "id": "w-001",
+      "driverId": "d-001",
+      "balance": 25.50,
+      "status": "ACTIVE"
+    }
+  ],
   "fareConfig": [
     {
       "id": 1,

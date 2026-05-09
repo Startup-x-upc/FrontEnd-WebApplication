@@ -18,16 +18,16 @@
 
 **Tasks**
 
-- [ ] `TASK-US03-01` Crear colección `users` y `profiles` en `db.json` con datos seed para pasajero y conductor.
-- [ ] `TASK-US03-02` Crear `account.entity.ts` y `profile.entity.ts` en `iam/domain/model`.
-- [ ] `TASK-US03-03` Crear DTOs `auth-response.ts` y `profile-response.ts` en `iam/infrastructure`.
-- [ ] `TASK-US03-04` Crear `account-assembler.ts` y `profile-assembler.ts`.
-- [ ] `TASK-US03-05` Implementar `iam-api.service.ts` con método `signIn(email, password)` usando json-server.
-- [ ] `TASK-US03-06` Implementar `iam.store.ts` con señales `currentUser`, `isAuthenticated`, `role`.
-- [ ] `TASK-US03-07` Crear componente `login-form` en `iam/presentation/components`.
-- [ ] `TASK-US03-08` Implementar redirección por rol después del login.
-- [ ] `TASK-US03-09` Implementar mensaje de error cuando no coincidan credenciales.
-- [ ] `TASK-US03-10` Persistir sesión mock en `localStorage`.
+- [X ] `TASK-US03-01` Crear colección `users` y `profiles` en `db.json` con datos seed para pasajero y conductor.
+- [ X] `TASK-US03-02` Crear `account.entity.ts` y `profile.entity.ts` en `iam/domain/model`.
+- [ X] `TASK-US03-03` Crear DTOs `auth-response.ts` y `profile-response.ts` en `iam/infrastructure`.
+- [ X] `TASK-US03-04` Crear `account-assembler.ts` y `profile-assembler.ts`.
+- [ X] `TASK-US03-05` Implementar `iam-api.service.ts` con método `signIn(email, password)` usando json-server.
+- [ X] `TASK-US03-06` Implementar `iam.store.ts` con señales `currentUser`, `isAuthenticated`, `role`.
+- [X ] `TASK-US03-07` Crear componente `login-form` en `iam/presentation/components`.
+- [ X] `TASK-US03-08` Implementar redirección por rol después del login.
+- [ X] `TASK-US03-09` Implementar mensaje de error cuando no coincidan credenciales.
+- [ X] `TASK-US03-10` Persistir sesión mock en `localStorage`.
 
 ### US-04 — Gestión de perfil
 

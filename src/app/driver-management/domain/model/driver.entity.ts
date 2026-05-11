@@ -5,8 +5,6 @@ export type DriverAccessStatus = 'ACTIVE' | 'PENDING_VERIFICATION' | 'RESTRICTED
 export class Driver implements BaseEntity {
   id: string = '';
   accountId: string = '';
-  licenseNumber: string = '';
-  soatNumber: string = '';
   isAvailable: boolean = false;
   accessStatus: DriverAccessStatus = 'PENDING_VERIFICATION';
 

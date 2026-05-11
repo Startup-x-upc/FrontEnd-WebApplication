@@ -6,8 +6,6 @@ export class DriverAssembler {
     const entity = new Driver();
     entity.id = response.id;
     entity.accountId = response.accountId;
-    entity.licenseNumber = response.id; // placeholder from id
-    entity.soatNumber = 'S-000'; // placeholder
     entity.isAvailable = response.operationalStatus === 'ENABLED';
     entity.accessStatus = response.verificationStatus as DriverAccessStatus;
     return entity;

@@ -12,10 +12,25 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard/passenger',
+    redirectTo: 'passenger/request-ride',
+    pathMatch: 'full'
+  },
+  {
+    path: 'passenger',
     loadComponent: () =>
-      import('./iam/presentation/components/passenger-dashboard/passenger-dashboard').then(
-        (m) => m.PassengerDashboard,
+      import('./shared/presentation/components/layout/passenger-layout/passenger-layout.component').then(
+        (m) => m.PassengerLayoutComponent,
       ),
+    children: [
+      {
+        path: 'request-ride',
+        loadComponent: () =>
+          import('./ride-dispatch/presentation/components/passenger-request-page/passenger-request-page.component').then(
+            (m) => m.PassengerRequestPageComponent,
+          ),
+      },
+      { path: '', redirectTo: 'request-ride', pathMatch: 'full' }
+    ]
   },
   {
     path: 'dashboard/driver',

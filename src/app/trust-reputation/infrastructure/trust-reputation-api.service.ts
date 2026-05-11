@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, of } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../environments/environment.development';
 
 import { DriverReputation } from '../domain/model/driver-reputation.entity';
 import { PassengerReputation } from '../domain/model/passenger-reputation.entity';

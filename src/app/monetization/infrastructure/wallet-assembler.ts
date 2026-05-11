@@ -1,4 +1,4 @@
-import { Wallet } from '../domain/model/wallet.entity';
+import { Wallet, WalletStatus } from '../domain/model/wallet.entity';
 import { WalletResponse } from './wallet-response';
 
 export class WalletAssembler {
@@ -7,7 +7,7 @@ export class WalletAssembler {
     entity.id = response.id;
     entity.driverId = response.driverId;
     entity.balance = response.balance;
-    entity.status = response.status;
+    entity.status = response.status as WalletStatus;
     return entity;
   }
 }

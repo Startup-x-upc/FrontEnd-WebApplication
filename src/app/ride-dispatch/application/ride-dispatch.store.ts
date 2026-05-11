@@ -41,7 +41,7 @@ export class RideDispatchStore {
     });
   }
 
-  loadRide(rideId: number): void {
+  loadRide(rideId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getRideById(rideId).subscribe({
@@ -57,7 +57,7 @@ export class RideDispatchStore {
   }
 
   submitRideRequest(
-    passengerId: number,
+    passengerId: string,
     origin: string,
     destination: string,
     distanceKm: number,
@@ -68,7 +68,7 @@ export class RideDispatchStore {
     }
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.createRideRequest(passengerId, origin, destination, distanceKm).subscribe({
+    this.api.createRideRequest(passengerId, origin, destination, distanceKm, 0).subscribe({
       next: (req) => {
         this.openRequestsSignal.update((list) => [...list, req]);
         this.loadingSignal.set(false);
@@ -80,7 +80,7 @@ export class RideDispatchStore {
     });
   }
 
-  acceptRide(rideId: number, driverId: number): void {
+  acceptRide(rideId: string, driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.acceptRide(rideId, driverId).subscribe({
@@ -95,7 +95,7 @@ export class RideDispatchStore {
     });
   }
 
-  loadDriverAvailability(driverId: number): void {
+  loadDriverAvailability(driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getDriverAvailability(driverId).subscribe({
@@ -110,7 +110,7 @@ export class RideDispatchStore {
     });
   }
 
-  toggleAvailability(driverId: number, hasPositiveBalance: boolean): void {
+  toggleAvailability(driverId: string, hasPositiveBalance: boolean): void {
     const current = this.driverAvailabilitySignal();
     if (!current) {
       this.errorSignal.set('La disponibilidad no ha sido cargada.');

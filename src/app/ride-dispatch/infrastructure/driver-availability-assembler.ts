@@ -6,7 +6,15 @@ export class DriverAvailabilityAssembler {
     const entity = new DriverAvailability();
     entity.id = response.id;
     entity.driverId = response.driverId;
-    entity.currentLocation = response.currentLocation;
+    
+    if (response.currentLocation) {
+      const parts = response.currentLocation.split(',');
+      if (parts.length === 2) {
+        entity.latitude = parseFloat(parts[0].trim());
+        entity.longitude = parseFloat(parts[1].trim());
+      }
+    }
+
     entity.isAvailable = response.isAvailable;
     return entity;
   }

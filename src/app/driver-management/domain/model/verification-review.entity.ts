@@ -5,7 +5,7 @@ export type VerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export class VerificationReview implements BaseEntity {
   id: string = '';
   driverId: string = '';
-  reviewerId: number = 0;
+  reviewerId: string = '';
   status: VerificationStatus = 'PENDING';
   comments: string = '';
   reviewedAt: string = '';

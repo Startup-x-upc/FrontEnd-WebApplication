@@ -5,7 +5,7 @@ export type RatedPartyType = 'DRIVER' | 'PASSENGER';
 
 export class TripRating implements BaseEntity {
   id: string = '';
-  tripId: number = 0;
+  tripId: string = '';
   driverId: string = '';
   passengerId: string = '';
   driverRatingStatus: RatingStatus = 'PENDING';

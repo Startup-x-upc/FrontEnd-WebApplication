@@ -26,7 +26,7 @@ export class DriverManagementStore {
   readonly isLoading = computed(() => this.loadingSignal());
   readonly error = computed(() => this.errorSignal());
 
-  loadDriverByAccountId(accountId: number): void {
+  loadDriverByAccountId(accountId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getDriverByAccountId(accountId).subscribe({
@@ -41,7 +41,7 @@ export class DriverManagementStore {
     });
   }
 
-  loadDriverDocuments(driverId: number): void {
+  loadDriverDocuments(driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getDriverDocuments(driverId).subscribe({
@@ -71,7 +71,7 @@ export class DriverManagementStore {
     });
   }
 
-  approveDriver(driverId: number, reviewerId: number, comments: string): void {
+  approveDriver(driverId: string, reviewerId: string, comments: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.approveDriver(driverId, reviewerId, comments).subscribe({
@@ -88,7 +88,7 @@ export class DriverManagementStore {
     });
   }
 
-  rejectDriver(driverId: number, reviewerId: number, comments: string): void {
+  rejectDriver(driverId: string, reviewerId: string, comments: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.rejectDriver(driverId, reviewerId, comments).subscribe({

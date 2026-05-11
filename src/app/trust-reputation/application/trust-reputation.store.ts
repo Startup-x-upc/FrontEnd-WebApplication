@@ -31,7 +31,7 @@ export class TrustReputationStore {
     return r !== null && r.hasRatings();
   });
 
-  loadDriverReputation(driverId: number): void {
+  loadDriverReputation(driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getDriverReputation(driverId).subscribe({
@@ -46,7 +46,7 @@ export class TrustReputationStore {
     });
   }
 
-  loadPassengerReputation(passengerId: number): void {
+  loadPassengerReputation(passengerId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getPassengerReputation(passengerId).subscribe({
@@ -61,7 +61,7 @@ export class TrustReputationStore {
     });
   }
 
-  loadTripRating(tripId: number): void {
+  loadTripRating(tripId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getTripRating(tripId).subscribe({
@@ -76,7 +76,7 @@ export class TrustReputationStore {
     });
   }
 
-  submitDriverRating(tripId: number, score: number): void {
+  submitDriverRating(tripId: string, score: number): void {
     if (score < 1 || score > 5) {
       this.errorSignal.set('La calificación debe estar entre 1 y 5.');
       return;
@@ -95,7 +95,7 @@ export class TrustReputationStore {
     });
   }
 
-  submitPassengerRating(tripId: number, score: number, comment: string = ''): void {
+  submitPassengerRating(tripId: string, score: number, comment: string = ''): void {
     if (score < 1 || score > 5) {
       this.errorSignal.set('La calificación debe estar entre 1 y 5.');
       return;

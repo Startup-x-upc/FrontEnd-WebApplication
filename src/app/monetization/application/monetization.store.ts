@@ -59,7 +59,7 @@ export class MonetizationStore {
     this.errorSignal.set(null);
   }
 
-  loadWallet(driverId: number): void {
+  loadWallet(driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.api.getWalletByDriverId(driverId).subscribe({

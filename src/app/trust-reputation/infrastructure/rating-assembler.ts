@@ -5,9 +5,10 @@ export class RatingAssembler {
   static toEntity(response: RatingResponse): TripRating {
     const entity = new TripRating();
     entity.id = response.id;
-    entity.rideId = response.rideId;
-    entity.ratingValue = response.rating;
-    entity.comment = response.comment;
+    entity.tripId = response.rideId;
+    entity.driverScore = response.rating;
+    entity.passengerScore = response.rating;
+    entity.passengerComment = response.comment;
     return entity;
   }
 }

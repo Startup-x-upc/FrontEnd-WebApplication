@@ -1,67 +1,64 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map, of } from 'rxjs';
+import { environment } from '../../../../environments/environment.development';
+
 import { Driver } from '../domain/model/driver.entity';
 import { DriverDocument } from '../domain/model/driver-document.entity';
 import { VerificationReview } from '../domain/model/verification-review.entity';
 
-/**
- * @summary TEMPORARY STUB. Returns hardcoded data while the real infrastructure
- * (responses, assemblers, HTTP gateway) is being built by the infrastructure team.
- * Replace this file when the real DriverManagementApiService lands.
- * @author Sebastian Andres Aiquipa Poma
- */
+import { DriverResponse } from './driver-response';
+import { DriverAssembler } from './driver-assembler';
+
 @Injectable({ providedIn: 'root' })
 export class DriverManagementApiService {
-  getDriverByAccountId(accountId: number): Observable<Driver> {
-    const d = new Driver();
-    d.id = 1;
-    d.accountId = accountId;
-    d.licenseNumber = 'Q12345678';
-    d.soatNumber = 'S87654321';
-    d.isAvailable = false;
-    d.accessStatus = 'ACTIVE';
-    return of(d).pipe(delay(200));
+  private readonly basePath = `${environment.apiBaseUrl}`;
+
+  constructor(private readonly http: HttpClient) {}
+
+  getDriverByAccountId(accountId: string): Observable<Driver> {
+    return this.http.get<DriverResponse[]>(`${this.basePath}/drivers?accountId=${accountId}`)
+      .pipe(map(responses => {
+        if (responses.length > 0) return DriverAssembler.toEntity(responses[0]);
+        // Fallback demo driver
+        const fallback = new Driver();
+        fallback.accountId = accountId;
+        fallback.isAvailable = false;
+        return fallback;
+      }));
   }
 
-  getDriverDocuments(driverId: number): Observable<DriverDocument[]> {
-    const docs: DriverDocument[] = [];
-    const license = new DriverDocument();
-    license.id = 1;
-    license.driverId = driverId;
-    license.documentType = 'LICENSE';
-    license.documentNumber = 'Q12345678';
-    license.status = 'APPROVED';
-    docs.push(license);
-    return of(docs).pipe(delay(200));
+  getDriverDocuments(driverId: string): Observable<DriverDocument[]> {
+    return of([]); // Minimal implementation for sprint 2
   }
 
   getPendingVerifications(): Observable<VerificationReview[]> {
-    return of([]).pipe(delay(200));
+    return of([]); // Minimal implementation for sprint 2
   }
 
   approveDriver(
-    driverId: number,
-    reviewerId: number,
+    driverId: string,
+    reviewerId: string,
     comments: string,
   ): Observable<VerificationReview> {
     const review = new VerificationReview();
-    review.id = Date.now();
+    review.id = Date.now().toString();
     review.driverId = driverId;
     review.reviewerId = reviewerId;
     review.approve(comments);
-    return of(review).pipe(delay(200));
+    return of(review);
   }
 
   rejectDriver(
-    driverId: number,
-    reviewerId: number,
+    driverId: string,
+    reviewerId: string,
     comments: string,
   ): Observable<VerificationReview> {
     const review = new VerificationReview();
-    review.id = Date.now();
+    review.id = Date.now().toString();
     review.driverId = driverId;
     review.reviewerId = reviewerId;
     review.reject(comments);
-    return of(review).pipe(delay(200));
+    return of(review);
   }
 }

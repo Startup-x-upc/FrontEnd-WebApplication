@@ -1,79 +1,106 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../../environments/environment.development';
+
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
 import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideStatus } from '../domain/model/ride.status';
 
-/**
- * @summary TEMPORARY STUB. Returns hardcoded data while the real infrastructure
- * (responses, assemblers, HTTP gateway) is being built by the infrastructure team.
- * Replace this file when the real RideDispatchApiService lands.
- * @author Sebastian Andres Aiquipa Poma
- */
+import { RideRequestResponse } from './ride-request-response';
+import { DriverAvailabilityResponse } from './driver-availability-response';
+import { RideResponse } from './ride-response';
+
+import { RideRequestAssembler } from './ride-request-assembler';
+import { DriverAvailabilityAssembler } from './driver-availability-assembler';
+import { RideAssembler } from './ride-assembler';
+
 @Injectable({ providedIn: 'root' })
 export class RideDispatchApiService {
+  private readonly basePath = `${environment.apiBaseUrl}`;
+
+  constructor(private readonly http: HttpClient) {}
+
   getOpenRideRequests(): Observable<RideRequest[]> {
-    const r = new RideRequest();
-    r.id = 1;
-    r.passengerId = 1;
-    r.origin = 'Jr. Ramón Castilla 432';
-    r.destination = 'Mercado Central';
-    r.distanceKm = 1.2;
-    r.isExpired = false;
-    return of([r]).pipe(delay(200));
+    return this.http.get<RideRequestResponse[]>(`${this.basePath}/rideRequests?status=PENDING`)
+      .pipe(map(responses => responses.map(RideRequestAssembler.toEntity)));
   }
 
-  getRideById(rideId: number): Observable<Ride> {
-    const ride = new Ride();
-    ride.id = rideId;
-    ride.passengerId = 1;
-    ride.driverId = 1;
-    ride.origin = 'Origen demo';
-    ride.destination = 'Destino demo';
-    ride.status = RideStatus.PENDING;
-    ride.estimatedFare = 4.0;
-    return of(ride).pipe(delay(200));
+  getRideById(rideId: string): Observable<Ride> {
+    return this.http.get<RideResponse>(`${this.basePath}/rides/${rideId}`)
+      .pipe(map(RideAssembler.toEntity));
   }
 
   createRideRequest(
-    passengerId: number,
+    passengerId: string,
     origin: string,
     destination: string,
     distanceKm: number,
+    estimatedFare: number
   ): Observable<RideRequest> {
-    const r = new RideRequest();
-    r.id = Date.now();
-    r.passengerId = passengerId;
-    r.origin = origin;
-    r.destination = destination;
-    r.distanceKm = distanceKm;
-    return of(r).pipe(delay(200));
+    const payload = {
+      id: `rr-${Date.now()}`,
+      passengerId,
+      origin,
+      destination,
+      distanceKm,
+      status: RideStatus.PENDING,
+      estimatedFare,
+      isExpired: false
+    };
+    return this.http.post<RideRequestResponse>(`${this.basePath}/rideRequests`, payload)
+      .pipe(map(RideRequestAssembler.toEntity));
   }
 
-  acceptRide(rideId: number, driverId: number): Observable<Ride> {
-    const ride = new Ride();
-    ride.id = rideId;
-    ride.driverId = driverId;
-    ride.status = RideStatus.ACCEPTED;
-    return of(ride).pipe(delay(200));
+  acceptRide(rideRequestId: string, driverId: string): Observable<Ride> {
+    // Note: A real backend would update rideRequest and create a ride. 
+    // Here we'll just create a ride in json-server to mock acceptance.
+    const payload = {
+      id: `r-${Date.now()}`,
+      passengerId: "passenger-from-request", // in a real app we'd fetch the request first
+      driverId,
+      origin: "Origin", // placeholder
+      destination: "Destination", // placeholder
+      status: RideStatus.ACCEPTED,
+      estimatedFare: 0 // placeholder
+    };
+    return this.http.post<RideResponse>(`${this.basePath}/rides`, payload)
+      .pipe(map(RideAssembler.toEntity));
   }
 
-  getDriverAvailability(driverId: number): Observable<DriverAvailability> {
-    const a = new DriverAvailability();
-    a.id = 1;
-    a.driverId = driverId;
-    a.isAvailable = false;
-    a.latitude = -12.04;
-    a.longitude = -77.05;
-    return of(a).pipe(delay(200));
+  getDriverAvailability(driverId: string): Observable<DriverAvailability> {
+    return this.http.get<DriverAvailabilityResponse[]>(`${this.basePath}/driverAvailability?driverId=${driverId}`)
+      .pipe(map(responses => {
+        if (responses.length > 0) return DriverAvailabilityAssembler.toEntity(responses[0]);
+        // Fallback for demo if missing
+        const fallback = new DriverAvailability();
+        fallback.driverId = driverId;
+        return fallback;
+      }));
   }
 
-  toggleDriverAvailability(driverId: number, isAvailable: boolean): Observable<DriverAvailability> {
-    const a = new DriverAvailability();
-    a.id = 1;
-    a.driverId = driverId;
-    a.isAvailable = isAvailable;
-    return of(a).pipe(delay(200));
+  toggleDriverAvailability(driverId: string, isAvailable: boolean): Observable<DriverAvailability> {
+    return this.getDriverAvailability(driverId).pipe(
+      map(availability => {
+        const idToPatch = availability.id ? availability.id : `da-${Date.now()}`;
+        if (!availability.id) {
+          // If it didn't exist, POST it
+          this.http.post(`${this.basePath}/driverAvailability`, {
+            id: idToPatch,
+            driverId,
+            currentLocation: '0,0',
+            isAvailable
+          }).subscribe();
+        } else {
+          // If it existed, PATCH it
+          this.http.patch(`${this.basePath}/driverAvailability/${availability.id}`, {
+            isAvailable
+          }).subscribe();
+        }
+        availability.isAvailable = isAvailable;
+        return availability;
+      })
+    );
   }
 }

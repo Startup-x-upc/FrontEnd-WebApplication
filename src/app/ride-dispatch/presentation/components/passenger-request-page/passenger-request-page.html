@@ -8,6 +8,8 @@
     <!-- Location Form, editable when not requested -->
     <app-trip-location-form
       *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY' || uiState() === 'ERROR'"
+      [origin]="rideStore.origin()"
+      [destination]="rideStore.destination()"
       (locationSelected)="onLocationSelected($event)">
     </app-trip-location-form>
 
@@ -15,7 +17,8 @@
       <app-trip-map 
         [origin]="rideStore.origin()" 
         [destination]="rideStore.destination()"
-        [nearbyDrivers]="rideStore.nearbyDrivers()">
+        [nearbyDrivers]="rideStore.nearbyDrivers()"
+        (mapClicked)="onMapClicked($event)">
       </app-trip-map>
     </div>
   </div>

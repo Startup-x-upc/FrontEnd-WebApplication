@@ -1,4 +1,4 @@
-import { Component, Input, AfterViewInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, AfterViewInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 
@@ -35,12 +35,18 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
   @Input() origin: string = '';
   @Input() destination: string = '';
   @Input() nearbyDrivers: any[] = [];
+  @Output() mapClicked = new EventEmitter<{lat: number, lng: number}>();
 
   private map: L.Map | undefined;
   private markers: L.Marker[] = [];
+  private polylines: L.Polyline[] = [];
 
   ngAfterViewInit(): void {
     this.initMap();
+    // Invalidate size to fix tile rendering issues in Angular
+    setTimeout(() => {
+      this.map?.invalidateSize();
+    }, 100);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -57,29 +63,51 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(this.map);
 
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+      this.mapClicked.emit({ lat: e.latlng.lat, lng: e.latlng.lng });
+    });
+
     this.updateMap();
+  }
+
+  private parseCoord(str: string, fallbackLat: number, fallbackLng: number): [number, number] {
+    const parts = str.split(',');
+    if (parts.length === 2) {
+      const lat = parseFloat(parts[0]);
+      const lng = parseFloat(parts[1]);
+      if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
+    }
+    return [fallbackLat, fallbackLng];
   }
 
   private updateMap(): void {
     if (!this.map) return;
 
-    // Clear previous markers
+    // Clear previous markers and lines
     this.markers.forEach(m => m.remove());
     this.markers = [];
+    this.polylines.forEach(p => p.remove());
+    this.polylines = [];
 
-    // Mock logic: Drop markers nearby based on strings
+    let originCoord: [number, number] | null = null;
+    let destCoord: [number, number] | null = null;
+
     if (this.origin) {
-      const originMarker = L.marker([-12.0464, -77.0428]).bindPopup('Origen: ' + this.origin).addTo(this.map);
+      originCoord = this.parseCoord(this.origin, -12.0464, -77.0428);
+      const originMarker = L.marker(originCoord).bindPopup('Origen').addTo(this.map);
       this.markers.push(originMarker);
     }
     
     if (this.destination) {
-      const destMarker = L.marker([-12.0664, -77.0228]).bindPopup('Destino: ' + this.destination).addTo(this.map);
+      destCoord = this.parseCoord(this.destination, -12.0664, -77.0228);
+      const destMarker = L.marker(destCoord).bindPopup('Destino').addTo(this.map);
       this.markers.push(destMarker);
     }
 
-    if (this.origin && this.destination) {
-      // Fit bounds
+    if (originCoord && destCoord) {
+      // Draw line between them
+      const polyline = L.polyline([originCoord, destCoord], {color: '#1a73e8', weight: 4}).addTo(this.map);
+      this.polylines.push(polyline);
       const group = new L.FeatureGroup(this.markers);
       this.map.fitBounds(group.getBounds(), { padding: [50, 50] });
     }

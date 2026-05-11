@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -62,7 +62,9 @@ import { MatIconModule } from '@angular/material/icon';
     }
   `]
 })
-export class TripLocationFormComponent {
+export class TripLocationFormComponent implements OnChanges {
+  @Input() origin: string = '';
+  @Input() destination: string = '';
   @Output() locationSelected = new EventEmitter<{origin: string, destination: string, distanceKm: number}>();
 
   form = new FormGroup({
@@ -70,13 +72,40 @@ export class TripLocationFormComponent {
     destination: new FormControl('', Validators.required)
   });
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['origin'] && changes['origin'].currentValue !== undefined) {
+      this.form.patchValue({ origin: this.origin }, { emitEvent: false });
+    }
+    if (changes['destination'] && changes['destination'].currentValue !== undefined) {
+      this.form.patchValue({ destination: this.destination }, { emitEvent: false });
+    }
+  }
+
   onSubmit() {
     if (this.form.valid) {
       // Mock distance calculation based on some logic or fixed for now
-      const mockDistance = Math.floor(Math.random() * 8) + 2; // Random 2-10 km
+      let mockDistance = Math.floor(Math.random() * 8) + 2; // Random 2-10 km
+      
+      const originStr = this.form.value.origin!;
+      const destStr = this.form.value.destination!;
+
+      // Simple mock distance if coordinates are provided
+      const originParts = originStr.split(',');
+      const destParts = destStr.split(',');
+      if (originParts.length === 2 && destParts.length === 2) {
+        const lat1 = parseFloat(originParts[0]);
+        const lng1 = parseFloat(originParts[1]);
+        const lat2 = parseFloat(destParts[0]);
+        const lng2 = parseFloat(destParts[1]);
+        if (!isNaN(lat1) && !isNaN(lat2)) {
+          mockDistance = Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lng1 - lng2, 2)) * 111;
+          mockDistance = Math.max(1, Math.round(mockDistance));
+        }
+      }
+
       this.locationSelected.emit({
-        origin: this.form.value.origin!,
-        destination: this.form.value.destination!,
+        origin: originStr,
+        destination: destStr,
         distanceKm: mockDistance
       });
     }

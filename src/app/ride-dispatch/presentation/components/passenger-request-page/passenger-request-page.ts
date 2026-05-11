@@ -96,6 +96,35 @@ export class PassengerRequestPageComponent {
     this.monetizationStore.calculateEstimatedFare(event.distanceKm);
   }
 
+  onMapClicked(coord: {lat: number, lng: number}) {
+    const coordStr = `${coord.lat.toFixed(5)},${coord.lng.toFixed(5)}`;
+    
+    if (!this.rideStore.origin() || (this.rideStore.origin() && this.rideStore.destination())) {
+      // Set origin and clear destination
+      this.rideStore.setOrigin(coordStr);
+      this.rideStore.setDestination('', 0);
+    } else {
+      // Origin is set, set destination
+      const destStr = coordStr;
+      
+      // Calculate mock distance between two points
+      const originParts = this.rideStore.origin().split(',');
+      let mockDistance = 5; // Default mock
+      if (originParts.length === 2) {
+        const lat1 = parseFloat(originParts[0]);
+        const lng1 = parseFloat(originParts[1]);
+        const lat2 = coord.lat;
+        const lng2 = coord.lng;
+        // Simple haversine mock (euclidean * ~111)
+        mockDistance = Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lng1 - lng2, 2)) * 111;
+        mockDistance = Math.max(1, Math.round(mockDistance));
+      }
+
+      this.rideStore.setDestination(destStr, mockDistance);
+      this.monetizationStore.calculateEstimatedFare(mockDistance);
+    }
+  }
+
   onConfirmRequest() {
     const passengerId = this.iamStore.currentAccount()?.id;
     const fare = this.monetizationStore.estimatedFare();

@@ -1,59 +1,65 @@
 import { Injectable } from '@angular/core';
-import { delay, Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map, of } from 'rxjs';
+import { environment } from '../../../../environments/environment.development';
+
 import { DriverReputation } from '../domain/model/driver-reputation.entity';
 import { PassengerReputation } from '../domain/model/passenger-reputation.entity';
 import { TripRating } from '../domain/model/trip-rating.entity';
 
-/**
- * @summary TEMPORARY STUB. Returns hardcoded data while the real infrastructure
- * (responses, assemblers, HTTP gateway) is being built by the infrastructure team.
- * Replace this file when the real TrustReputationApiService lands.
- * @author Sebastian Andres Aiquipa Poma
- */
+import { RatingResponse } from './rating-response';
+import { RatingAssembler } from './rating-assembler';
+
 @Injectable({ providedIn: 'root' })
 export class TrustReputationApiService {
-  getDriverReputation(driverId: number): Observable<DriverReputation> {
+  private readonly basePath = `${environment.apiBaseUrl}`;
+
+  constructor(private readonly http: HttpClient) {}
+
+  getDriverReputation(driverId: string): Observable<DriverReputation> {
     const r = new DriverReputation();
-    r.id = 1;
+    r.id = driverId;
     r.driverId = driverId;
     r.averageScore = 4.8;
     r.totalRatings = 42;
-    return of(r).pipe(delay(200));
+    return of(r);
   }
 
-  getPassengerReputation(passengerId: number): Observable<PassengerReputation> {
+  getPassengerReputation(passengerId: string): Observable<PassengerReputation> {
     const r = new PassengerReputation();
-    r.id = 1;
+    r.id = passengerId;
     r.passengerId = passengerId;
     r.averageScore = 4.5;
     r.totalRatings = 18;
-    return of(r).pipe(delay(200));
+    return of(r);
   }
 
-  getTripRating(tripId: number): Observable<TripRating> {
-    const t = new TripRating();
-    t.id = 1;
-    t.tripId = tripId;
-    t.driverId = 1;
-    t.passengerId = 1;
-    t.openForRating();
-    return of(t).pipe(delay(200));
+  getTripRating(tripId: string): Observable<TripRating> {
+    return this.http.get<RatingResponse[]>(`${this.basePath}/ratings?rideId=${tripId}`)
+      .pipe(map(responses => {
+        if (responses.length > 0) return RatingAssembler.toEntity(responses[0]);
+        const fallback = new TripRating();
+        fallback.tripId = tripId;
+        fallback.openForRating();
+        return fallback;
+      }));
   }
 
-  rateDriver(tripId: number, score: number): Observable<TripRating> {
-    const t = new TripRating();
-    t.id = 1;
-    t.tripId = tripId;
-    t.rateDriver(score);
-    return of(t).pipe(delay(200));
+  rateDriver(tripId: string, score: number): Observable<TripRating> {
+    return this.http.post<RatingResponse>(`${this.basePath}/ratings`, {
+      id: `rt-${Date.now()}`,
+      rideId: tripId,
+      rating: score,
+      comment: ''
+    }).pipe(map(RatingAssembler.toEntity));
   }
 
-  ratePassenger(tripId: number, score: number, comment: string): Observable<TripRating> {
-    const t = new TripRating();
-    t.id = 1;
-    t.tripId = tripId;
-    t.ratePassenger(score);
-    if (comment) t.recordPassengerLowRatingComment(comment);
-    return of(t).pipe(delay(200));
+  ratePassenger(tripId: string, score: number, comment: string): Observable<TripRating> {
+    return this.http.post<RatingResponse>(`${this.basePath}/ratings`, {
+      id: `rt-${Date.now()}`,
+      rideId: tripId,
+      rating: score,
+      comment: comment
+    }).pipe(map(RatingAssembler.toEntity));
   }
 }

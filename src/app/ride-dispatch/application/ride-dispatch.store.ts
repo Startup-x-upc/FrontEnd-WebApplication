@@ -56,21 +56,46 @@ export class RideDispatchStore {
     });
   }
 
+  // Passenger request flow state
+  private originSignal = signal<string>('');
+  private destinationSignal = signal<string>('');
+  private distanceKmSignal = signal<number>(0);
+  private currentRequestSignal = signal<RideRequest | null>(null);
+  // Nearby drivers (composed data)
+  private nearbyDriversSignal = signal<any[]>([]); // simplified
+
+  readonly origin = computed(() => this.originSignal());
+  readonly destination = computed(() => this.destinationSignal());
+  readonly distanceKm = computed(() => this.distanceKmSignal());
+  readonly currentRequest = computed(() => this.currentRequestSignal());
+  readonly nearbyDrivers = computed(() => this.nearbyDriversSignal());
+
+  setOrigin(origin: string): void {
+    this.originSignal.set(origin);
+  }
+
+  setDestination(destination: string, distanceKm: number): void {
+    this.destinationSignal.set(destination);
+    this.distanceKmSignal.set(distanceKm);
+  }
+
   submitRideRequest(
     passengerId: string,
-    origin: string,
-    destination: string,
-    distanceKm: number,
+    estimatedFare: number,
   ): void {
+    const origin = this.originSignal();
+    const destination = this.destinationSignal();
+    const distanceKm = this.distanceKmSignal();
+
     if (!origin || !destination || distanceKm <= 0) {
       this.errorSignal.set('Datos incompletos para crear la solicitud.');
       return;
     }
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.createRideRequest(passengerId, origin, destination, distanceKm, 0).subscribe({
+    this.api.createRideRequest(passengerId, origin, destination, distanceKm, estimatedFare).subscribe({
       next: (req) => {
-        this.openRequestsSignal.update((list) => [...list, req]);
+        this.currentRequestSignal.set(req);
         this.loadingSignal.set(false);
       },
       error: () => {
@@ -78,6 +103,16 @@ export class RideDispatchStore {
         this.errorSignal.set('No se pudo crear la solicitud.');
       },
     });
+  }
+
+  // Placeholder for nearby drivers (mock)
+  loadNearbyDrivers(): void {
+    // In a real app, this calls an API. Here we just mock it for the UI.
+    setTimeout(() => {
+      this.nearbyDriversSignal.set([
+        { id: 'd-001', lat: -12.083, lng: -77.031, name: 'Carlos Mendoza', rating: 4.8 }
+      ]);
+    }, 500);
   }
 
   acceptRide(rideId: string, driverId: string): void {
@@ -139,3 +174,4 @@ export class RideDispatchStore {
     this.errorSignal.set(null);
   }
 }
+

@@ -5,7 +5,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { IamStore } from '../../../../iam/application/iam.store';
+import { IamStore } from '../../../../../iam/application/iam.store';
 
 @Component({
   selector: 'app-passenger-layout',
@@ -93,7 +93,7 @@ import { IamStore } from '../../../../iam/application/iam.store';
   `]
 })
 export class PassengerLayoutComponent {
-  private iamStore = inject(IamStore);
+  private iamStore: IamStore = inject(IamStore);
 
   profile = this.iamStore.currentProfile;
 

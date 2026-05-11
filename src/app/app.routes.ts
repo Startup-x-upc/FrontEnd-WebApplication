@@ -18,14 +18,14 @@ export const routes: Routes = [
   {
     path: 'passenger',
     loadComponent: () =>
-      import('./shared/presentation/components/layout/passenger-layout/passenger-layout.component').then(
+      import('./shared/presentation/components/layout/passenger-layout/passenger-layout').then(
         (m) => m.PassengerLayoutComponent,
       ),
     children: [
       {
         path: 'request-ride',
         loadComponent: () =>
-          import('./ride-dispatch/presentation/components/passenger-request-page/passenger-request-page.component').then(
+          import('./ride-dispatch/presentation/components/passenger-request-page/passenger-request-page').then(
             (m) => m.PassengerRequestPageComponent,
           ),
       },

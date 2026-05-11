@@ -1,0 +1,47 @@
+<div class="request-page-container">
+  <div class="left-panel">
+    <div class="page-header">
+      <h1>Solicitar viaje</h1>
+      <p>Indica tu origen y destino para calcular la tarifa</p>
+    </div>
+
+    <!-- Location Form, editable when not requested -->
+    <app-trip-location-form
+      *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY' || uiState() === 'ERROR'"
+      (locationSelected)="onLocationSelected($event)">
+    </app-trip-location-form>
+
+    <div class="map-container">
+      <app-trip-map 
+        [origin]="rideStore.origin()" 
+        [destination]="rideStore.destination()"
+        [nearbyDrivers]="rideStore.nearbyDrivers()">
+      </app-trip-map>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <app-trip-availability-summary
+      *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY'"
+      [nearbyDrivers]="rideStore.nearbyDrivers()">
+    </app-trip-availability-summary>
+
+    <app-fare-summary-card
+      *ngIf="uiState() === 'FARE_READY'"
+      [estimatedFare]="monetizationStore.estimatedFare()"
+      [distanceKm]="rideStore.distanceKm()"
+      (confirm)="onConfirmRequest()">
+    </app-fare-summary-card>
+
+    <app-trip-request-status
+      *ngIf="uiState() === 'SEARCHING_DRIVER' || uiState() === 'DRIVER_ASSIGNED'"
+      [uiState]="uiState()"
+      [request]="rideStore.currentRequest()">
+    </app-trip-request-status>
+
+    <div *ngIf="uiState() === 'ERROR'" class="error-card">
+      <p style="color: red;">{{ rideStore.error() || monetizationStore.error() }}</p>
+    </div>
+  </div>
+</div>
+

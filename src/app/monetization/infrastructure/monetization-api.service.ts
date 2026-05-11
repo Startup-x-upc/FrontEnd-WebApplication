@@ -1,36 +1,47 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../../environments/environment.development';
+
 import { FarePolicy } from '../domain/model/fare-policy.entity';
 import { Wallet } from '../domain/model/wallet.entity';
 import { WalletTransaction } from '../domain/model/wallet-transaction.entity';
 
-/**
- * @summary TEMPORARY STUB. Returns hardcoded data while the real infrastructure
- * (responses, assemblers, HTTP gateway) is being built by the infrastructure team.
- * Replace this file when the real MonetizationApiService lands.
- * @author Sebastian Andres Aiquipa Poma
- */
+import { FareConfigResponse } from './fare-config-response';
+import { WalletResponse } from './wallet-response';
+import { FareConfigAssembler } from './fare-config-assembler';
+import { WalletAssembler } from './wallet-assembler';
+
 @Injectable({ providedIn: 'root' })
 export class MonetizationApiService {
+  private readonly basePath = `${environment.apiBaseUrl}`;
+
+  constructor(private readonly http: HttpClient) {}
+
   getFarePolicy(): Observable<FarePolicy> {
-    const p = new FarePolicy();
-    p.id = 1;
-    p.baseFare = 2.5;
-    p.pricePerKm = 1.2;
-    p.minimumFare = 4.0;
-    return of(p).pipe(delay(200));
+    return this.http.get<FareConfigResponse[]>(`${this.basePath}/fareConfig`)
+      .pipe(map(responses => {
+        if (responses.length > 0) return FareConfigAssembler.toEntity(responses[0]);
+        const fallback = new FarePolicy();
+        fallback.baseFare = 2.5;
+        fallback.pricePerKm = 1.2;
+        fallback.minimumFare = 4.0;
+        return fallback;
+      }));
   }
 
-  getWalletByDriverId(driverId: number): Observable<Wallet> {
-    const w = new Wallet();
-    w.id = 1;
-    w.driverId = driverId;
-    w.balance = 25.5;
-    w.status = 'ACTIVE';
-    return of(w).pipe(delay(200));
+  getWalletByDriverId(driverId: string): Observable<Wallet> {
+    return this.http.get<WalletResponse[]>(`${this.basePath}/wallets?driverId=${driverId}`)
+      .pipe(map(responses => {
+        if (responses.length > 0) return WalletAssembler.toEntity(responses[0]);
+        const fallback = new Wallet();
+        fallback.driverId = driverId;
+        return fallback;
+      }));
   }
 
-  getWalletTransactions(walletId: number): Observable<WalletTransaction[]> {
-    return of([]).pipe(delay(200));
+  getWalletTransactions(walletId: string): Observable<WalletTransaction[]> {
+    return this.http.get<any[]>(`${this.basePath}/walletTransactions?walletId=${walletId}`)
+      .pipe(map(() => [])); // To be implemented when transaction DTOs are needed
   }
 }

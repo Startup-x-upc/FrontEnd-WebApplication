@@ -1,8 +1,8 @@
 import { BaseEntity } from '../../../shared/domain/model/base-entity';
 
-export class DriverReputation implements BaseEntity {
+export class PassengerReputation implements BaseEntity {
   id: string = '';
-  driverId: string = '';
+  passengerId: string = '';
   averageScore: number = 0;
   totalRatings: number = 0;
 

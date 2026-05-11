@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { delay, Observable, of } from 'rxjs';
 import { DriverReputation } from '../domain/model/driver-reputation.entity';
-import { PassengerReputation } from '../domain/model/passanger-reputation.entity';
+import { PassengerReputation } from '../domain/model/passenger-reputation.entity';
 import { TripRating } from '../domain/model/trip-rating.entity';
 
 /**

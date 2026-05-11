@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
-import { DriverAvailability } from '../domain/model/driver-availabity.entity';
+import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideStatus } from '../domain/model/ride.status';
 
 /**

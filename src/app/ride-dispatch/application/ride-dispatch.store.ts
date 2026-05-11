@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
-import { DriverAvailability } from '../domain/model/driver-availabity.entity';
+import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideDispatchApiService } from '../infrastructure/ride-dispatch-api.service';
 
 /**

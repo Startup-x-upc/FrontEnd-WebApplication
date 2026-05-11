@@ -49,12 +49,50 @@
       "fullName": "Carlos Mendoza",
       "vehicleType": "Mototaxi",
       "verificationStatus": "APPROVED",
-      "operationalStatus": "ENABLED"
+      "operationalStatus": "ENABLED",
+      "ratingAverage": 4.8,
+      "ratingCount": 120
     }
   ],
-  "driverAvailability": [],
-  "rideRequests": [],
-  "rides": [],
+  "driverAvailability": [
+    {
+      "id": "da-001",
+      "driverId": "d-001",
+      "currentLocation": "-12.083, -77.031",
+      "isAvailable": true
+    }
+  ],
+  "rideRequests": [
+    {
+      "id": "rr-001",
+      "passengerId": "u-001",
+      "origin": "Av. La Marina 2000",
+      "destination": "Plaza San Miguel",
+      "distanceKm": 2.5,
+      "status": "PENDING",
+      "estimatedFare": 7.0,
+      "isExpired": false
+    }
+  ],
+  "rides": [
+    {
+      "id": "r-001",
+      "passengerId": "u-001",
+      "driverId": "d-001",
+      "origin": "Av. La Marina 2000",
+      "destination": "Plaza San Miguel",
+      "status": "ACCEPTED",
+      "estimatedFare": 7.0
+    }
+  ],
+  "ratings": [
+    {
+      "id": "rt-001",
+      "rideId": "r-001",
+      "rating": 5,
+      "comment": "Excelente servicio"
+    }
+  ],
   "wallets": [
     {
       "id": "w-001",

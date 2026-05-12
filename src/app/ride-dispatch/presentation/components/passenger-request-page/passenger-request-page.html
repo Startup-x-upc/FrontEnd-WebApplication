@@ -1,21 +1,29 @@
 <div class="request-page-container">
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- LEFT PANEL — Location form + Map                            -->
+  <!-- ════════════════════════════════════════════════════════════ -->
   <div class="left-panel">
+
+    <!-- Page header -->
     <div class="page-header">
       <h1>Solicitar viaje</h1>
-      <p>Indica tu origen y destino para calcular la tarifa</p>
+      <p>Indica tu origen y destino en el mapa para calcular la tarifa</p>
     </div>
 
-    <!-- Location Form, editable when not requested -->
+    <!-- Location form (shown until request is submitted) -->
     <app-trip-location-form
-      *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY' || uiState() === 'ERROR'"
+      *ngIf="uiState() !== 'SEARCHING_DRIVER' && uiState() !== 'DRIVER_ASSIGNED'"
       [origin]="rideStore.origin()"
       [destination]="rideStore.destination()"
-      (locationSelected)="onLocationSelected($event)">
+      (clearOriginRequested)="onClearOrigin()"
+      (clearDestinationRequested)="onClearDestination()">
     </app-trip-location-form>
 
+    <!-- Map (always visible) -->
     <div class="map-container">
-      <app-trip-map 
-        [origin]="rideStore.origin()" 
+      <app-trip-map
+        [origin]="rideStore.origin()"
         [destination]="rideStore.destination()"
         [nearbyDrivers]="rideStore.nearbyDrivers()"
         (mapClicked)="onMapClicked($event)">
@@ -23,12 +31,18 @@
     </div>
   </div>
 
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- RIGHT PANEL — One active state at a time                    -->
+  <!-- ════════════════════════════════════════════════════════════ -->
   <div class="right-panel">
+
+    <!-- ① PREPARING / FARE_READY — Show driver availability -->
     <app-trip-availability-summary
       *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY'"
       [nearbyDrivers]="rideStore.nearbyDrivers()">
     </app-trip-availability-summary>
 
+    <!-- ② FARE_READY — Show fare card with primary CTA -->
     <app-fare-summary-card
       *ngIf="uiState() === 'FARE_READY'"
       [estimatedFare]="monetizationStore.estimatedFare()"
@@ -36,15 +50,38 @@
       (confirm)="onConfirmRequest()">
     </app-fare-summary-card>
 
+    <!-- ③ SEARCHING_DRIVER / DRIVER_ASSIGNED — Show request status -->
     <app-trip-request-status
       *ngIf="uiState() === 'SEARCHING_DRIVER' || uiState() === 'DRIVER_ASSIGNED'"
       [uiState]="uiState()"
       [request]="rideStore.currentRequest()">
     </app-trip-request-status>
 
-    <div *ngIf="uiState() === 'ERROR'" class="error-card">
-      <p style="color: red;">{{ rideStore.error() || monetizationStore.error() }}</p>
+    <!-- ④ NO_DRIVERS — Dedicated no-availability state -->
+    <div class="no-drivers-card" *ngIf="uiState() === 'NO_DRIVERS'">
+      <mat-icon>directions_off</mat-icon>
+      <h3>Sin conductores disponibles</h3>
+      <p>
+        No hay conductores cerca en este momento.<br>
+        Intenta de nuevo en unos minutos.
+      </p>
+      <button mat-stroked-button color="primary" (click)="onTryAgain()">
+        <mat-icon>refresh</mat-icon>
+        Intentar nuevamente
+      </button>
     </div>
+
+    <!-- ⑤ ERROR — Recoverable error state -->
+    <div class="error-card" *ngIf="uiState() === 'ERROR'">
+      <mat-icon>error_outline</mat-icon>
+      <div class="error-info">
+        <h4>Algo salió mal</h4>
+        <p>{{ rideStore.error() || monetizationStore.error() }}</p>
+        <button mat-stroked-button color="warn" (click)="onRetry()">
+          Reintentar
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
-

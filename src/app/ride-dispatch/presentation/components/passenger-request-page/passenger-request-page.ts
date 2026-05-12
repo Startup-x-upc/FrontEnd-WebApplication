@@ -26,6 +26,7 @@ export type RequestUiState =
   | 'FARE_READY'
   | 'SEARCHING_DRIVER'
   | 'DRIVER_ASSIGNED'
+  | 'REQUEST_EXPIRED'
   | 'ERROR';
 
 /**
@@ -191,6 +192,7 @@ export class PassengerRequestPageComponent {
     // Check post-submission states
     const request = this.rideStore.currentRequest();
     if (request) {
+      if (request.isExpired) return 'REQUEST_EXPIRED';
       if (request.status === 'ACCEPTED') return 'DRIVER_ASSIGNED';
       return 'SEARCHING_DRIVER';
     }
@@ -285,6 +287,14 @@ export class PassengerRequestPageComponent {
   /** Handles manual refresh to check if the specific request was accepted. */
   onRefreshRequestStatus(): void {
     this.rideStore.checkRequestStatus();
+  }
+
+  /** Clears the expired request so the passenger can start a new one. */
+  onStartNewRequest(): void {
+    this.rideStore.clearCurrentRequest();
+    this.rideStore.setOrigin('');
+    this.rideStore.setDestination('', 0);
+    this.activeField = 'origin';
   }
 
   /** Retries loading after an error. */

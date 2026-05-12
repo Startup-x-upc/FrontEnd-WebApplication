@@ -192,6 +192,10 @@ export class RideDispatchStore {
     this.openRequestsSignal.update((list) => list.filter((r) => r.id !== requestId));
   }
 
+  clearCurrentRequest(): void {
+    this.currentRequestSignal.set(null);
+  }
+
   clearError(): void {
     this.errorSignal.set(null);
   }

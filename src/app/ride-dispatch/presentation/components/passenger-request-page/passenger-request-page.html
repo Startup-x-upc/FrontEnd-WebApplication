@@ -53,6 +53,18 @@
       (confirm)="onConfirmRequest()">
     </app-fare-summary-card>
 
+    <!-- REQUEST_EXPIRED — no driver accepted in time -->
+    <div class="error-card" *ngIf="uiState() === 'REQUEST_EXPIRED'">
+      <mat-icon>timer_off</mat-icon>
+      <div class="error-info">
+        <h4>Solicitud vencida</h4>
+        <p>Ningún conductor aceptó tu solicitud a tiempo. Puedes intentarlo nuevamente.</p>
+        <button mat-stroked-button color="primary" (click)="onStartNewRequest()">
+          Nueva solicitud
+        </button>
+      </div>
+    </div>
+
     <app-trip-request-status
       *ngIf="uiState() === 'SEARCHING_DRIVER' || uiState() === 'DRIVER_ASSIGNED'"
       [uiState]="uiState()"

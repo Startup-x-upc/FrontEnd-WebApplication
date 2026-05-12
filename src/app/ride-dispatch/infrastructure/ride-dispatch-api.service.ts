@@ -104,25 +104,24 @@ export class RideDispatchApiService {
 
   toggleDriverAvailability(driverId: string, isAvailable: boolean): Observable<DriverAvailability> {
     return this.getDriverAvailability(driverId).pipe(
-      map(availability => {
-        const idToPatch = availability.id ? availability.id : `da-${Date.now()}`;
+      switchMap(availability => {
         if (!availability.id) {
-          // If it didn't exist, POST it
-          this.http.post(`${this.basePath}/driverAvailability`, {
-            id: idToPatch,
-            driverId,
-            currentLocation: '0,0',
-            isAvailable
-          }).subscribe();
-        } else {
-          // If it existed, PATCH it
-          this.http.patch(`${this.basePath}/driverAvailability/${availability.id}`, {
-            isAvailable
-          }).subscribe();
+          return this.http
+            .post<DriverAvailabilityResponse>(`${this.basePath}/driverAvailability`, {
+              id: `da-${Date.now()}`,
+              driverId,
+              currentLocation: '0,0',
+              isAvailable,
+            })
+            .pipe(map(DriverAvailabilityAssembler.toEntity));
         }
-        availability.isAvailable = isAvailable;
-        return availability;
-      })
+        return this.http
+          .patch<DriverAvailabilityResponse>(
+            `${this.basePath}/driverAvailability/${availability.id}`,
+            { isAvailable },
+          )
+          .pipe(map(DriverAvailabilityAssembler.toEntity));
+      }),
     );
   }
 }

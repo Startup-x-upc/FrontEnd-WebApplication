@@ -27,6 +27,11 @@ export class RideDispatchApiService {
       .pipe(map(responses => responses.map(RideRequestAssembler.toEntity)));
   }
 
+  getRideRequestById(requestId: string): Observable<RideRequest> {
+    return this.http.get<RideRequestResponse>(`${this.basePath}/rideRequests/${requestId}`)
+      .pipe(map(RideRequestAssembler.toEntity));
+  }
+
   getRideById(rideId: string): Observable<Ride> {
     return this.http.get<RideResponse>(`${this.basePath}/rides/${rideId}`)
       .pipe(map(RideAssembler.toEntity));

@@ -4,6 +4,7 @@ import { RideStatus } from './ride.status';
 export class RideRequest implements BaseEntity {
   id: string = '';
   passengerId: string = '';
+  driverId: string = '';
   origin: string = '';
   destination: string = '';
   distanceKm: number = 0;

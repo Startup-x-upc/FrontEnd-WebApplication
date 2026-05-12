@@ -6,6 +6,7 @@ export class RideRequestAssembler {
     const entity = new RideRequest();
     entity.id = response.id;
     entity.passengerId = response.passengerId;
+    entity.driverId = response.driverId ?? '';
     entity.origin = response.origin;
     entity.destination = response.destination;
     entity.distanceKm = response.distanceKm;

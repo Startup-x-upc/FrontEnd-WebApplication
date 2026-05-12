@@ -15,12 +15,11 @@ import { calculateEstimatedDistance } from '../../../../shared/utils/geo.utils';
 
 /**
  * @summary Union type for all possible UI states of the passenger request flow.
- * PREPARING   — Waiting for origin/destination.
- * FARE_READY  — Both points set, fare calculated. Ready to confirm.
- * SEARCHING_DRIVER — Request submitted, awaiting assignment.
- * DRIVER_ASSIGNED  — A driver has been assigned.
- * NO_DRIVERS  — No drivers found in the area.
- * ERROR       — A recoverable error occurred.
+ * PREPARING        — Waiting for origin/destination.
+ * FARE_READY       — Both points set, fare calculated. Ready to confirm.
+ * SEARCHING_DRIVER — Request submitted, awaiting assignment (manual refresh).
+ * DRIVER_ASSIGNED  — A driver has accepted the request.
+ * ERROR            — A recoverable error occurred.
  */
 export type RequestUiState =
   | 'PREPARING'
@@ -276,14 +275,9 @@ export class PassengerRequestPageComponent {
     }
   }
 
-  /** Handles manual refresh to check if the request was accepted. */
+  /** Handles manual refresh to check if the specific request was accepted. */
   onRefreshRequestStatus(): void {
-    const passengerId = this.iamStore.currentAccount()?.id;
-    if (passengerId) {
-      // In Sprint 2, this simulates checking if a Ride exists for this passenger
-      console.log('Manual refresh triggered for passenger:', passengerId);
-      // Expected to call a store method like: this.rideStore.checkAssignedRide(passengerId);
-    }
+    this.rideStore.checkRequestStatus();
   }
 
   /** Retries loading after an error. */

@@ -62,57 +62,9 @@
       "isAvailable": true
     }
   ],
-  "rideRequests": [
-    {
-      "id": "rr-001",
-      "passengerId": "u-001",
-      "origin": "Av. La Marina 2000",
-      "destination": "Plaza San Miguel",
-      "distanceKm": 2.5,
-      "status": "PENDING",
-      "estimatedFare": 7,
-      "isExpired": false
-    },
-    {
-      "id": "Y1dswuuuAmM",
-      "passengerId": "u-001",
-      "origin": "-12.01562,-77.05659",
-      "destination": "-12.00739,-77.06896",
-      "distanceKm": 2,
-      "status": "PENDING",
-      "estimatedFare": 4.9,
-      "isExpired": false
-    },
-    {
-      "id": "TbIvcVKdlp8",
-      "passengerId": "u-001",
-      "origin": "-12.03483,-77.04435",
-      "destination": "-12.03173,-77.02917",
-      "distanceKm": 2,
-      "status": "PENDING",
-      "estimatedFare": 4.9,
-      "isExpired": false
-    }
-  ],
-  "rides": [
-    {
-      "id": "r-001",
-      "passengerId": "u-001",
-      "driverId": "d-001",
-      "origin": "Av. La Marina 2000",
-      "destination": "Plaza San Miguel",
-      "status": "ACCEPTED",
-      "estimatedFare": 7
-    }
-  ],
-  "ratings": [
-    {
-      "id": "rt-001",
-      "rideId": "r-001",
-      "rating": 5,
-      "comment": "Excelente servicio"
-    }
-  ],
+  "rideRequests": [],
+  "rides": [],
+  "ratings": [],
   "wallets": [
     {
       "id": "w-001",

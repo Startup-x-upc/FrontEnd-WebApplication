@@ -171,27 +171,25 @@ export class RideDispatchStore {
     });
   }
 
-  checkAssignedRide(passengerId: string): void {
+  checkRequestStatus(): void {
+    const current = this.currentRequestSignal();
+    if (!current?.id) return;
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.getRidesByPassenger(passengerId).subscribe({
-      next: (rides) => {
-        const acceptedRide = rides.find((r) => r.status === RideStatus.ACCEPTED);
-        if (acceptedRide) {
-          this.currentRideSignal.set(acceptedRide);
-          const req = this.currentRequestSignal();
-          if (req) {
-            const updatedReq = Object.assign(new RideRequest(), req, { status: RideStatus.ACCEPTED });
-            this.currentRequestSignal.set(updatedReq);
-          }
-        }
+    this.api.getRideRequestById(current.id).subscribe({
+      next: (updatedRequest) => {
+        this.currentRequestSignal.set(updatedRequest);
         this.loadingSignal.set(false);
       },
       error: () => {
         this.loadingSignal.set(false);
-        this.errorSignal.set('No se pudo verificar el estado del viaje.');
+        this.errorSignal.set('No se pudo verificar el estado de la solicitud.');
       },
     });
+  }
+
+  skipRequest(requestId: string): void {
+    this.openRequestsSignal.update((list) => list.filter((r) => r.id !== requestId));
   }
 
   clearError(): void {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 
 import { Ride } from '../domain/model/ride.entity';
@@ -32,6 +32,16 @@ export class RideDispatchApiService {
       .pipe(map(RideAssembler.toEntity));
   }
 
+  getRideRequestsByPassenger(passengerId: string): Observable<RideRequest[]> {
+    return this.http.get<RideRequestResponse[]>(`${this.basePath}/rideRequests?passengerId=${passengerId}`)
+      .pipe(map(responses => responses.map(RideRequestAssembler.toEntity)));
+  }
+
+  getRidesByPassenger(passengerId: string): Observable<Ride[]> {
+    return this.http.get<RideResponse[]>(`${this.basePath}/rides?passengerId=${passengerId}`)
+      .pipe(map(responses => responses.map(RideAssembler.toEntity)));
+  }
+
   createRideRequest(
     passengerId: string,
     origin: string,
@@ -53,20 +63,27 @@ export class RideDispatchApiService {
       .pipe(map(RideRequestAssembler.toEntity));
   }
 
-  acceptRide(rideRequestId: string, driverId: string): Observable<Ride> {
-    // Note: A real backend would update rideRequest and create a ride. 
-    // Here we'll just create a ride in json-server to mock acceptance.
-    const payload = {
-      id: `r-${Date.now()}`,
-      passengerId: "passenger-from-request", // in a real app we'd fetch the request first
-      driverId,
-      origin: "Origin", // placeholder
-      destination: "Destination", // placeholder
-      status: RideStatus.ACCEPTED,
-      estimatedFare: 0 // placeholder
-    };
-    return this.http.post<RideResponse>(`${this.basePath}/rides`, payload)
-      .pipe(map(RideAssembler.toEntity));
+  acceptRideRequest(request: RideRequest, driverId: string): Observable<Ride> {
+    return this.http
+      .patch<RideRequestResponse>(`${this.basePath}/rideRequests/${request.id}`, {
+        status: RideStatus.ACCEPTED,
+        driverId,
+      })
+      .pipe(
+        switchMap(() => {
+          const payload = {
+            id: `r-${Date.now()}`,
+            passengerId: request.passengerId,
+            driverId,
+            origin: request.origin,
+            destination: request.destination,
+            status: RideStatus.ACCEPTED,
+            estimatedFare: request.estimatedFare,
+          };
+          return this.http.post<RideResponse>(`${this.basePath}/rides`, payload);
+        }),
+        map(RideAssembler.toEntity),
+      );
   }
 
   getDriverAvailability(driverId: string): Observable<DriverAvailability> {

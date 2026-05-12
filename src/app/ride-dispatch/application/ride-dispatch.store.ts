@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
 import { DriverAvailability } from '../domain/model/driver-availability.entity';
+import { RideStatus } from '../domain/model/ride.status';
 import { RideDispatchApiService } from '../infrastructure/ride-dispatch-api.service';
 
 /**
@@ -79,10 +80,7 @@ export class RideDispatchStore {
     this.distanceKmSignal.set(distanceKm);
   }
 
-  submitRideRequest(
-    passengerId: string,
-    estimatedFare: number,
-  ): void {
+  submitRideRequest(passengerId: string, estimatedFare: number): void {
     const origin = this.originSignal();
     const destination = this.destinationSignal();
     const distanceKm = this.distanceKmSignal();
@@ -93,16 +91,18 @@ export class RideDispatchStore {
     }
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.createRideRequest(passengerId, origin, destination, distanceKm, estimatedFare).subscribe({
-      next: (req) => {
-        this.currentRequestSignal.set(req);
-        this.loadingSignal.set(false);
-      },
-      error: () => {
-        this.loadingSignal.set(false);
-        this.errorSignal.set('No se pudo crear la solicitud.');
-      },
-    });
+    this.api
+      .createRideRequest(passengerId, origin, destination, distanceKm, estimatedFare)
+      .subscribe({
+        next: (req) => {
+          this.currentRequestSignal.set(req);
+          this.loadingSignal.set(false);
+        },
+        error: () => {
+          this.loadingSignal.set(false);
+          this.errorSignal.set('No se pudo crear la solicitud.');
+        },
+      });
   }
 
   // Placeholder for nearby drivers (mock)
@@ -110,22 +110,23 @@ export class RideDispatchStore {
     // In a real app, this calls an API. Here we just mock it for the UI.
     setTimeout(() => {
       this.nearbyDriversSignal.set([
-        { id: 'd-001', lat: -9.47100, lng: -78.29900, name: 'Carlos Mendoza', rating: 4.8 }
+        { id: 'd-001', lat: -9.471, lng: -78.299, name: 'Carlos Mendoza', rating: 4.8 },
       ]);
     }, 500);
   }
 
-  acceptRide(rideId: string, driverId: string): void {
+  acceptRideRequest(request: RideRequest, driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.acceptRide(rideId, driverId).subscribe({
+    this.api.acceptRideRequest(request, driverId).subscribe({
       next: (ride) => {
         this.currentRideSignal.set(ride);
+        this.openRequestsSignal.update((list) => list.filter((r) => r.id !== request.id));
         this.loadingSignal.set(false);
       },
       error: () => {
         this.loadingSignal.set(false);
-        this.errorSignal.set('No se pudo aceptar el viaje.');
+        this.errorSignal.set('No se pudo aceptar la solicitud.');
       },
     });
   }
@@ -170,8 +171,30 @@ export class RideDispatchStore {
     });
   }
 
+  checkAssignedRide(passengerId: string): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.api.getRidesByPassenger(passengerId).subscribe({
+      next: (rides) => {
+        const acceptedRide = rides.find((r) => r.status === RideStatus.ACCEPTED);
+        if (acceptedRide) {
+          this.currentRideSignal.set(acceptedRide);
+          const req = this.currentRequestSignal();
+          if (req) {
+            const updatedReq = Object.assign(new RideRequest(), req, { status: RideStatus.ACCEPTED });
+            this.currentRequestSignal.set(updatedReq);
+          }
+        }
+        this.loadingSignal.set(false);
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo verificar el estado del viaje.');
+      },
+    });
+  }
+
   clearError(): void {
     this.errorSignal.set(null);
   }
 }
-

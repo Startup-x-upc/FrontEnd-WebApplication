@@ -82,6 +82,16 @@
       "status": "PENDING",
       "estimatedFare": 4.9,
       "isExpired": false
+    },
+    {
+      "id": "TbIvcVKdlp8",
+      "passengerId": "u-001",
+      "origin": "-12.03483,-77.04435",
+      "destination": "-12.03173,-77.02917",
+      "distanceKm": 2,
+      "status": "PENDING",
+      "estimatedFare": 4.9,
+      "isExpired": false
     }
   ],
   "rides": [

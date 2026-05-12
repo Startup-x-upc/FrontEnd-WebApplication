@@ -79,8 +79,8 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
   }
 
   private initMap(): void {
-    // Center in Lima, Peru for demo
-    this.map = L.map('trip-map', { zoomControl: false }).setView([-12.0464, -77.0428], 13);
+    // Center in Casma, Peru
+    this.map = L.map('trip-map', { zoomControl: false }).setView([-9.47388, -78.29814], 14);
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
@@ -114,13 +114,13 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
     let destCoord: [number, number] | null = null;
 
     if (this.origin) {
-      originCoord = this.parseCoord(this.origin, -12.0464, -77.0428);
+      originCoord = this.parseCoord(this.origin, -9.47388, -78.29814);
       const originMarker = L.marker(originCoord, { icon: this.getSvgIcon('#10b981') }).bindPopup('Origen').addTo(this.map);
       this.markers.push(originMarker);
     }
     
     if (this.destination) {
-      destCoord = this.parseCoord(this.destination, -12.0664, -77.0228);
+      destCoord = this.parseCoord(this.destination, -9.47500, -78.29500);
       const destMarker = L.marker(destCoord, { icon: this.getSvgIcon('#ef4444') }).bindPopup('Destino').addTo(this.map);
       this.markers.push(destMarker);
     }

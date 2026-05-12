@@ -110,7 +110,7 @@ export class RideDispatchStore {
     // In a real app, this calls an API. Here we just mock it for the UI.
     setTimeout(() => {
       this.nearbyDriversSignal.set([
-        { id: 'd-001', lat: -12.083, lng: -77.031, name: 'Carlos Mendoza', rating: 4.8 }
+        { id: 'd-001', lat: -9.47100, lng: -78.29900, name: 'Carlos Mendoza', rating: 4.8 }
       ]);
     }, 500);
   }

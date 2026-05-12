@@ -15,7 +15,9 @@ export class DriverAvailabilityAssembler {
       }
     }
 
-    entity.isAvailable = response.isAvailable;
+    entity.isAvailable  = response.isAvailable;
+    entity.isBusy       = response.isBusy ?? false;
+    entity.activeRideId = response.activeRideId ?? null;
     return entity;
   }
 }

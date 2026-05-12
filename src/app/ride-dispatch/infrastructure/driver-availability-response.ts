@@ -3,4 +3,6 @@ export interface DriverAvailabilityResponse {
   driverId: string;
   currentLocation: string;
   isAvailable: boolean;
+  isBusy: boolean;
+  activeRideId: string | null;
 }

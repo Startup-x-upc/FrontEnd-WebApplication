@@ -41,26 +41,7 @@ function buildPinIcon(fillColor: string, strokeColor: string, size = 36): L.DivI
   });
 }
 
-/**
- * @summary Builds a mototaxi SVG icon for nearby drivers.
- */
-function buildDriverIcon(): L.DivIcon {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"
-         style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));">
-      <!-- Circle background -->
-      <circle cx="16" cy="16" r="15" fill="#1a73e8" stroke="white" stroke-width="2"/>
-      <!-- Simplified mototaxi icon (person on vehicle) -->
-      <text x="16" y="21" text-anchor="middle" font-size="15" fill="white">🛵</text>
-    </svg>`;
-  return L.divIcon({
-    className: 'custom-map-icon',
-    html: svg,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
-  });
-}
+
 
 /** Color tokens for map semantics. */
 const ORIGIN_COLOR = '#10b981';
@@ -92,10 +73,7 @@ const DEST_STROKE = '#dc2626';
           <span class="legend-dot" style="background:#ef4444"></span>
           <span>Destino</span>
         </div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background:#1a73e8"></span>
-          <span>Conductor</span>
-        </div>
+
       </div>
 
       <!-- Map hint overlay (only when map is empty) -->
@@ -299,18 +277,6 @@ export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.map.setView(destCoord, 16);
     }
 
-    // Nearby driver markers (blue mototaxi icon)
-    this.nearbyDrivers.forEach((driver) => {
-      const driverMarker = L.marker([driver.lat, driver.lng], { icon: buildDriverIcon() })
-        .bindPopup(
-          `
-          <div style="font-size:13px;min-width:120px;">
-            <b>${driver.name ?? 'Conductor'}</b><br>
-            <span style="color:#f59e0b;">★</span> ${driver.rating ?? ''}
-          </div>`,
-        )
-        .addTo(this.map!);
-      this.markers.push(driverMarker);
-    });
+
   }
 }

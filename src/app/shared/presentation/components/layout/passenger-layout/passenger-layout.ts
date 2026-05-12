@@ -27,65 +27,75 @@ import { IamStore } from '../../../../../iam/application/iam.store';
       background-color: #f5f7fa;
     }
     .sidebar {
-      width: 280px;
+      width: 240px;
       background-color: #ffffff;
-      border-right: 1px solid #e0e0e0;
+      border-right: 1px solid #ebebeb;
       display: flex;
       flex-direction: column;
     }
     .sidebar-header {
-      padding: 24px;
-      text-align: center;
+      padding: 18px 20px;
       border-bottom: 1px solid #f0f0f0;
+      background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
     }
     .sidebar-header h2 {
       margin: 0;
-      color: #1a73e8;
+      color: #ffffff;
       font-weight: 700;
-      font-size: 24px;
+      font-size: 18px;
+      letter-spacing: 0.2px;
     }
     .user-block {
-      padding: 24px;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+      border-bottom: 1px solid #f5f5f5;
     }
     .avatar {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       object-fit: cover;
+      border: 2px solid #e8f0fe;
     }
     .user-info {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
     .user-name {
       font-weight: 600;
-      color: #333;
+      color: #1f2937;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .user-role {
-      font-size: 12px;
-      color: #666;
+      font-size: 11px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
     mat-nav-list {
       flex: 1;
-      padding-top: 16px;
+      padding-top: 8px;
     }
     .active-link {
       background-color: #e8f0fe !important;
       color: #1a73e8 !important;
+      border-radius: 8px;
     }
     .active-link mat-icon {
       color: #1a73e8 !important;
     }
     .sidebar-footer {
-      padding: 16px;
+      padding: 12px 16px;
       border-top: 1px solid #f0f0f0;
     }
     .main-content {
-      padding: 32px;
+      padding: 24px 28px;
       height: 100%;
       box-sizing: border-box;
       overflow-y: auto;

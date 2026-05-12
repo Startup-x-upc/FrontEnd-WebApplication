@@ -5,6 +5,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RideRequest } from '../../../domain/model/ride-request.entity';
 
+function isRawCoord(v: string): boolean {
+  const p = v.split(',');
+  return p.length === 2 && !isNaN(parseFloat(p[0])) && !isNaN(parseFloat(p[1]));
+}
+
+function humanizeCoord(v: string, type: 'origin' | 'destination'): string {
+  if (!v) return '—';
+  if (isRawCoord(v)) return type === 'origin' ? 'Punto de partida seleccionado' : 'Destino seleccionado';
+  return v;
+}
+
 /**
  * @summary Renders the post-confirmation ride request status for the passenger.
  * Handles SEARCHING_DRIVER and DRIVER_ASSIGNED states exclusively.
@@ -27,12 +38,12 @@ import { RideRequest } from '../../../domain/model/ride-request.entity';
         <div class="request-summary" *ngIf="request">
           <div class="summary-row">
             <span class="dot dot--origin"></span>
-            <span class="summary-text">{{ request.origin }}</span>
+            <span class="summary-text">{{ humanizeCoord(request.origin, 'origin') }}</span>
           </div>
           <div class="route-line"></div>
           <div class="summary-row">
             <span class="dot dot--dest"></span>
-            <span class="summary-text">{{ request.destination }}</span>
+            <span class="summary-text">{{ humanizeCoord(request.destination, 'destination') }}</span>
           </div>
           <div class="fare-row">
             <mat-icon class="fare-icon">payments</mat-icon>
@@ -42,8 +53,11 @@ import { RideRequest } from '../../../domain/model/ride-request.entity';
           </div>
         </div>
 
-        <button mat-stroked-button color="primary" class="refresh-btn" (click)="onRefresh()">
-          <mat-icon>refresh</mat-icon> Actualizar estado
+        <button mat-stroked-button color="primary" class="refresh-btn"
+                [disabled]="isLoading"
+                (click)="onRefresh()">
+          <mat-icon>refresh</mat-icon>
+          {{ isLoading ? 'Verificando...' : 'Actualizar estado' }}
         </button>
       </div>
     </div>
@@ -65,11 +79,11 @@ import { RideRequest } from '../../../domain/model/ride-request.entity';
       <div class="trip-detail" *ngIf="request">
         <div class="detail-row">
           <span class="detail-label">Origen</span>
-          <span class="detail-value">{{ request.origin }}</span>
+          <span class="detail-value">{{ humanizeCoord(request.origin, 'origin') }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Destino</span>
-          <span class="detail-value">{{ request.destination }}</span>
+          <span class="detail-value">{{ humanizeCoord(request.destination, 'destination') }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Tarifa</span>
@@ -282,7 +296,10 @@ import { RideRequest } from '../../../domain/model/ride-request.entity';
 export class TripRequestStatusComponent {
   @Input() uiState: string = '';
   @Input() request: RideRequest | null = null;
+  @Input() isLoading: boolean = false;
   @Output() refreshRequested = new EventEmitter<void>();
+
+  readonly humanizeCoord = humanizeCoord;
 
   onRefresh(): void {
     this.refreshRequested.emit();

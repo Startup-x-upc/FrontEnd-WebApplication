@@ -65,10 +65,11 @@ function estimatedMinutes(distanceKm: number): string {
               id="btn-confirm-ride"
               class="confirm-btn"
               color="primary"
+              [disabled]="loading"
               (click)="confirm.emit()"
               aria-label="Confirmar solicitud de viaje">
         <mat-icon>directions_car</mat-icon>
-        Confirmar solicitud
+        {{ loading ? 'Enviando...' : 'Confirmar solicitud' }}
       </button>
     </div>
   `,
@@ -196,6 +197,8 @@ export class FareSummaryCardComponent {
   @Input() estimatedFare: number | null = null;
   /** Distance in kilometers for this trip. */
   @Input() distanceKm: number = 0;
+  /** When true, disables the confirm button while the request is being submitted. */
+  @Input() loading: boolean = false;
   /** Emitted when the user confirms the ride request. */
   @Output() confirm = new EventEmitter<void>();
 

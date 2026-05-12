@@ -48,6 +48,7 @@
       *ngIf="uiState() === 'FARE_READY'"
       [estimatedFare]="monetizationStore.estimatedFare()"
       [distanceKm]="rideStore.distanceKm()"
+      [loading]="rideStore.isLoading()"
       (confirm)="onConfirmRequest()">
     </app-fare-summary-card>
 
@@ -55,6 +56,7 @@
       *ngIf="uiState() === 'SEARCHING_DRIVER' || uiState() === 'DRIVER_ASSIGNED'"
       [uiState]="uiState()"
       [request]="rideStore.currentRequest()"
+      [isLoading]="rideStore.isLoading()"
       (refreshRequested)="onRefreshRequestStatus()">
     </app-trip-request-status>
 

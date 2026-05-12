@@ -58,8 +58,8 @@
     {
       "id": "da-001",
       "driverId": "d-001",
-      "currentLocation": "-12.083, -77.031",
-      "isAvailable": true
+      "currentLocation": "-12.083,-77.031",
+      "isAvailable": false
     }
   ],
   "rideRequests": [],

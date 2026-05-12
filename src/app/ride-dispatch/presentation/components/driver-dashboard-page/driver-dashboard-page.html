@@ -1,0 +1,121 @@
+<div class="dashboard">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- LEFT COLUMN — Wallet + Availability                           -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="left-column">
+
+    <div class="page-header">
+      <h1>Panel del conductor</h1>
+      <p>Actívate para recibir solicitudes de viaje</p>
+    </div>
+
+    <!-- Wallet balance -->
+    <app-wallet-balance-card
+      [wallet]="monetizationStore.wallet()">
+    </app-wallet-balance-card>
+
+    <!-- Availability toggle -->
+    <div class="availability-card">
+      <div class="avail-header">
+        <mat-icon class="avail-icon">sensors</mat-icon>
+        <span class="avail-label">Disponibilidad</span>
+      </div>
+
+      <div class="avail-status">
+        <div class="status-badge"
+             [class.badge--available]="rideStore.driverAvailability()?.isAvailable"
+             [class.badge--offline]="!rideStore.driverAvailability()?.isAvailable">
+          <mat-icon>{{ rideStore.driverAvailability()?.isAvailable ? 'wifi_tethering' : 'wifi_tethering_off' }}</mat-icon>
+          {{ rideStore.driverAvailability()?.isAvailable ? 'Disponible' : 'Inactivo' }}
+        </div>
+      </div>
+
+      <!-- Blocked by balance -->
+      <p class="avail-blocked" *ngIf="uiState() === 'INSUFFICIENT_BALANCE'">
+        No puedes activarte con saldo cero. Recarga tu wallet primero.
+      </p>
+
+      <!-- Toggle button -->
+      <button mat-flat-button
+              class="avail-toggle-btn"
+              [color]="rideStore.driverAvailability()?.isAvailable ? 'warn' : 'primary'"
+              [disabled]="uiState() === 'LOADING' || uiState() === 'INSUFFICIENT_BALANCE'"
+              (click)="onToggleAvailability()"
+              aria-label="Cambiar disponibilidad">
+        <mat-icon>{{ rideStore.driverAvailability()?.isAvailable ? 'stop_circle' : 'play_circle' }}</mat-icon>
+        {{ rideStore.driverAvailability()?.isAvailable ? 'Desactivarme' : 'Activarme' }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- RIGHT COLUMN — Pending requests                               -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="right-column">
+
+    <div class="requests-header">
+      <span class="requests-title">Solicitudes pendientes</span>
+      <button mat-stroked-button
+              color="primary"
+              [disabled]="uiState() === 'LOADING'"
+              (click)="onRefreshRequests()"
+              aria-label="Actualizar solicitudes">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading-state" *ngIf="uiState() === 'LOADING'">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Cargando información...</span>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-card" *ngIf="uiState() === 'ERROR'">
+      <mat-icon>error_outline</mat-icon>
+      <div class="error-info">
+        <h4>Algo salió mal</h4>
+        <p>{{ rideStore.error() || monetizationStore.error() || driverMgmtStore.error() }}</p>
+        <button mat-stroked-button color="warn" (click)="onRetry()">
+          Reintentar
+        </button>
+      </div>
+    </div>
+
+    <!-- DRIVER OFFLINE — no muestra solicitudes, pide activarse -->
+    <div class="offline-state"
+         *ngIf="uiState() === 'DRIVER_OFFLINE' || uiState() === 'INSUFFICIENT_BALANCE'">
+      <mat-icon>wifi_off</mat-icon>
+      <div>
+        <h3>No estás disponible</h3>
+        <p>
+          {{ uiState() === 'INSUFFICIENT_BALANCE'
+            ? 'Recarga tu wallet y actívate para ver solicitudes.'
+            : 'Actívate desde el panel de disponibilidad para empezar a recibir solicitudes.' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- NO PENDING REQUESTS — disponible pero sin solicitudes -->
+    <div class="empty-state" *ngIf="uiState() === 'NO_PENDING_REQUESTS'">
+      <mat-icon>inbox</mat-icon>
+      <h3>Sin solicitudes en este momento</h3>
+      <p>No hay solicitudes pendientes. Presiona Actualizar para verificar de nuevo.</p>
+    </div>
+
+    <!-- PENDING REQUESTS LIST -->
+    <div class="request-list" *ngIf="uiState() === 'PENDING_REQUESTS_LOADED'">
+      <app-pending-request-card
+        *ngFor="let req of rideStore.openRequests()"
+        [request]="req"
+        [loading]="rideStore.isLoading()"
+        (accept)="onAcceptRequest($event)">
+      </app-pending-request-card>
+    </div>
+
+  </div>
+
+</div>

@@ -34,10 +34,25 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard/driver',
+    redirectTo: 'driver/home',
+    pathMatch: 'full',
+  },
+  {
+    path: 'driver',
     loadComponent: () =>
-      import('./iam/presentation/components/driver-dashboard/driver-dashboard').then(
-        (m) => m.DriverDashboard,
+      import('./shared/presentation/components/layout/driver-layout/driver-layout').then(
+        (m) => m.DriverLayoutComponent,
       ),
+    children: [
+      {
+        path: 'home',
+        loadComponent: () =>
+          import('./ride-dispatch/presentation/components/driver-dashboard-page/driver-dashboard-page').then(
+            (m) => m.DriverDashboardPageComponent,
+          ),
+      },
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+    ],
   },
   {
     path: 'dashboard/admin',

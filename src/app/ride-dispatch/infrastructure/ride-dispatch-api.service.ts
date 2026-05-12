@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, map, switchMap } from 'rxjs';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 
 import { Ride } from '../domain/model/ride.entity';
@@ -115,11 +115,12 @@ export class RideDispatchApiService {
   }
 
   /**
-   * Passenger selects a candidate — four operations in sequence:
-   * 1. PATCH rideRequest -> status: CONFIRMED, selectedDriverId
-   * 2. PATCH selected candidate -> ACCEPTED
-   * 3. PATCH other candidates -> REJECTED
+   * Passenger selects a candidate. Executes in order:
+   * 1. PATCH rideRequest  → CONFIRMED + selectedDriverId
+   * 2. PATCH selected candidate → ACCEPTED
+   * 3. PATCH other candidates  → REJECTED
    * 4. POST new ride
+   * 5. PATCH driverAvailability → isBusy: true, activeRideId
    */
   confirmCandidate(
     request: RideRequest,
@@ -144,7 +145,7 @@ export class RideDispatchApiService {
         ))
       : null;
 
-    const createRide$ = switchMap(() => {
+    const createRideAndMarkBusy = (): Observable<Ride> => {
       const ridePayload = {
         id: `r-${Date.now()}`,
         requestId: request.id,
@@ -155,16 +156,38 @@ export class RideDispatchApiService {
         estimatedFare: request.estimatedFare,
         status: RideStatus.ACCEPTED,
       };
-      return this.http.post<RideResponse>(`${this.base}/rides`, ridePayload)
-        .pipe(map(RideAssembler.toEntity));
-    });
+      return this.http.post<RideResponse>(`${this.base}/rides`, ridePayload).pipe(
+        map(RideAssembler.toEntity),
+        switchMap(ride =>
+          this.getDriverAvailability(selectedCandidate.driverId).pipe(
+            switchMap(avail => {
+              if (avail.id) {
+                return this.markDriverBusy(avail.id, ride.id).pipe(map(() => ride));
+              }
+              return of(ride);
+            }),
+          )
+        ),
+      );
+    };
 
     if (patchRejected$) {
       return forkJoin([patchRequest$, patchSelected$, patchRejected$])
-        .pipe(createRide$);
+        .pipe(switchMap(createRideAndMarkBusy));
     }
     return forkJoin([patchRequest$, patchSelected$])
-      .pipe(createRide$);
+      .pipe(switchMap(createRideAndMarkBusy));
+  }
+
+  /** Returns the first active (non-completed, non-cancelled) ride for a driver, or null. */
+  getActiveRideForDriver(driverId: string): Observable<Ride | null> {
+    return this.http.get<RideResponse[]>(`${this.base}/rides?driverId=${driverId}`)
+      .pipe(map(rides => {
+        const active = rides.find(
+          r => r.status !== RideStatus.COMPLETED && r.status !== RideStatus.CANCELLED
+        );
+        return active ? RideAssembler.toEntity(active) : null;
+      }));
   }
 
   // ── Rides ────────────────────────────────────────────────────────────

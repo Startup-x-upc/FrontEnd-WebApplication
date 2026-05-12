@@ -7,4 +7,5 @@ export interface DriverResponse {
   operationalStatus: string;
   ratingAverage?: number;
   ratingCount?: number;
+  photoUrl?: string;
 }

@@ -70,7 +70,17 @@
       "destination": "Plaza San Miguel",
       "distanceKm": 2.5,
       "status": "PENDING",
-      "estimatedFare": 7.0,
+      "estimatedFare": 7,
+      "isExpired": false
+    },
+    {
+      "id": "Y1dswuuuAmM",
+      "passengerId": "u-001",
+      "origin": "-12.01562,-77.05659",
+      "destination": "-12.00739,-77.06896",
+      "distanceKm": 2,
+      "status": "PENDING",
+      "estimatedFare": 4.9,
       "isExpired": false
     }
   ],
@@ -82,7 +92,7 @@
       "origin": "Av. La Marina 2000",
       "destination": "Plaza San Miguel",
       "status": "ACCEPTED",
-      "estimatedFare": 7.0
+      "estimatedFare": 7
     }
   ],
   "ratings": [
@@ -97,16 +107,17 @@
     {
       "id": "w-001",
       "driverId": "d-001",
-      "balance": 25.50,
+      "balance": 25.5,
       "status": "ACTIVE"
     }
   ],
   "fareConfig": [
     {
-      "id": 1,
+      "id": "1",
       "baseFare": 2.5,
       "pricePerKm": 1.2,
-      "minimumFare": 4.0
+      "minimumFare": 4
     }
-  ]
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }

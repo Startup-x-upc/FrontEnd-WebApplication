@@ -29,6 +29,14 @@ L.Marker.prototype.options.icon = iconDefault;
       height: 100%;
       min-height: 400px;
     }
+    :host ::ng-deep .custom-svg-icon {
+      background: transparent;
+      border: none;
+    }
+    :host ::ng-deep .custom-div-icon {
+      background: transparent;
+      border: none;
+    }
   `]
 })
 export class TripMapComponent implements AfterViewInit, OnChanges {
@@ -39,7 +47,22 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
 
   private map: L.Map | undefined;
   private markers: L.Marker[] = [];
-  private polylines: L.Polyline[] = [];
+
+  // SVG Icons
+  private getSvgIcon(color: string): L.DivIcon {
+    const svgHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="${color}" style="filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+    `;
+    return L.divIcon({
+      className: 'custom-svg-icon',
+      html: svgHtml,
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36]
+    });
+  }
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -83,33 +106,32 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
   private updateMap(): void {
     if (!this.map) return;
 
-    // Clear previous markers and lines
+    // Clear previous markers
     this.markers.forEach(m => m.remove());
     this.markers = [];
-    this.polylines.forEach(p => p.remove());
-    this.polylines = [];
 
     let originCoord: [number, number] | null = null;
     let destCoord: [number, number] | null = null;
 
     if (this.origin) {
       originCoord = this.parseCoord(this.origin, -12.0464, -77.0428);
-      const originMarker = L.marker(originCoord).bindPopup('Origen').addTo(this.map);
+      const originMarker = L.marker(originCoord, { icon: this.getSvgIcon('#10b981') }).bindPopup('Origen').addTo(this.map);
       this.markers.push(originMarker);
     }
     
     if (this.destination) {
       destCoord = this.parseCoord(this.destination, -12.0664, -77.0228);
-      const destMarker = L.marker(destCoord).bindPopup('Destino').addTo(this.map);
+      const destMarker = L.marker(destCoord, { icon: this.getSvgIcon('#ef4444') }).bindPopup('Destino').addTo(this.map);
       this.markers.push(destMarker);
     }
 
     if (originCoord && destCoord) {
-      // Draw line between them
-      const polyline = L.polyline([originCoord, destCoord], {color: '#1a73e8', weight: 4}).addTo(this.map);
-      this.polylines.push(polyline);
       const group = new L.FeatureGroup(this.markers);
       this.map.fitBounds(group.getBounds(), { padding: [50, 50] });
+    } else if (originCoord) {
+      this.map.setView(originCoord, 15);
+    } else if (destCoord) {
+      this.map.setView(destCoord, 15);
     }
 
     // Add drivers

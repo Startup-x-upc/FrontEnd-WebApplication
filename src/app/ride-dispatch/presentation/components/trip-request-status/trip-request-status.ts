@@ -21,8 +21,11 @@ import { MatButtonModule } from '@angular/material/button';
         <mat-spinner diameter="36" color="accent"></mat-spinner>
       </div>
       <div class="info">
-        <h3>Buscando conductor…</h3>
-        <p>Enviando tu solicitud a los conductores cercanos</p>
+        <h3>Solicitud enviada</h3>
+        <p>Los conductores revisarán tu solicitud. Actualiza para ver si fue aceptada.</p>
+        <button mat-stroked-button color="primary" class="refresh-btn" (click)="onRefresh()">
+          <mat-icon>refresh</mat-icon> Actualizar estado
+        </button>
       </div>
     </div>
 
@@ -32,9 +35,9 @@ import { MatButtonModule } from '@angular/material/button';
         <mat-icon>check_circle</mat-icon>
       </div>
       <div class="info">
-        <h3>¡Conductor en camino!</h3>
+        <h3>¡Conductor asignado!</h3>
         <p *ngIf="request?.origin">De: {{ request.origin }}</p>
-        <p>Tu conductor está de camino. Prepárate para subir.</p>
+        <p>Tu viaje ha sido aceptado por un conductor.</p>
       </div>
     </div>
   `,
@@ -101,6 +104,13 @@ import { MatButtonModule } from '@angular/material/button';
       color: #6b7280;
       line-height: 1.4;
     }
+    .refresh-btn {
+      margin-top: 8px;
+      align-self: flex-start;
+    }
+    .refresh-btn mat-icon {
+      margin-right: 4px;
+    }
   `]
 })
 export class TripRequestStatusComponent {
@@ -108,4 +118,10 @@ export class TripRequestStatusComponent {
   @Input() uiState: string = '';
   /** Current ride request object (optional, used for display context). */
   @Input() request: any = null;
+  /** Emitted when the user explicitly requests to refresh the status. */
+  @Output() refreshRequested = new import('@angular/core').EventEmitter<void>();
+
+  onRefresh() {
+    this.refreshRequested.emit();
+  }
 }

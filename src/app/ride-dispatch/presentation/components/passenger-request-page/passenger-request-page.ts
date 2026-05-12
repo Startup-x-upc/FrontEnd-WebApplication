@@ -11,6 +11,7 @@ import { TripMapComponent } from '../trip-map/trip-map';
 import { TripAvailabilitySummaryComponent } from '../trip-availability-summary/trip-availability-summary';
 import { TripRequestStatusComponent } from '../trip-request-status/trip-request-status';
 import { FareSummaryCardComponent } from '../../../../monetization/presentation/components/fare-summary-card/fare-summary-card';
+import { calculateEstimatedDistance } from '../../../../shared/utils/geo.utils';
 
 /**
  * @summary Union type for all possible UI states of the passenger request flow.
@@ -26,7 +27,6 @@ export type RequestUiState =
   | 'FARE_READY'
   | 'SEARCHING_DRIVER'
   | 'DRIVER_ASSIGNED'
-  | 'NO_DRIVERS'
   | 'ERROR';
 
 /**
@@ -97,41 +97,6 @@ export type RequestUiState =
     }
 
     /* ── State cards ─────────────────────────────────────────────── */
-
-    /* No drivers state */
-    .no-drivers-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 10px;
-      padding: 28px 20px;
-      border-radius: 12px;
-      background: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      border-top: 3px solid #f59e0b;
-    }
-    .no-drivers-card mat-icon {
-      font-size: 36px;
-      height: 36px;
-      width: 36px;
-      color: #f59e0b;
-    }
-    .no-drivers-card h3 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: #1f2937;
-    }
-    .no-drivers-card p {
-      margin: 0;
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.5;
-    }
-    .no-drivers-card button {
-      margin-top: 4px;
-    }
 
     /* Error state */
     .error-card {
@@ -213,6 +178,9 @@ export class PassengerRequestPageComponent {
   /** @internal IAM store for current user context. */
   private iamStore: IamStore = inject(IamStore);
 
+  /** Indicates which form field is currently active for map input. */
+  activeField: 'origin' | 'destination' = 'origin';
+
   /**
    * Derives the current UI state from the stores.
    * Only one state is active at a time — no contradictions.
@@ -228,11 +196,6 @@ export class PassengerRequestPageComponent {
       return 'SEARCHING_DRIVER';
     }
 
-    // No drivers available
-    if (this.rideStore.nearbyDrivers().length === 0 && this.rideStore.distanceKm() > 0) {
-      return 'NO_DRIVERS';
-    }
-
     // Fare calculated
     const dist = this.rideStore.distanceKm();
     if (dist > 0) return 'FARE_READY';
@@ -246,7 +209,7 @@ export class PassengerRequestPageComponent {
   }
 
   /**
-   * Handles map click: first click = origin, second click = destination.
+   * Handles map click, setting the coordinates to the active field.
    * Automatically calculates distance and fare when both are set.
    *
    * @param coord - Clicked lat/lng coordinate.
@@ -257,34 +220,51 @@ export class PassengerRequestPageComponent {
 
     const coordStr = `${coord.lat.toFixed(5)},${coord.lng.toFixed(5)}`;
 
-    if (!this.rideStore.origin() || (this.rideStore.origin() && this.rideStore.destination())) {
-      // Set origin and clear destination
+    if (this.activeField === 'origin') {
       this.rideStore.setOrigin(coordStr);
-      this.rideStore.setDestination('', 0);
-    } else {
-      // Origin is set — set destination and calculate
-      const originParts = this.rideStore.origin().split(',');
-      let dist = 5;
-      if (originParts.length === 2) {
-        const lat1 = parseFloat(originParts[0]);
-        const lng1 = parseFloat(originParts[1]);
-        dist = Math.sqrt(Math.pow(lat1 - coord.lat, 2) + Math.pow(lng1 - coord.lng, 2)) * 111;
-        dist = Math.max(1, Math.round(dist));
+      // Auto-switch to destination if it's empty
+      if (!this.rideStore.destination()) {
+        this.activeField = 'destination';
+      } else {
+        this.recalculateDistance();
       }
-      this.rideStore.setDestination(coordStr, dist);
-      this.monetizationStore.calculateEstimatedFare(dist);
+    } else {
+      this.rideStore.setDestination(coordStr, 0); // Temp dist 0
+      this.recalculateDistance();
     }
+  }
+
+  private recalculateDistance(): void {
+    const origin = this.rideStore.origin();
+    const destination = this.rideStore.destination();
+    
+    if (origin && destination) {
+      const oParts = origin.split(',').map(Number);
+      const dParts = destination.split(',').map(Number);
+      if (oParts.length === 2 && dParts.length === 2) {
+        const dist = calculateEstimatedDistance([oParts[0], oParts[1]], [dParts[0], dParts[1]]);
+        this.rideStore.setDestination(destination, dist);
+        this.monetizationStore.calculateEstimatedFare(dist);
+      }
+    }
+  }
+
+  /** Updates the active field from the form. */
+  onActiveFieldChanged(field: 'origin' | 'destination'): void {
+    this.activeField = field;
   }
 
   /** Clears the origin and resets the flow to PREPARING. */
   onClearOrigin(): void {
     this.rideStore.setOrigin('');
     this.rideStore.setDestination('', 0);
+    this.activeField = 'origin';
   }
 
   /** Clears only the destination so the user can re-select. */
   onClearDestination(): void {
     this.rideStore.setDestination('', 0);
+    this.activeField = 'destination';
   }
 
   /** Submits the confirmed ride request. */
@@ -296,17 +276,20 @@ export class PassengerRequestPageComponent {
     }
   }
 
+  /** Handles manual refresh to check if the request was accepted. */
+  onRefreshRequestStatus(): void {
+    const passengerId = this.iamStore.currentAccount()?.id;
+    if (passengerId) {
+      // In Sprint 2, this simulates checking if a Ride exists for this passenger
+      console.log('Manual refresh triggered for passenger:', passengerId);
+      // Expected to call a store method like: this.rideStore.checkAssignedRide(passengerId);
+    }
+  }
+
   /** Retries loading after an error. */
   onRetry(): void {
     this.rideStore.clearError();
     this.monetizationStore.loadFarePolicy();
-    this.rideStore.loadNearbyDrivers();
-  }
-
-  /** Resets the flow to allow a new trip request after NO_DRIVERS state. */
-  onTryAgain(): void {
-    this.rideStore.setOrigin('');
-    this.rideStore.setDestination('', 0);
     this.rideStore.loadNearbyDrivers();
   }
 }

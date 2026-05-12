@@ -16,6 +16,8 @@
       *ngIf="uiState() !== 'SEARCHING_DRIVER' && uiState() !== 'DRIVER_ASSIGNED'"
       [origin]="rideStore.origin()"
       [destination]="rideStore.destination()"
+      [activeField]="activeField"
+      (activeFieldChanged)="onActiveFieldChanged($event)"
       (clearOriginRequested)="onClearOrigin()"
       (clearDestinationRequested)="onClearDestination()">
     </app-trip-location-form>
@@ -50,26 +52,12 @@
       (confirm)="onConfirmRequest()">
     </app-fare-summary-card>
 
-    <!-- ③ SEARCHING_DRIVER / DRIVER_ASSIGNED — Show request status -->
     <app-trip-request-status
       *ngIf="uiState() === 'SEARCHING_DRIVER' || uiState() === 'DRIVER_ASSIGNED'"
       [uiState]="uiState()"
-      [request]="rideStore.currentRequest()">
+      [request]="rideStore.currentRequest()"
+      (refreshRequested)="onRefreshRequestStatus()">
     </app-trip-request-status>
-
-    <!-- ④ NO_DRIVERS — Dedicated no-availability state -->
-    <div class="no-drivers-card" *ngIf="uiState() === 'NO_DRIVERS'">
-      <mat-icon>directions_off</mat-icon>
-      <h3>Sin conductores disponibles</h3>
-      <p>
-        No hay conductores cerca en este momento.<br>
-        Intenta de nuevo en unos minutos.
-      </p>
-      <button mat-stroked-button color="primary" (click)="onTryAgain()">
-        <mat-icon>refresh</mat-icon>
-        Intentar nuevamente
-      </button>
-    </div>
 
     <!-- ⑤ ERROR — Recoverable error state -->
     <div class="error-card" *ngIf="uiState() === 'ERROR'">

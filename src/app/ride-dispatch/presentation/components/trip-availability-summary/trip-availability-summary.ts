@@ -19,11 +19,8 @@ import { MatIconModule } from '@angular/material/icon';
         <mat-icon>radar</mat-icon>
       </div>
       <div class="info">
-        <h3>{{ nearbyDrivers.length }} {{ nearbyDrivers.length === 1 ? 'conductor' : 'conductores' }} cerca</h3>
-        <p>Asignación estimada en 2–5 min</p>
-      </div>
-      <div class="badge">
-        <span class="pulse-dot"></span>
+        <h3>{{ nearbyDrivers.length }} {{ nearbyDrivers.length === 1 ? 'conductor disponible' : 'conductores disponibles' }}</h3>
+        <p>Disponibilidad referencial en la zona</p>
       </div>
     </div>
 
@@ -93,26 +90,7 @@ import { MatIconModule } from '@angular/material/icon';
       color: #6b7280;
     }
 
-    /* Pulse indicator for active availability */
-    .badge {
-      display: flex;
-      align-items: center;
-      padding-right: 4px;
-    }
-    .pulse-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
-      animation: pulse 1.8s infinite;
-    }
-    @keyframes pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-      70%  { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-    }
+
   `]
 })
 export class TripAvailabilitySummaryComponent {

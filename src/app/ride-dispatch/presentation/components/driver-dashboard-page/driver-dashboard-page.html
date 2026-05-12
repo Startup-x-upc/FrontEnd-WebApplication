@@ -11,8 +11,7 @@
     </div>
 
     <!-- Wallet balance -->
-    <app-wallet-balance-card
-      [wallet]="monetizationStore.wallet()">
+    <app-wallet-balance-card [wallet]="monetizationStore.wallet()">
     </app-wallet-balance-card>
 
     <!-- Availability toggle -->
@@ -22,21 +21,17 @@
         <span class="avail-label">Disponibilidad</span>
       </div>
 
-      <div class="avail-status">
-        <div class="status-badge"
-             [class.badge--available]="rideStore.driverAvailability()?.isAvailable"
-             [class.badge--offline]="!rideStore.driverAvailability()?.isAvailable">
-          <mat-icon>{{ rideStore.driverAvailability()?.isAvailable ? 'wifi_tethering' : 'wifi_tethering_off' }}</mat-icon>
-          {{ rideStore.driverAvailability()?.isAvailable ? 'Disponible' : 'Inactivo' }}
-        </div>
+      <div class="status-badge"
+           [class.badge--available]="rideStore.driverAvailability()?.isAvailable"
+           [class.badge--offline]="!rideStore.driverAvailability()?.isAvailable">
+        <mat-icon>{{ rideStore.driverAvailability()?.isAvailable ? 'wifi_tethering' : 'wifi_tethering_off' }}</mat-icon>
+        {{ rideStore.driverAvailability()?.isAvailable ? 'Disponible' : 'Inactivo' }}
       </div>
 
-      <!-- Blocked by balance -->
       <p class="avail-blocked" *ngIf="uiState() === 'INSUFFICIENT_BALANCE'">
         No puedes activarte con saldo cero. Recarga tu wallet primero.
       </p>
 
-      <!-- Toggle button -->
       <button mat-flat-button
               class="avail-toggle-btn"
               [color]="rideStore.driverAvailability()?.isAvailable ? 'warn' : 'primary'"
@@ -51,70 +46,152 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════ -->
-  <!-- RIGHT COLUMN — Pending requests                               -->
+  <!-- RIGHT COLUMN — List view OR Detail view                       -->
   <!-- ══════════════════════════════════════════════════════════════ -->
   <div class="right-column">
 
-    <div class="requests-header">
-      <span class="requests-title">Solicitudes pendientes</span>
-      <button mat-stroked-button
-              color="primary"
-              [disabled]="uiState() === 'LOADING'"
-              (click)="onRefreshRequests()"
-              aria-label="Actualizar solicitudes">
-        <mat-icon>refresh</mat-icon>
-        Actualizar
-      </button>
-    </div>
+    <!-- ─── DETAIL VIEW ─────────────────────────────────────── -->
+    <ng-container *ngIf="selectedRequest()">
+      <div class="detail-view">
 
-    <!-- LOADING -->
-    <div class="loading-state" *ngIf="uiState() === 'LOADING'">
-      <mat-spinner diameter="28"></mat-spinner>
-      <span>Cargando información...</span>
-    </div>
+        <!-- Back button -->
+        <button mat-button class="detail-back" (click)="onBackToList()">
+          <mat-icon>arrow_back</mat-icon> Volver a solicitudes
+        </button>
 
-    <!-- ERROR -->
-    <div class="error-card" *ngIf="uiState() === 'ERROR'">
-      <mat-icon>error_outline</mat-icon>
-      <div class="error-info">
-        <h4>Algo salió mal</h4>
-        <p>{{ rideStore.error() || monetizationStore.error() || driverMgmtStore.error() }}</p>
-        <button mat-stroked-button color="warn" (click)="onRetry()">
-          Reintentar
+        <div class="detail-card">
+          <!-- Banner -->
+          <div class="detail-banner">
+            <mat-icon>notifications_active</mat-icon>
+            <span>Nueva solicitud de viaje — responde para asignarte</span>
+          </div>
+
+          <div class="detail-body">
+            <!-- Route -->
+            <p class="detail-section-label">Ruta del viaje</p>
+            <div class="detail-route">
+              <div class="detail-route-row">
+                <span class="detail-dot detail-dot--origin"></span>
+                <div class="detail-route-info">
+                  <span class="detail-route-label">Origen</span>
+                  <span class="detail-route-value">{{ selectedRequest()!.origin }}</span>
+                </div>
+              </div>
+              <div class="detail-route-line"></div>
+              <div class="detail-route-row">
+                <span class="detail-dot detail-dot--dest"></span>
+                <div class="detail-route-info">
+                  <span class="detail-route-label">Destino</span>
+                  <span class="detail-route-value">{{ selectedRequest()!.destination }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fare + distance chips -->
+            <p class="detail-section-label">Detalles del viaje</p>
+            <div class="detail-chips">
+              <div class="detail-chip">
+                <mat-icon>payments</mat-icon>
+                <div>
+                  <div class="chip-value">S/ {{ selectedRequest()!.estimatedFare | number:'1.2-2' }}</div>
+                  <div class="chip-label">Tarifa estimada</div>
+                </div>
+              </div>
+              <div class="detail-chip" *ngIf="selectedRequest()!.distanceKm > 0">
+                <mat-icon>straighten</mat-icon>
+                <div>
+                  <div class="chip-value">{{ selectedRequest()!.distanceKm | number:'1.1-1' }} km</div>
+                  <div class="chip-label">Distancia</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="detail-actions">
+              <button mat-flat-button
+                      color="primary"
+                      class="accept-btn"
+                      [disabled]="rideStore.isLoading()"
+                      (click)="onAcceptRequest(selectedRequest()!)"
+                      aria-label="Aceptar solicitud de viaje">
+                <mat-icon>check_circle</mat-icon>
+                Aceptar viaje
+              </button>
+              <button mat-stroked-button
+                      class="skip-btn"
+                      (click)="onSkipRequest(selectedRequest()!)"
+                      aria-label="Omitir esta solicitud">
+                Omitir
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+    <!-- ─── LIST VIEW ────────────────────────────────────────── -->
+    <ng-container *ngIf="!selectedRequest()">
+
+      <div class="requests-header">
+        <span class="requests-title">Solicitudes pendientes</span>
+        <button mat-stroked-button
+                color="primary"
+                [disabled]="uiState() === 'LOADING'"
+                (click)="onRefreshRequests()"
+                aria-label="Actualizar lista de solicitudes">
+          <mat-icon>refresh</mat-icon>
+          Actualizar
         </button>
       </div>
-    </div>
 
-    <!-- DRIVER OFFLINE — no muestra solicitudes, pide activarse -->
-    <div class="offline-state"
-         *ngIf="uiState() === 'DRIVER_OFFLINE' || uiState() === 'INSUFFICIENT_BALANCE'">
-      <mat-icon>wifi_off</mat-icon>
-      <div>
-        <h3>No estás disponible</h3>
-        <p>
-          {{ uiState() === 'INSUFFICIENT_BALANCE'
-            ? 'Recarga tu wallet y actívate para ver solicitudes.'
-            : 'Actívate desde el panel de disponibilidad para empezar a recibir solicitudes.' }}
-        </p>
+      <!-- LOADING -->
+      <div class="loading-state" *ngIf="uiState() === 'LOADING'">
+        <mat-spinner diameter="28"></mat-spinner>
+        <span>Cargando información...</span>
       </div>
-    </div>
 
-    <!-- NO PENDING REQUESTS — disponible pero sin solicitudes -->
-    <div class="empty-state" *ngIf="uiState() === 'NO_PENDING_REQUESTS'">
-      <mat-icon>inbox</mat-icon>
-      <h3>Sin solicitudes en este momento</h3>
-      <p>No hay solicitudes pendientes. Presiona Actualizar para verificar de nuevo.</p>
-    </div>
+      <!-- ERROR -->
+      <div class="error-card" *ngIf="uiState() === 'ERROR'">
+        <mat-icon>error_outline</mat-icon>
+        <div class="error-info">
+          <h4>Algo salió mal</h4>
+          <p>{{ rideStore.error() || monetizationStore.error() || driverMgmtStore.error() }}</p>
+          <button mat-stroked-button color="warn" (click)="onRetry()">Reintentar</button>
+        </div>
+      </div>
 
-    <!-- PENDING REQUESTS LIST -->
-    <div class="request-list" *ngIf="uiState() === 'PENDING_REQUESTS_LOADED'">
-      <app-pending-request-card
-        *ngFor="let req of rideStore.openRequests()"
-        [request]="req"
-        [loading]="rideStore.isLoading()"
-        (accept)="onAcceptRequest($event)">
-      </app-pending-request-card>
-    </div>
+      <!-- OFFLINE / INSUFFICIENT BALANCE -->
+      <div class="offline-state"
+           *ngIf="uiState() === 'DRIVER_OFFLINE' || uiState() === 'INSUFFICIENT_BALANCE'">
+        <mat-icon>wifi_off</mat-icon>
+        <div>
+          <h3>No estás disponible</h3>
+          <p>
+            {{ uiState() === 'INSUFFICIENT_BALANCE'
+              ? 'Recarga tu wallet y actívate para recibir solicitudes.'
+              : 'Actívate desde el panel lateral para empezar a recibir solicitudes.' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- NO PENDING REQUESTS -->
+      <div class="empty-state" *ngIf="uiState() === 'NO_PENDING_REQUESTS'">
+        <mat-icon>inbox</mat-icon>
+        <h3>Sin solicitudes por ahora</h3>
+        <p>No hay solicitudes pendientes. Presiona Actualizar para verificar de nuevo.</p>
+      </div>
+
+      <!-- REQUEST LIST -->
+      <div class="request-list" *ngIf="uiState() === 'PENDING_REQUESTS_LOADED'">
+        <app-pending-request-card
+          *ngFor="let req of rideStore.openRequests()"
+          [request]="req"
+          (viewDetails)="onViewDetails($event)">
+        </app-pending-request-card>
+      </div>
+
+    </ng-container>
 
   </div>
 

@@ -1,4 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { of, switchMap } from 'rxjs';
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
 import { RideCandidate } from '../domain/model/ride-candidate.entity';
@@ -249,22 +250,21 @@ export class RideDispatchStore {
   loadDriverActiveCandidate(driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.getDriverActiveCandidate(driverId).subscribe({
-      next: candidate => {
+    this.api.getDriverActiveCandidate(driverId).pipe(
+      switchMap(candidate => {
         this.activeCandidateSignal.set(candidate);
-        this.loadingSignal.set(false);
-        // If no active PROPOSED candidate, check for an active ride
+        // If no active PROPOSED candidate, check for any active ride in progress
         if (!candidate) {
-          this.api.getDriverAvailability(driverId).subscribe({
-            next: avail => {
-              if (avail.activeRideId) {
-                this.api.getRideById(avail.activeRideId).subscribe({
-                  next: ride => this.currentRideSignal.set(ride),
-                });
-              }
-            },
-          });
+          return this.api.getActiveRideForDriver(driverId);
         }
+        return of(null);
+      })
+    ).subscribe({
+      next: ride => {
+        if (ride) {
+          this.currentRideSignal.set(ride);
+        }
+        this.loadingSignal.set(false);
       },
       error: () => {
         this.loadingSignal.set(false);
@@ -284,14 +284,19 @@ export class RideDispatchStore {
     if (!ride?.id) return;
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.updateRideStatus(ride.id, nextStatus).subscribe({
-      next: updated => {
+    this.api.updateRideStatus(ride.id, nextStatus).pipe(
+      switchMap(updated => {
         this.currentRideSignal.set(updated);
         // Mark driver free when ride is completed
         if (nextStatus === RideStatus.COMPLETED && avail?.id) {
-          this.api.markDriverFree(avail.id).subscribe({
-            next: updatedAvail => this.driverAvailabilitySignal.set(updatedAvail),
-          });
+          return this.api.markDriverFree(avail.id);
+        }
+        return of(null);
+      })
+    ).subscribe({
+      next: updatedAvail => {
+        if (updatedAvail) {
+          this.driverAvailabilitySignal.set(updatedAvail);
         }
         this.loadingSignal.set(false);
       },
@@ -313,14 +318,20 @@ export class RideDispatchStore {
   loadDriverAvailability(driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.getDriverAvailability(driverId).subscribe({
-      next: a => {
+    this.api.getDriverAvailability(driverId).pipe(
+      switchMap(a => {
         this.driverAvailabilitySignal.set(a);
-        // If driver has an active ride, load it
+        // Use direct activeRideId or fallback to a deep lookup in DB
         if (a.activeRideId) {
-          this.api.getRideById(a.activeRideId).subscribe({
-            next: ride => this.currentRideSignal.set(ride),
-          });
+          return this.api.getRideById(a.activeRideId);
+        } else {
+          return this.api.getActiveRideForDriver(driverId);
+        }
+      })
+    ).subscribe({
+      next: ride => {
+        if (ride) {
+          this.currentRideSignal.set(ride);
         }
         this.loadingSignal.set(false);
       },

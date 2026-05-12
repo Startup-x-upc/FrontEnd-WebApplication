@@ -19,8 +19,8 @@ import { MatIconModule } from '@angular/material/icon';
         <mat-icon>radar</mat-icon>
       </div>
       <div class="info">
-        <h3>{{ nearbyDrivers.length }} {{ nearbyDrivers.length === 1 ? 'conductor disponible' : 'conductores disponibles' }}</h3>
-        <p>Disponibilidad referencial en la zona</p>
+        <h3>Conductores disponibles en la zona</h3>
+        <p>Disponibilidad referencial • Actualización manual</p>
       </div>
     </div>
 

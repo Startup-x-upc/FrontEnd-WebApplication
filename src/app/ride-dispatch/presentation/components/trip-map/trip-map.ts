@@ -1,75 +1,227 @@
-import { Component, Input, Output, EventEmitter, AfterViewInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, AfterViewInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 
-// Fix for default Leaflet icon path issues
-const iconRetinaUrl = 'assets/marker-icon-2x.png';
-const iconUrl = 'assets/marker-icon.png';
-const shadowUrl = 'assets/marker-shadow.png';
-const iconDefault = L.icon({
-  iconRetinaUrl,
-  iconUrl,
-  shadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  tooltipAnchor: [16, -28],
-  shadowSize: [41, 41]
-});
-L.Marker.prototype.options.icon = iconDefault;
+/**
+ * @summary SVG path for a map pin (material-style drop-pin).
+ */
+const PIN_PATH = 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z';
 
+/**
+ * @summary Builds a colored SVG pin DivIcon for Leaflet.
+ *
+ * @param fillColor - Fill color for the pin body.
+ * @param strokeColor - Stroke/border color.
+ * @param size - Icon size in px.
+ */
+function buildPinIcon(fillColor: string, strokeColor: string, size = 36): L.DivIcon {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+         width="${size}" height="${size}"
+         style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));">
+      <path d="${PIN_PATH}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="0.5"/>
+    </svg>`;
+  return L.divIcon({
+    className: 'custom-map-icon',
+    html: svg,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size]
+  });
+}
+
+/**
+ * @summary Builds a mototaxi SVG icon for nearby drivers.
+ */
+function buildDriverIcon(): L.DivIcon {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"
+         style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));">
+      <!-- Circle background -->
+      <circle cx="16" cy="16" r="15" fill="#1a73e8" stroke="white" stroke-width="2"/>
+      <!-- Simplified mototaxi icon (person on vehicle) -->
+      <text x="16" y="21" text-anchor="middle" font-size="15" fill="white">🛵</text>
+    </svg>`;
+  return L.divIcon({
+    className: 'custom-map-icon',
+    html: svg,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+  });
+}
+
+/** Color tokens for map semantics. */
+const ORIGIN_COLOR = '#10b981';
+const ORIGIN_STROKE = '#059669';
+const DEST_COLOR = '#ef4444';
+const DEST_STROKE = '#dc2626';
+
+/**
+ * @summary Presentation component that renders the interactive trip map using Leaflet.
+ * Provides semantic visual conventions: green pin = origin, red pin = destination,
+ * blue circle = nearby driver, teal polyline = estimated route.
+ * @author Jesús Iván Castillo Vidal
+ */
 @Component({
   selector: 'app-trip-map',
   standalone: true,
   imports: [CommonModule],
-  template: `<div id="trip-map" class="map-frame"></div>`,
+  template: `
+    <div class="map-wrapper">
+      <div id="trip-map" class="map-frame"></div>
+
+      <!-- Compact legend -->
+      <div class="map-legend" *ngIf="showLegend">
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#10b981"></span>
+          <span>Origen</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#ef4444"></span>
+          <span>Destino</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#1a73e8"></span>
+          <span>Conductor</span>
+        </div>
+        <div class="legend-item" *ngIf="hasRoute">
+          <span class="legend-line"></span>
+          <span>Ruta</span>
+        </div>
+      </div>
+
+      <!-- Map hint overlay (only when map is empty) -->
+      <div class="map-hint" *ngIf="!origin && !destination">
+        <mat-icon>touch_app</mat-icon>
+        <span>Toca el mapa para fijar tu punto de partida</span>
+      </div>
+    </div>
+  `,
   styles: [`
-    .map-frame {
+    .map-wrapper {
+      position: relative;
       width: 100%;
       height: 100%;
       min-height: 400px;
     }
-    :host ::ng-deep .custom-svg-icon {
-      background: transparent;
-      border: none;
+    .map-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+      border-radius: 12px;
     }
-    :host ::ng-deep .custom-div-icon {
-      background: transparent;
-      border: none;
+    /* Suppress Leaflet outline on focus */
+    :host ::ng-deep .leaflet-container:focus {
+      outline: none;
+    }
+    :host ::ng-deep .custom-map-icon {
+      background: transparent !important;
+      border: none !important;
+    }
+    /* Route polyline style (applied via Leaflet, reinforced here) */
+    :host ::ng-deep .route-polyline {
+      stroke: #1a73e8;
+      stroke-width: 4;
+      stroke-dasharray: none;
+      opacity: 0.75;
+    }
+
+    /* Legend */
+    .map-legend {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(4px);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #374151;
+      font-weight: 500;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      background: #1a73e8;
+      border-radius: 2px;
+      flex-shrink: 0;
+      opacity: 0.75;
+    }
+
+    /* Empty state hint overlay */
+    .map-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(4px);
+      border-radius: 24px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #4b5563;
+      font-weight: 500;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+      z-index: 1000;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .map-hint mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      color: #1a73e8;
     }
   `]
 })
-export class TripMapComponent implements AfterViewInit, OnChanges {
+export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
+  /** Raw origin coordinate string (lat,lng). */
   @Input() origin: string = '';
+  /** Raw destination coordinate string (lat,lng). */
   @Input() destination: string = '';
+  /** Array of nearby driver objects with lat/lng/name. */
   @Input() nearbyDrivers: any[] = [];
+  /** Emitted when the user clicks on the map. */
   @Output() mapClicked = new EventEmitter<{lat: number, lng: number}>();
 
-  private map: L.Map | undefined;
-  private markers: L.Marker[] = [];
-
-  // SVG Icons
-  private getSvgIcon(color: string): L.DivIcon {
-    const svgHtml = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="${color}" style="filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-      </svg>
-    `;
-    return L.divIcon({
-      className: 'custom-svg-icon',
-      html: svgHtml,
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
-      popupAnchor: [0, -36]
-    });
+  /** Whether to show the legend overlay. */
+  get showLegend(): boolean {
+    return !!(this.origin || this.destination || this.nearbyDrivers.length > 0);
   }
+
+  /** Whether a route polyline should be shown. */
+  get hasRoute(): boolean {
+    return !!(this.origin && this.destination);
+  }
+
+  private map: L.Map | undefined;
+  private markers: L.Layer[] = [];
+  private routePolyline: L.Polyline | undefined;
 
   ngAfterViewInit(): void {
     this.initMap();
-    // Invalidate size to fix tile rendering issues in Angular
-    setTimeout(() => {
-      this.map?.invalidateSize();
-    }, 100);
+    setTimeout(() => { this.map?.invalidateSize(); }, 150);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -78,12 +230,16 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  ngOnDestroy(): void {
+    this.map?.remove();
+  }
+
   private initMap(): void {
-    // Center in Casma, Peru
-    this.map = L.map('trip-map', { zoomControl: false }).setView([-9.47388, -78.29814], 14);
-    
+    this.map = L.map('trip-map', { zoomControl: true }).setView([-9.47388, -78.29814], 14);
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      maxZoom: 19
     }).addTo(this.map);
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
@@ -93,55 +249,90 @@ export class TripMapComponent implements AfterViewInit, OnChanges {
     this.updateMap();
   }
 
+  /**
+   * Parses a "lat,lng" string into a Leaflet LatLng tuple.
+   *
+   * @param str - The coordinate string to parse.
+   * @param fallbackLat - Fallback latitude if parsing fails.
+   * @param fallbackLng - Fallback longitude if parsing fails.
+   */
   private parseCoord(str: string, fallbackLat: number, fallbackLng: number): [number, number] {
     const parts = str.split(',');
     if (parts.length === 2) {
-      const lat = parseFloat(parts[0]);
-      const lng = parseFloat(parts[1]);
+      const lat = parseFloat(parts[0].trim());
+      const lng = parseFloat(parts[1].trim());
       if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
     }
     return [fallbackLat, fallbackLng];
   }
 
-  private updateMap(): void {
-    if (!this.map) return;
-
-    // Clear previous markers
+  /** Clears all markers and the route polyline from the map. */
+  private clearMap(): void {
     this.markers.forEach(m => m.remove());
     this.markers = [];
+    if (this.routePolyline) {
+      this.routePolyline.remove();
+      this.routePolyline = undefined;
+    }
+  }
+
+  /** Rebuilds markers and route based on current inputs. */
+  private updateMap(): void {
+    if (!this.map) return;
+    this.clearMap();
 
     let originCoord: [number, number] | null = null;
     let destCoord: [number, number] | null = null;
 
+    // Origin marker (green pin)
     if (this.origin) {
       originCoord = this.parseCoord(this.origin, -9.47388, -78.29814);
-      const originMarker = L.marker(originCoord, { icon: this.getSvgIcon('#10b981') }).bindPopup('Origen').addTo(this.map);
-      this.markers.push(originMarker);
+      const marker = L.marker(originCoord, { icon: buildPinIcon(ORIGIN_COLOR, ORIGIN_STROKE) })
+        .bindPopup('<b style="color:#059669">📍 Origen</b>')
+        .addTo(this.map!);
+      this.markers.push(marker);
     }
-    
+
+    // Destination marker (red pin)
     if (this.destination) {
       destCoord = this.parseCoord(this.destination, -9.47500, -78.29500);
-      const destMarker = L.marker(destCoord, { icon: this.getSvgIcon('#ef4444') }).bindPopup('Destino').addTo(this.map);
-      this.markers.push(destMarker);
+      const marker = L.marker(destCoord, { icon: buildPinIcon(DEST_COLOR, DEST_STROKE) })
+        .bindPopup('<b style="color:#dc2626">🏁 Destino</b>')
+        .addTo(this.map!);
+      this.markers.push(marker);
     }
 
+    // Route polyline (straight-line estimate when both points are set)
     if (originCoord && destCoord) {
-      const group = new L.FeatureGroup(this.markers);
-      this.map.fitBounds(group.getBounds(), { padding: [50, 50] });
+      this.routePolyline = L.polyline([originCoord, destCoord], {
+        color: '#1a73e8',
+        weight: 4,
+        opacity: 0.72,
+        dashArray: '8 4'
+      }).addTo(this.map!);
+      this.markers.push(this.routePolyline);
+
+      // Fit map to show the full route
+      const group = L.featureGroup([
+        L.marker(originCoord),
+        L.marker(destCoord)
+      ]);
+      this.map.fitBounds(group.getBounds(), { padding: [60, 60] });
     } else if (originCoord) {
-      this.map.setView(originCoord, 15);
+      this.map.setView(originCoord, 16);
     } else if (destCoord) {
-      this.map.setView(destCoord, 15);
+      this.map.setView(destCoord, 16);
     }
 
-    // Add drivers
+    // Nearby driver markers (blue mototaxi icon)
     this.nearbyDrivers.forEach(driver => {
-      const driverIcon = L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div style='background-color:#1a73e8;width:12px;height:12px;border-radius:50%;border:2px solid white;'></div>`,
-        iconSize: [16, 16]
-      });
-      const driverMarker = L.marker([driver.lat, driver.lng], { icon: driverIcon }).bindPopup(driver.name).addTo(this.map!);
+      const driverMarker = L.marker([driver.lat, driver.lng], { icon: buildDriverIcon() })
+        .bindPopup(`
+          <div style="font-size:13px;min-width:120px;">
+            <b>${driver.name ?? 'Conductor'}</b><br>
+            <span style="color:#f59e0b;">★</span> ${driver.rating ?? ''}
+          </div>`)
+        .addTo(this.map!);
       this.markers.push(driverMarker);
     });
   }

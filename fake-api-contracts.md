@@ -1,26 +1,18 @@
-# Fake API Contracts
+# Fake API Contracts (Reorientado a Candidatos - inDrive Style)
 
-Este documento define la estructura de datos que devuelve `json-server` (la Fake API) basada en `server/db.json`. Estos contratos son los que la UI debe esperar y consumir a través de la capa de infraestructura estabilizada en el Sprint 2.
+Este documento define la estructura de datos que devuelve `json-server` (la Fake API) basada en `server/db.json`. Define el modelo competitivo de candidatos implementado en el Sprint 2.
 
 > [!IMPORTANT]
-> Para el Sprint 2, la sincronización del flujo se implementará mediante **refresh manual**.
-> No se usará:
->
-> - realtime real
-> - WebSockets
-> - Ably
-> - polling automático
-> - tracking dinámico del motorizado en el mapa
->
-> La visualización de conductores en el mapa será **referencial**, no una representación en vivo de movimiento.
+> El flujo se sincroniza mediante **refresh manual** en ambos extremos (pasajero y conductor).
+> No se usa real-time real, WebSockets, polling automático ni tracking dinámico.
+> La navegación para el conductor se realiza mediante redirecciones a **Google Maps externo**.
 
 ---
 
 ## Collections
 
 ### users
-
-Almacena las credenciales de acceso y el rol base del usuario autenticado.
+Almacena las credenciales de acceso y el rol del usuario.
 
 ```json
 {
@@ -32,9 +24,7 @@ Almacena las credenciales de acceso y el rol base del usuario autenticado.
 ```
 
 ### profiles
-
-Almacena la información básica de visualización enlazada a una cuenta.
-En este sprint se usará solo como soporte para la sesión y presentación básica del usuario autenticado.
+Soporte de identidad básica enlazada a una cuenta de usuario.
 
 ```json
 {
@@ -47,9 +37,7 @@ En este sprint se usará solo como soporte para la sesión y presentación bási
 ```
 
 ### drivers
-
-Extensión del perfil del conductor con información operativa simplificada y reputación mock.
-Funciona como una proyección útil para la demo.
+Perfil ampliado del conductor con información operativa y de reputación.
 
 ```json
 {
@@ -60,84 +48,96 @@ Funciona como una proyección útil para la demo.
   "verificationStatus": "APPROVED",
   "operationalStatus": "ENABLED",
   "ratingAverage": 4.8,
-  "ratingCount": 120
+  "ratingCount": 120,
+  "photoUrl": "https://i.pravatar.cc/150?img=33"
 }
 ```
 
-**Uso principal en Sprint 2:**
-- Consultar estado ampliado del conductor.
-- Mostrar información referencial del conductor asignado.
-- Soporte visual de reputación mock si se requiere.
-
 ### driverAvailability
-
-Almacena la disponibilidad y ubicación referencial del conductor.
-
-> [!NOTE]
-> `currentLocation` no representa tracking en tiempo real.
-> Solo se usa para ubicar visualmente al conductor en el mapa de forma estática o semiestática durante la demo.
+Almacena la disponibilidad, ubicación y estado de ocupación del conductor.
 
 ```json
 {
   "id": "da-001",
   "driverId": "d-001",
-  "currentLocation": "-12.083, -77.031",
-  "isAvailable": true
+  "currentLocation": "-9.47100,-78.29900",
+  "isAvailable": true,
+  "isBusy": false,
+  "activeRideId": null
 }
 ```
 
-**Uso principal en Sprint 2:**
-- Activar o desactivar disponibilidad del conductor.
-- Mostrar presencia referencial de conductores cercanos.
-- No se usa para seguimiento dinámico del vehículo.
+- `isBusy`: Evita que un conductor con un viaje activo vea nuevas solicitudes abiertas.
+- `activeRideId`: Enlace al viaje activo actual para restaurar el estado de la UI del conductor tras recargar.
 
 ### rideRequests
-
-Solicitudes de viaje emitidas por pasajeros antes de ser aceptadas.
+Solicitudes de viaje emitidas por pasajeros. Cambia su modelo de asignación directa por uno de selección de candidatos.
 
 ```json
 {
   "id": "rr-001",
   "passengerId": "u-001",
-  "origin": "Av. La Marina 2000",
-  "destination": "Plaza San Miguel",
-  "distanceKm": 2.5,
-  "status": "PENDING",
-  "estimatedFare": 7.0,
+  "origin": "-9.46538,-78.32101",
+  "destination": "-9.47305,-78.30578",
+  "distanceKm": 2,
+  "status": "OPEN",
+  "estimatedFare": 4.9,
+  "selectedDriverId": null,
   "isExpired": false
 }
 ```
 
-**Uso principal en Sprint 2:**
-- Registrar una nueva solicitud de viaje.
-- Consultar solicitudes pendientes para el conductor.
-- Permitir que el pasajero haga refresh manual y verifique si su solicitud sigue pendiente.
-- Servir como base del flujo principal del Sprint 2.
+**Estados soportados (`status`):**
+- `OPEN`: Visible para que los conductores disponibles se postulen.
+- `CONFIRMED`: El pasajero eligió un candidato de la lista y se ha generado el viaje.
+
+### rideCandidates (NUEVA)
+Colección que registra la postulación de los conductores a solicitudes de viaje abiertas.
+
+```json
+{
+  "id": "rc-001",
+  "requestId": "rr-001",
+  "driverId": "d-001",
+  "driverName": "Carlos Mendoza",
+  "vehicleType": "Mototaxi",
+  "ratingAverage": 4.8,
+  "photoUrl": "https://i.pravatar.cc/150?img=33",
+  "status": "PROPOSED",
+  "appliedAt": "2026-05-12T23:30:00Z"
+}
+```
+
+**Estados soportados (`status`):**
+- `PROPOSED`: Candidatura enviada por el conductor, a la espera de que el pasajero decida.
+- `ACCEPTED`: Candidato seleccionado por el pasajero para realizar el viaje.
+- `REJECTED`: Candidatura descartada (el pasajero eligió a otro conductor).
 
 ### rides
-
-Viajes aceptados por un conductor.
+Viajes formalizados tras la confirmación de un candidato por parte del pasajero.
 
 ```json
 {
   "id": "r-001",
+  "requestId": "rr-001",
   "passengerId": "u-001",
   "driverId": "d-001",
-  "origin": "Av. La Marina 2000",
-  "destination": "Plaza San Miguel",
-  "status": "ACCEPTED",
-  "estimatedFare": 7.0
+  "origin": "-9.46538,-78.32101",
+  "destination": "-9.47305,-78.30578",
+  "estimatedFare": 4.9,
+  "status": "ACCEPTED"
 }
 ```
 
-**Uso principal en Sprint 2:**
-- Registrar que un conductor aceptó una solicitud.
-- Permitir que el pasajero, mediante refresh manual, vea que ya tiene conductor asignado.
-- Representar el cambio de estado posterior a la aceptación.
+**Estados de progreso del viaje (`status`):**
+- `ACCEPTED`: Ride creado tras la selección del candidato.
+- `DRIVER_ON_THE_WAY`: Conductor se dirige al origen.
+- `DRIVER_ARRIVED`: Conductor se encuentra en el origen esperando al pasajero.
+- `STARTED`: Viaje iniciado en curso.
+- `COMPLETED`: Viaje finalizado exitosamente.
 
 ### wallets
-
-Monederos de los conductores.
+Monederos de los conductores. Se consulta el saldo para autorizar la activación operativa.
 
 ```json
 {
@@ -148,100 +148,21 @@ Monederos de los conductores.
 }
 ```
 
-**Uso principal en Sprint 2:**
-- Consultar el saldo disponible del conductor.
-- Validar si el conductor puede activarse o no.
-- No se implementará aún el flujo completo de recarga o descuento automático de comisión.
-
-### fareConfig
-
-Configuración global de la tarifa del sistema.
-
-```json
-{
-  "id": 1,
-  "baseFare": 2.5,
-  "pricePerKm": 1.2,
-  "minimumFare": 4.0
-}
-```
-
-**Uso principal en Sprint 2:**
-- Calcular la tarifa estimada del viaje en el frontend.
-- Mostrar el resumen tarifario antes de confirmar la solicitud.
-
-### ratings
-
-Calificaciones emitidas sobre viajes.
-
-```json
-{
-  "id": "rt-001",
-  "rideId": "r-001",
-  "rating": 5,
-  "comment": "Excelente servicio"
-}
-```
-
-**Uso en Sprint 2:**
-- Soporte secundario / placeholder.
-- No forma parte del flujo principal de la demo.
-- Solo puede usarse para mostrar reputación mock si se necesita contexto visual.
-
 ---
 
-## Endpoint map
+## Endpoint Map
 
-### IAM
-
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `GET` | `/users?email={email}&password={password}` | Autenticación del usuario. |
-| `GET` | `/profiles?accountId={accountId}` | Obtención de datos básicos del usuario autenticado. |
-
-> [!NOTE]
-> En este sprint, `profiles` no se usa para una gestión completa de perfil, sino como soporte de identidad básica (nombre, email, foto).
-
-### Ride Dispatch
+### Ride Dispatch (Flujo Competitivo)
 
 | Método | Endpoint | Descripción |
 | :--- | :--- | :--- |
-| `POST` | `/rideRequests` | Crear una nueva solicitud de viaje del pasajero. |
-| `GET` | `/rideRequests?status=PENDING` | Obtener solicitudes pendientes visibles para conductores. |
-| `GET` | `/rideRequests?passengerId={passengerId}` | Consultar las solicitudes del pasajero para actualizar el estado mediante refresh manual. |
-| `PATCH` | `/rideRequests/{id}` | Actualizar el estado de una solicitud si el flujo lo requiere. |
-| `POST` | `/rides` | Registrar un viaje aceptado por un conductor. |
-| `GET` | `/rides?passengerId={passengerId}` | Consultar si el pasajero ya tiene un viaje aceptado/asignado después del refresh manual. |
-| `GET` | `/driverAvailability?isAvailable=true` | Consultar conductores disponibles para visualización referencial. |
-| `GET` | `/driverAvailability?driverId={id}` | Consultar el estado de disponibilidad de un conductor específico. |
-| `PATCH` | `/driverAvailability/{id}` | Alternar la disponibilidad del conductor. |
-
-> [!IMPORTANT]
-> La actualización del estado de la solicitud y de la asignación del conductor se hará mediante refresh manual desde la UI.
-
-### Monetization
-
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `GET` | `/fareConfig` | Obtener configuración tarifaria actual para calcular la cotización en el frontend. |
-| `GET` | `/wallets?driverId={driverId}` | Consultar el saldo del conductor. |
-| `PATCH` | `/wallets/{id}` | Actualizar el wallet si en una fase posterior se requiere. No forma parte del flujo principal del Sprint 2. |
-
-### Driver Management
-
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `GET` | `/drivers?accountId={accountId}` | Consultar el perfil ampliado del conductor y su estado operativo/documental. |
-
-> [!NOTE]
-> En este sprint no se implementará flujo interactivo de revisión documental; solo se consumen estos datos como soporte.
-
-### Trust & Reputation
-
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `GET` | `/ratings?rideId={rideId}` | Consultar si un viaje tiene una calificación registrada. |
-| `POST` | `/ratings` | Registrar una calificación. |
-
-> [!NOTE]
-> En el Sprint 2 este bounded context no es parte del flujo principal. Su uso es opcional y secundario.
+| `POST` | `/rideRequests` | Crea una nueva solicitud con estado `OPEN`. |
+| `GET` | `/rideRequests?status=OPEN` | Recupera las solicitudes visibles para los conductores no ocupados. |
+| `PATCH` | `/rideRequests/{id}` | Actualiza el estado de la solicitud (p. ej. a `CONFIRMED`). |
+| `GET` | `/rideCandidates?requestId={id}` | Recupera las postulaciones de conductores para una solicitud específica. |
+| `POST` | `/rideCandidates` | Registra la postulación de un conductor a una solicitud (`PROPOSED`). |
+| `PATCH` | `/rideCandidates/{id}` | Cambia el estado de la candidatura a `ACCEPTED` o `REJECTED`. |
+| `POST` | `/rides` | Crea formalmente el viaje asignado. |
+| `PATCH` | `/rides/{id}` | Actualiza el estado progresivo del viaje en curso. |
+| `GET` | `/driverAvailability?driverId={id}` | Consulta y recupera la disponibilidad y estado `isBusy` del conductor. |
+| `PATCH` | `/driverAvailability/{id}` | Gestiona el cambio de disponibilidad (`isAvailable`) o de ocupación (`isBusy`, `activeRideId`). |

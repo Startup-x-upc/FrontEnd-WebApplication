@@ -246,33 +246,44 @@ En lugar de notificación realtime, el pasajero podrá actualizar manualmente el
 
 ---
 
-## US-16 — Aceptación de solicitud por el conductor
+## US-16 — Postulación de conductor y selección por parte del pasajero (inDrive flow)
 
-- **Estado actual:** Partial
-- **Readiness:** **Ready for UI**
+- **Estado actual:** Completed
+- **Readiness:** **Fully Implemented**
 
 ### Acceptance Criteria
 
-- El conductor puede aceptar una solicitud pendiente.
-- El sistema registra un viaje aceptado y el pasajero puede verlo al refrescar.
+- Los conductores disponibles pueden ver las solicitudes y postularse (`PROPOSED`).
+- El pasajero visualiza los candidatos postulados tras un refresh manual.
+- El pasajero selecciona al conductor que prefiera, confirmando el viaje.
+- Se crea formalmente el viaje (`rides`) y el conductor seleccionado queda ocupado (`isBusy`).
 
 ### User Tasks
 
-- **TASK-US16-01** Implementar botón `Aceptar` en la vista del conductor.
-- **TASK-US16-02** Crear registro en `rides` al aceptar.
-- **TASK-US16-03** Actualizar o cerrar la solicitud pendiente correspondiente.
-- **TASK-US16-04** Asegurar que el pasajero vea el nuevo estado mediante refresh manual.
+- **TASK-US16-01** Implementar colección `rideCandidates` en `db.json`.
+- **TASK-US16-02** Diseñar pantalla de selección de candidatos en la UI del pasajero (`app-ride-candidates-list`).
+- **TASK-US16-03** Crear acción de postulación para el conductor en el dashboard.
+- **TASK-US16-04** Implementar flujo transaccional de selección: confirmación de solicitud + aceptación de candidato + rechazo de competidores + creación de viaje.
 
 ---
 
-## US-17 — Inicio y finalización del viaje
+## US-17 — Progresión y finalización del viaje
 
-- **Estado actual:** Pending
-- **Readiness:** **Deferred**
+- **Estado actual:** Completed
+- **Readiness:** **Fully Implemented**
+
+### Acceptance Criteria
+
+- El conductor puede marcar secuencialmente los estados del viaje: en camino, llegó, iniciado, completado.
+- El pasajero puede actualizar su pantalla y ver el estado de avance correspondiente.
+- Al completar el viaje, el conductor se libera para recibir nuevas postulaciones.
+- Se proveen botones en la UI para redirigir al conductor a **Google Maps externo**.
 
 ### User Tasks
 
-> No se trabajará en este sprint.
+- **TASK-US17-01** Implementar botones de navegación a Google Maps para el conductor.
+- **TASK-US17-02** Controlar los estados intermedios del viaje: `DRIVER_ON_THE_WAY`, `DRIVER_ARRIVED`, `STARTED`, `COMPLETED`.
+- **TASK-US17-03** Asegurar la liberación del conductor (`isBusy = false`) tras la finalización.
 
 ---
 
@@ -432,22 +443,23 @@ En lugar de notificación realtime, el pasajero podrá actualizar manualmente el
 
 ---
 
-# Ready for UI
+# Ready & Fully Implemented (Sprint 2)
 
-Las siguientes historias cuentan con base funcional suficiente para construir interfaz en este sprint:
+Las siguientes historias cuentan con base funcional e interfaces completas implementadas en este sprint:
 
 1. **US-03** — Inicio de sesión
 2. **US-07** — Detección de ubicación del pasajero
 3. **US-08** — Selección de destino
-4. **US-09** — Visualización simplificada de conductores disponibles
+4. **US-09** — Visualización referencial de disponibilidad
 5. **US-10** — Actualización manual del estado de aceptación
 6. **US-11** — Actualización manual del estado de rechazo o espera
 7. **US-13** — Activar disponibilidad del conductor
 8. **US-14** — Visualización de solicitudes para conductor
 9. **US-15** — Solicitud de viaje del pasajero
-10. **US-16** — Aceptación de solicitud por el conductor
-11. **US-19** — Cálculo y visualización de tarifa
-12. **US-28** — Visualización del saldo del wallet
+10. **US-16** — Postulación y selección competitiva de conductores (inDrive model)
+11. **US-17** — Progresión y finalización del viaje (en camino, llegó, iniciado, terminado)
+12. **US-19** — Cálculo y visualización de tarifa
+13. **US-28** — Visualización del saldo del wallet
 
 ---
 
@@ -466,7 +478,6 @@ Las siguientes historias no formarán parte del alcance principal del Sprint 2:
 
 Las siguientes historias quedan diferidas para una iteración posterior o para una versión más completa del producto:
 
-- **US-17** — Inicio y finalización del viaje
 - **US-18** — Cancelación de viaje
 - **US-21** — Calificación al conductor
 - **US-22** — Calificación al pasajero

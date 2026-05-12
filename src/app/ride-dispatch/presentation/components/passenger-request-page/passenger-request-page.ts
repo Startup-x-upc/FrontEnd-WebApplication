@@ -5,35 +5,45 @@ import { MatButtonModule } from '@angular/material/button';
 import { RideDispatchStore } from '../../../application/ride-dispatch.store';
 import { MonetizationStore } from '../../../../monetization/application/monetization.store';
 import { IamStore } from '../../../../iam/application/iam.store';
+import { RideStatus } from '../../../domain/model/ride.status';
+import { RideCandidate } from '../../../domain/model/ride-candidate.entity';
 
 import { TripLocationFormComponent } from '../trip-location-form/trip-location-form';
 import { TripMapComponent } from '../trip-map/trip-map';
 import { TripAvailabilitySummaryComponent } from '../trip-availability-summary/trip-availability-summary';
 import { TripRequestStatusComponent } from '../trip-request-status/trip-request-status';
 import { FareSummaryCardComponent } from '../../../../monetization/presentation/components/fare-summary-card/fare-summary-card';
+import { RideCandidatesListComponent } from '../ride-candidates-list/ride-candidates-list';
 import { calculateEstimatedDistance } from '../../../../shared/utils/geo.utils';
 
 /**
- * @summary Union type for all possible UI states of the passenger request flow.
- * PREPARING        — Waiting for origin/destination.
- * FARE_READY       — Both points set, fare calculated. Ready to confirm.
- * SEARCHING_DRIVER — Request submitted, awaiting assignment (manual refresh).
- * DRIVER_ASSIGNED  — A driver has accepted the request.
- * ERROR            — A recoverable error occurred.
+ * @summary Possible UI states of the passenger request flow.
+ *
+ * PREPARING           — Waiting for origin/destination to be set on the map.
+ * FARE_READY          — Both points set, fare calculated. Ready to confirm.
+ * WAITING_CANDIDATES  — Request submitted (OPEN). No candidates yet.
+ * CANDIDATES_AVAILABLE— At least one driver applied. Passenger can choose.
+ * DRIVER_SELECTED     — Passenger confirmed a driver. Ride created.
+ * RIDE_IN_PROGRESS    — Driver is on the way / arrived / trip started.
+ * RIDE_COMPLETED      — Trip finished.
+ * REQUEST_EXPIRED     — Request timed out without a selection.
+ * ERROR               — A recoverable error occurred.
  */
 export type RequestUiState =
   | 'PREPARING'
   | 'FARE_READY'
-  | 'SEARCHING_DRIVER'
-  | 'DRIVER_ASSIGNED'
+  | 'WAITING_CANDIDATES'
+  | 'CANDIDATES_AVAILABLE'
+  | 'DRIVER_SELECTED'
+  | 'RIDE_IN_PROGRESS'
+  | 'RIDE_COMPLETED'
   | 'REQUEST_EXPIRED'
   | 'ERROR';
 
 /**
- * @summary Main passenger screen. Unifies the ride request flow:
- * Selecting origin & destination → viewing fare → confirming the request.
- * Orchestrates TripMap, TripLocationForm, TripAvailabilitySummary,
- * FareSummaryCard and TripRequestStatus through a single derived UI state.
+ * @summary Main passenger screen. Orchestrates the inDrive-style ride request flow:
+ * Set location → View fare → Confirm → Wait for candidates →
+ * Select driver → Track ride (manual refresh).
  * @author Jesús Iván Castillo Vidal
  */
 @Component({
@@ -47,7 +57,8 @@ export type RequestUiState =
     TripMapComponent,
     TripAvailabilitySummaryComponent,
     TripRequestStatusComponent,
-    FareSummaryCardComponent
+    FareSummaryCardComponent,
+    RideCandidatesListComponent,
   ],
   templateUrl: './passenger-request-page.html',
   styles: [`
@@ -66,9 +77,7 @@ export type RequestUiState =
       gap: 14px;
       min-height: 0;
     }
-    .page-header {
-      margin-bottom: 2px;
-    }
+    .page-header { margin-bottom: 2px; }
     .page-header h1 {
       font-size: 26px;
       font-weight: 700;
@@ -96,14 +105,12 @@ export type RequestUiState =
       gap: 14px;
     }
 
-    /* ── State cards ─────────────────────────────────────────────── */
-
-    /* Error state */
+    /* ── Error / expired state cards ──────────────────────────────── */
     .error-card {
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      padding: 18px 18px;
+      padding: 18px;
       border-radius: 12px;
       background: #fff7f7;
       border: 1px solid #fecaca;
@@ -117,179 +124,212 @@ export type RequestUiState =
       width: 20px;
       margin-top: 1px;
     }
-    .error-info h4 {
-      margin: 0 0 4px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #b91c1c;
+    .error-info h4 { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #b91c1c; }
+    .error-info p  { margin: 0; font-size: 13px; color: #6b7280; line-height: 1.4; }
+    .error-info button { margin-top: 10px; font-size: 12px; }
+
+    /* ── Ride status card (DRIVER_SELECTED / RIDE_IN_PROGRESS) ────── */
+    .ride-status-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-left: 4px solid #10b981;
     }
-    .error-info p {
-      margin: 0;
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.4;
+    .ride-status-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #d1fae5;
+      color: #059669;
+      flex-shrink: 0;
     }
-    .error-info button {
+    .ride-status-icon mat-icon { font-size: 22px; height: 22px; width: 22px; }
+    .ride-status-info { flex: 1; }
+    .ride-status-info h3 { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1f2937; }
+    .ride-status-info p  { margin: 0; font-size: 12px; color: #6b7280; line-height: 1.5; }
+    .ride-status-badge {
+      display: inline-block;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+    }
+    .refresh-mini {
       margin-top: 10px;
       font-size: 12px;
     }
-
-    /* Flow progress indicator */
-    .flow-progress {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      padding: 10px 14px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    .flow-step {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 500;
-      color: #9ca3af;
-    }
-    .flow-step.active {
-      color: #1a73e8;
-    }
-    .flow-step.done {
-      color: #10b981;
-    }
-    .flow-step mat-icon {
+    .refresh-mini mat-icon {
       font-size: 14px;
       height: 14px;
       width: 14px;
+      margin-right: 3px;
     }
-    .flow-divider {
-      flex: 1;
-      height: 1px;
-      background: #e5e7eb;
+
+    /* Completed card */
+    .completed-card {
+      border-left-color: #1a73e8;
+    }
+    .completed-card .ride-status-icon {
+      background: #dbeafe;
+      color: #1a73e8;
     }
   `]
 })
 export class PassengerRequestPageComponent {
-  /** @internal Ride dispatch store. */
-  protected rideStore: RideDispatchStore = inject(RideDispatchStore);
-  /** @internal Monetization store for fare calculation. */
-  protected monetizationStore: MonetizationStore = inject(MonetizationStore);
-  /** @internal IAM store for current user context. */
-  private iamStore: IamStore = inject(IamStore);
+  protected rideStore        = inject(RideDispatchStore);
+  protected monetizationStore = inject(MonetizationStore);
+  private iamStore           = inject(IamStore);
 
-  /** Indicates which form field is currently active for map input. */
+  /** Controls which map field (origin / destination) receives the next tap. */
   activeField: 'origin' | 'destination' = 'origin';
 
   /**
-   * Derives the current UI state from the stores.
-   * Only one state is active at a time — no contradictions.
+   * Derives the current UI state from signal values.
+   * Priority: ERROR > RIDE_COMPLETED > RIDE_IN_PROGRESS > DRIVER_SELECTED >
+   * CANDIDATES_AVAILABLE > WAITING_CANDIDATES > REQUEST_EXPIRED >
+   * FARE_READY > PREPARING.
    */
   uiState = computed<RequestUiState>(() => {
-    // Error takes precedence
     if (this.rideStore.error() || this.monetizationStore.error()) return 'ERROR';
 
-    // Check post-submission states
-    const request = this.rideStore.currentRequest();
-    if (request) {
-      if (request.isExpired) return 'REQUEST_EXPIRED';
-      if (request.status === 'ACCEPTED') return 'DRIVER_ASSIGNED';
-      return 'SEARCHING_DRIVER';
+    const ride = this.rideStore.currentRide();
+    if (ride) {
+      if (ride.status === RideStatus.COMPLETED)       return 'RIDE_COMPLETED';
+      if (
+        ride.status === RideStatus.DRIVER_ON_THE_WAY ||
+        ride.status === RideStatus.DRIVER_ARRIVED    ||
+        ride.status === RideStatus.STARTED
+      ) return 'RIDE_IN_PROGRESS';
+      if (ride.status === RideStatus.ACCEPTED)        return 'DRIVER_SELECTED';
     }
 
-    // Fare calculated
+    const req = this.rideStore.currentRequest();
+    if (req) {
+      if (req.isExpired)                              return 'REQUEST_EXPIRED';
+      if (req.status === RideStatus.CONFIRMED)        return 'DRIVER_SELECTED';
+      // Show candidates if any have applied
+      if (this.rideStore.candidates().length > 0)    return 'CANDIDATES_AVAILABLE';
+      return 'WAITING_CANDIDATES';
+    }
+
     const dist = this.rideStore.distanceKm();
     if (dist > 0) return 'FARE_READY';
 
     return 'PREPARING';
   });
 
+  /** Human-readable label for the current ride status. */
+  rideStatusLabel = computed<string>(() => {
+    const ride = this.rideStore.currentRide();
+    if (!ride) return '';
+    switch (ride.status) {
+      case RideStatus.ACCEPTED:          return 'Conductor confirmado';
+      case RideStatus.DRIVER_ON_THE_WAY: return 'Conductor en camino';
+      case RideStatus.DRIVER_ARRIVED:    return 'Conductor llegó';
+      case RideStatus.STARTED:           return 'Viaje en curso';
+      case RideStatus.COMPLETED:         return 'Viaje completado';
+      default: return ride.status;
+    }
+  });
+
   constructor() {
     this.monetizationStore.loadFarePolicy();
-    this.rideStore.loadNearbyDrivers();
   }
 
-  /**
-   * Handles map click, setting the coordinates to the active field.
-   * Automatically calculates distance and fare when both are set.
-   *
-   * @param coord - Clicked lat/lng coordinate.
-   */
+  // ── Map interaction ─────────────────────────────────────────────────
+
   onMapClicked(coord: { lat: number; lng: number }): void {
-    // Don't allow new points after request is submitted
-    if (this.uiState() === 'SEARCHING_DRIVER' || this.uiState() === 'DRIVER_ASSIGNED') return;
+    const state = this.uiState();
+    if (state === 'WAITING_CANDIDATES' || state === 'CANDIDATES_AVAILABLE' ||
+        state === 'DRIVER_SELECTED'    || state === 'RIDE_IN_PROGRESS') return;
 
     const coordStr = `${coord.lat.toFixed(5)},${coord.lng.toFixed(5)}`;
-
     if (this.activeField === 'origin') {
       this.rideStore.setOrigin(coordStr);
-      // Auto-switch to destination if it's empty
       if (!this.rideStore.destination()) {
         this.activeField = 'destination';
       } else {
         this.recalculateDistance();
       }
     } else {
-      this.rideStore.setDestination(coordStr, 0); // Temp dist 0
+      this.rideStore.setDestination(coordStr, 0);
       this.recalculateDistance();
     }
   }
 
   private recalculateDistance(): void {
-    const origin = this.rideStore.origin();
+    const origin      = this.rideStore.origin();
     const destination = this.rideStore.destination();
-    
     if (origin && destination) {
-      const oParts = origin.split(',').map(Number);
-      const dParts = destination.split(',').map(Number);
-      if (oParts.length === 2 && dParts.length === 2) {
-        const dist = calculateEstimatedDistance([oParts[0], oParts[1]], [dParts[0], dParts[1]]);
+      const o = origin.split(',').map(Number);
+      const d = destination.split(',').map(Number);
+      if (o.length === 2 && d.length === 2) {
+        const dist = calculateEstimatedDistance([o[0], o[1]], [d[0], d[1]]);
         this.rideStore.setDestination(destination, dist);
         this.monetizationStore.calculateEstimatedFare(dist);
       }
     }
   }
 
-  /** Updates the active field from the form. */
   onActiveFieldChanged(field: 'origin' | 'destination'): void {
     this.activeField = field;
   }
 
-  /** Receives the geolocation coordinate from TripLocationForm and sets it as origin. */
   onCurrentLocationDetected(coordStr: string): void {
     this.rideStore.setOrigin(coordStr);
     this.activeField = 'destination';
     this.recalculateDistance();
   }
 
-  /** Clears the origin and resets the flow to PREPARING. */
   onClearOrigin(): void {
     this.rideStore.setOrigin('');
     this.rideStore.setDestination('', 0);
     this.activeField = 'origin';
   }
 
-  /** Clears only the destination so the user can re-select. */
   onClearDestination(): void {
     this.rideStore.setDestination('', 0);
     this.activeField = 'destination';
   }
 
-  /** Submits the confirmed ride request. */
+  // ── Request flow ────────────────────────────────────────────────────
+
   onConfirmRequest(): void {
     const passengerId = this.iamStore.currentAccount()?.id;
-    const fare = this.monetizationStore.estimatedFare();
+    const fare        = this.monetizationStore.estimatedFare();
     if (passengerId && fare !== null) {
       this.rideStore.submitRideRequest(passengerId, fare);
     }
   }
 
-  /** Handles manual refresh to check if the specific request was accepted. */
-  onRefreshRequestStatus(): void {
-    this.rideStore.checkRequestStatus();
+  /** Manual refresh: reloads request status + candidates. */
+  onRefreshCandidates(): void {
+    this.rideStore.refreshPassengerRequest();
   }
 
-  /** Clears the expired request so the passenger can start a new one. */
+  /** Passenger selects a specific candidate. */
+  onCandidateSelected(candidate: RideCandidate): void {
+    this.rideStore.selectCandidate(candidate);
+  }
+
+  /** Manual refresh: reloads ride status after driver selection. */
+  onRefreshRide(): void {
+    this.rideStore.refreshPassengerRide();
+  }
+
+  /** Clears expired request to start over. */
   onStartNewRequest(): void {
     this.rideStore.clearCurrentRequest();
     this.rideStore.setOrigin('');
@@ -297,10 +337,8 @@ export class PassengerRequestPageComponent {
     this.activeField = 'origin';
   }
 
-  /** Retries loading after an error. */
   onRetry(): void {
     this.rideStore.clearError();
     this.monetizationStore.loadFarePolicy();
-    this.rideStore.loadNearbyDrivers();
   }
 }

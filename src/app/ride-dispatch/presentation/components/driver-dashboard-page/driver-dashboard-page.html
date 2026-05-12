@@ -35,7 +35,7 @@
       <button mat-flat-button
               class="avail-toggle-btn"
               [color]="rideStore.driverAvailability()?.isAvailable ? 'warn' : 'primary'"
-              [disabled]="uiState() === 'LOADING' || uiState() === 'INSUFFICIENT_BALANCE'"
+              [disabled]="uiState() === 'LOADING' || uiState() === 'INSUFFICIENT_BALANCE' || isInActiveRide()"
               (click)="onToggleAvailability()"
               aria-label="Cambiar disponibilidad">
         <mat-icon>{{ rideStore.driverAvailability()?.isAvailable ? 'stop_circle' : 'play_circle' }}</mat-icon>
@@ -46,28 +46,245 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════ -->
-  <!-- RIGHT COLUMN — List view OR Detail view                       -->
+  <!-- RIGHT COLUMN — State-driven content                           -->
   <!-- ══════════════════════════════════════════════════════════════ -->
   <div class="right-column">
 
-    <!-- ─── DETAIL VIEW ─────────────────────────────────────── -->
-    <ng-container *ngIf="selectedRequest()">
-      <div class="detail-view">
+    <!-- ─── LOADING ──────────────────────────────────────────────── -->
+    <div class="loading-state" *ngIf="uiState() === 'LOADING'">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Cargando información...</span>
+    </div>
 
-        <!-- Back button -->
+    <!-- ─── ERROR ────────────────────────────────────────────────── -->
+    <div class="error-card" *ngIf="uiState() === 'ERROR'">
+      <mat-icon>error_outline</mat-icon>
+      <div class="error-info">
+        <h4>Algo salió mal</h4>
+        <p>{{ rideStore.error() || monetizationStore.error() || driverMgmtStore.error() }}</p>
+        <button mat-stroked-button color="warn" (click)="onRetry()">Reintentar</button>
+      </div>
+    </div>
+
+    <!-- ─── OFFLINE / INSUFFICIENT BALANCE ───────────────────────── -->
+    <div class="offline-state"
+         *ngIf="uiState() === 'DRIVER_OFFLINE' || uiState() === 'INSUFFICIENT_BALANCE'">
+      <mat-icon>wifi_off</mat-icon>
+      <div>
+        <h3>No estás disponible</h3>
+        <p>
+          {{ uiState() === 'INSUFFICIENT_BALANCE'
+            ? 'Recarga tu wallet y actívate para recibir solicitudes.'
+            : 'Actívate desde el panel lateral para empezar a recibir solicitudes.' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- ─── CANDIDATE SUBMITTED — waiting for passenger choice ────── -->
+    <div class="candidate-waiting-card" *ngIf="uiState() === 'CANDIDATE_SUBMITTED'">
+      <div class="waiting-banner">
+        <mat-icon>hourglass_empty</mat-icon>
+        <span>Postulación enviada — esperando decisión del pasajero</span>
+      </div>
+      <div class="ride-body">
+        <p class="detail-section-label">Tu postulación</p>
+        <p style="font-size:13px; color:#6b7280; margin:0 0 16px;">
+          El pasajero revisará tu perfil junto a otros conductores disponibles.
+          Actualiza para saber si fuiste seleccionado.
+        </p>
+        <button mat-stroked-button
+                color="primary"
+                style="width:100%"
+                [disabled]="rideStore.isLoading()"
+                (click)="onRefreshCandidacy()"
+                aria-label="Actualizar estado de postulación">
+          <mat-icon>refresh</mat-icon> Actualizar estado
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── RIDE_ASSIGNED — navigate to pickup ───────────────────── -->
+    <div class="active-ride-card"
+         *ngIf="uiState() === 'RIDE_ASSIGNED'">
+      <div class="ride-banner ride-banner--assigned">
+        <mat-icon>directions</mat-icon>
+        <div class="ride-banner-text">
+          <span class="ride-banner-title">Viaje asignado</span>
+          <span class="ride-banner-sub">Dirígete al punto de recojo del pasajero</span>
+        </div>
+      </div>
+      <div class="ride-body">
+        <p class="detail-section-label">Ruta del viaje</p>
+        <div class="detail-route">
+          <div class="detail-route-row">
+            <span class="detail-dot detail-dot--origin"></span>
+            <div class="detail-route-info">
+              <span class="detail-route-label">Origen</span>
+              <span class="detail-route-value">{{ rideStore.currentRide()?.origin }}</span>
+            </div>
+          </div>
+          <div class="detail-route-line"></div>
+          <div class="detail-route-row">
+            <span class="detail-dot detail-dot--dest"></span>
+            <div class="detail-route-info">
+              <span class="detail-route-label">Destino</span>
+              <span class="detail-route-value">{{ rideStore.currentRide()?.destination }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-chips">
+          <div class="detail-chip">
+            <mat-icon>payments</mat-icon>
+            <div>
+              <div class="chip-value">S/ {{ rideStore.currentRide()?.estimatedFare | number:'1.2-2' }}</div>
+              <div class="chip-label">Tarifa estimada</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="maps-actions">
+          <button mat-flat-button color="accent" class="maps-btn"
+                  (click)="openMapsToOrigin()"
+                  aria-label="Navegar al punto de origen en Google Maps">
+            <mat-icon>map</mat-icon> Navegar al origen
+          </button>
+        </div>
+
+        <button mat-flat-button color="primary" class="ride-action-btn"
+                [disabled]="rideStore.isLoading()"
+                (click)="onMarkOnTheWay()"
+                aria-label="Marcar que estoy en camino">
+          <mat-icon>two_wheeler</mat-icon> Estoy en camino
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── DRIVER_ON_THE_WAY ────────────────────────────────────── -->
+    <div class="active-ride-card"
+         *ngIf="uiState() === 'DRIVER_ON_THE_WAY'">
+      <div class="ride-banner ride-banner--assigned">
+        <mat-icon>two_wheeler</mat-icon>
+        <div class="ride-banner-text">
+          <span class="ride-banner-title">En camino al pasajero</span>
+          <span class="ride-banner-sub">Pulsa "Llegué" cuando estés en el punto de recojo</span>
+        </div>
+      </div>
+      <div class="ride-body">
+        <p class="detail-section-label">Punto de recojo</p>
+        <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
+          {{ rideStore.currentRide()?.origin }}
+        </p>
+        <div class="maps-actions">
+          <button mat-stroked-button class="maps-btn"
+                  (click)="openMapsToOrigin()"
+                  aria-label="Navegar al origen en Google Maps">
+            <mat-icon>map</mat-icon> Abrir en Google Maps
+          </button>
+        </div>
+        <button mat-flat-button color="primary" class="ride-action-btn"
+                [disabled]="rideStore.isLoading()"
+                (click)="onMarkArrived()"
+                aria-label="Marcar que llegué al punto de recojo">
+          <mat-icon>location_on</mat-icon> Llegué al origen
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── DRIVER_ARRIVED ───────────────────────────────────────── -->
+    <div class="active-ride-card"
+         *ngIf="uiState() === 'DRIVER_ARRIVED'">
+      <div class="ride-banner ride-banner--assigned">
+        <mat-icon>location_on</mat-icon>
+        <div class="ride-banner-text">
+          <span class="ride-banner-title">Conductor en el origen</span>
+          <span class="ride-banner-sub">Cuando el pasajero suba, inicia el viaje</span>
+        </div>
+      </div>
+      <div class="ride-body">
+        <p class="detail-section-label">Destino del viaje</p>
+        <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
+          {{ rideStore.currentRide()?.destination }}
+        </p>
+        <div class="maps-actions">
+          <button mat-stroked-button class="maps-btn"
+                  (click)="openMapsToDestination()"
+                  aria-label="Navegar al destino en Google Maps">
+            <mat-icon>map</mat-icon> Ver destino en Google Maps
+          </button>
+        </div>
+        <button mat-flat-button color="primary" class="ride-action-btn"
+                [disabled]="rideStore.isLoading()"
+                (click)="onStartRide()"
+                aria-label="Iniciar el viaje">
+          <mat-icon>play_arrow</mat-icon> Iniciar viaje
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── RIDE_STARTED ────────────────────────────────────────── -->
+    <div class="active-ride-card"
+         *ngIf="uiState() === 'RIDE_STARTED'">
+      <div class="ride-banner ride-banner--started">
+        <mat-icon>two_wheeler</mat-icon>
+        <div class="ride-banner-text">
+          <span class="ride-banner-title">Viaje en curso</span>
+          <span class="ride-banner-sub">Lleva al pasajero al destino y finaliza el viaje</span>
+        </div>
+      </div>
+      <div class="ride-body">
+        <p class="detail-section-label">Destino</p>
+        <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
+          {{ rideStore.currentRide()?.destination }}
+        </p>
+        <div class="maps-actions">
+          <button mat-stroked-button class="maps-btn"
+                  (click)="openMapsToDestination()"
+                  aria-label="Navegar al destino en Google Maps">
+            <mat-icon>map</mat-icon> Navegar al destino
+          </button>
+        </div>
+        <button mat-flat-button color="primary" class="ride-action-btn"
+                [disabled]="rideStore.isLoading()"
+                (click)="onCompleteRide()"
+                aria-label="Finalizar viaje">
+          <mat-icon>flag</mat-icon> Finalizar viaje
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── RIDE_COMPLETED ───────────────────────────────────────── -->
+    <div class="active-ride-card" *ngIf="uiState() === 'RIDE_COMPLETED'">
+      <div class="ride-banner completed-banner">
+        <mat-icon>check_circle</mat-icon>
+        <div class="ride-banner-text">
+          <span class="ride-banner-title">¡Viaje completado!</span>
+          <span class="ride-banner-sub">Buen trabajo. Ya puedes recibir nuevas solicitudes.</span>
+        </div>
+      </div>
+      <div class="ride-body">
+        <p style="font-size:13px; color:#6b7280; margin:0;">
+          El viaje ha finalizado exitosamente. Tu disponibilidad ha sido restaurada.
+        </p>
+      </div>
+    </div>
+
+    <!-- ─── LIST + DETAIL VIEW (non-ride states) ──────────────────── -->
+    <ng-container *ngIf="!isInActiveRide() && uiState() !== 'CANDIDATE_SUBMITTED'">
+
+      <!-- DETAIL VIEW -->
+      <div class="detail-view" *ngIf="selectedRequest()">
         <button mat-button class="detail-back" (click)="onBackToList()">
           <mat-icon>arrow_back</mat-icon> Volver a solicitudes
         </button>
 
         <div class="detail-card">
-          <!-- Banner -->
           <div class="detail-banner">
             <mat-icon>notifications_active</mat-icon>
-            <span>Nueva solicitud de viaje — responde para asignarte</span>
+            <span>Nueva solicitud — postúlate para que el pasajero te elija</span>
           </div>
 
           <div class="detail-body">
-            <!-- Route -->
             <p class="detail-section-label">Ruta del viaje</p>
             <div class="detail-route">
               <div class="detail-route-row">
@@ -87,7 +304,6 @@
               </div>
             </div>
 
-            <!-- Fare + distance chips -->
             <p class="detail-section-label">Detalles del viaje</p>
             <div class="detail-chips">
               <div class="detail-chip">
@@ -106,16 +322,15 @@
               </div>
             </div>
 
-            <!-- Actions -->
             <div class="detail-actions">
               <button mat-flat-button
                       color="primary"
-                      class="accept-btn"
+                      class="apply-btn"
                       [disabled]="rideStore.isLoading()"
-                      (click)="onAcceptRequest(selectedRequest()!)"
-                      aria-label="Aceptar solicitud de viaje">
-                <mat-icon>check_circle</mat-icon>
-                Aceptar viaje
+                      (click)="onApplyToRequest(selectedRequest()!)"
+                      aria-label="Postularme a esta solicitud">
+                <mat-icon>person_add</mat-icon>
+                Postularme
               </button>
               <button mat-stroked-button
                       class="skip-btn"
@@ -126,70 +341,35 @@
             </div>
           </div>
         </div>
-
-      </div>
-    </ng-container>
-
-    <!-- ─── LIST VIEW ────────────────────────────────────────── -->
-    <ng-container *ngIf="!selectedRequest()">
-
-      <div class="requests-header">
-        <span class="requests-title">Solicitudes pendientes</span>
-        <button mat-stroked-button
-                color="primary"
-                [disabled]="uiState() === 'LOADING'"
-                (click)="onRefreshRequests()"
-                aria-label="Actualizar lista de solicitudes">
-          <mat-icon>refresh</mat-icon>
-          Actualizar
-        </button>
       </div>
 
-      <!-- LOADING -->
-      <div class="loading-state" *ngIf="uiState() === 'LOADING'">
-        <mat-spinner diameter="28"></mat-spinner>
-        <span>Cargando información...</span>
-      </div>
-
-      <!-- ERROR -->
-      <div class="error-card" *ngIf="uiState() === 'ERROR'">
-        <mat-icon>error_outline</mat-icon>
-        <div class="error-info">
-          <h4>Algo salió mal</h4>
-          <p>{{ rideStore.error() || monetizationStore.error() || driverMgmtStore.error() }}</p>
-          <button mat-stroked-button color="warn" (click)="onRetry()">Reintentar</button>
+      <!-- LIST VIEW -->
+      <ng-container *ngIf="!selectedRequest()">
+        <div class="requests-header">
+          <span class="requests-title">Solicitudes abiertas</span>
+          <button mat-stroked-button
+                  color="primary"
+                  [disabled]="uiState() === 'LOADING'"
+                  (click)="onRefreshRequests()"
+                  aria-label="Actualizar lista de solicitudes">
+            <mat-icon>refresh</mat-icon> Actualizar
+          </button>
         </div>
-      </div>
 
-      <!-- OFFLINE / INSUFFICIENT BALANCE -->
-      <div class="offline-state"
-           *ngIf="uiState() === 'DRIVER_OFFLINE' || uiState() === 'INSUFFICIENT_BALANCE'">
-        <mat-icon>wifi_off</mat-icon>
-        <div>
-          <h3>No estás disponible</h3>
-          <p>
-            {{ uiState() === 'INSUFFICIENT_BALANCE'
-              ? 'Recarga tu wallet y actívate para recibir solicitudes.'
-              : 'Actívate desde el panel lateral para empezar a recibir solicitudes.' }}
-          </p>
+        <div class="empty-state" *ngIf="uiState() === 'NO_PENDING_REQUESTS'">
+          <mat-icon>inbox</mat-icon>
+          <h3>Sin solicitudes por ahora</h3>
+          <p>No hay solicitudes abiertas. Presiona Actualizar para verificar de nuevo.</p>
         </div>
-      </div>
 
-      <!-- NO PENDING REQUESTS -->
-      <div class="empty-state" *ngIf="uiState() === 'NO_PENDING_REQUESTS'">
-        <mat-icon>inbox</mat-icon>
-        <h3>Sin solicitudes por ahora</h3>
-        <p>No hay solicitudes pendientes. Presiona Actualizar para verificar de nuevo.</p>
-      </div>
-
-      <!-- REQUEST LIST -->
-      <div class="request-list" *ngIf="uiState() === 'PENDING_REQUESTS_LOADED'">
-        <app-pending-request-card
-          *ngFor="let req of rideStore.openRequests()"
-          [request]="req"
-          (viewDetails)="onViewDetails($event)">
-        </app-pending-request-card>
-      </div>
+        <div class="request-list" *ngIf="uiState() === 'PENDING_REQUESTS_LOADED'">
+          <app-pending-request-card
+            *ngFor="let req of rideStore.openRequests()"
+            [request]="req"
+            (viewDetails)="onViewDetails($event)">
+          </app-pending-request-card>
+        </div>
+      </ng-container>
 
     </ng-container>
 

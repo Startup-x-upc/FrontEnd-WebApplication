@@ -11,9 +11,9 @@
       <p>Indica tu origen y destino en el mapa para calcular la tarifa</p>
     </div>
 
-    <!-- Location form (shown until request is submitted) -->
+    <!-- Location form (hidden once request is submitted) -->
     <app-trip-location-form
-      *ngIf="uiState() !== 'SEARCHING_DRIVER' && uiState() !== 'DRIVER_ASSIGNED'"
+      *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY'"
       [origin]="rideStore.origin()"
       [destination]="rideStore.destination()"
       [activeField]="activeField"
@@ -34,17 +34,17 @@
   </div>
 
   <!-- ════════════════════════════════════════════════════════════ -->
-  <!-- RIGHT PANEL — One active state at a time                    -->
+  <!-- RIGHT PANEL — One active state block at a time             -->
   <!-- ════════════════════════════════════════════════════════════ -->
   <div class="right-panel">
 
-    <!-- ① PREPARING / FARE_READY — Show driver availability -->
+    <!-- ① PREPARING / FARE_READY — referential availability -->
     <app-trip-availability-summary
       *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY'"
-      [nearbyDrivers]="rideStore.nearbyDrivers()">
+      [nearbyDrivers]="[]">
     </app-trip-availability-summary>
 
-    <!-- ② FARE_READY — Show fare card with primary CTA -->
+    <!-- ② FARE_READY — confirm button -->
     <app-fare-summary-card
       *ngIf="uiState() === 'FARE_READY'"
       [estimatedFare]="monetizationStore.estimatedFare()"
@@ -53,27 +53,82 @@
       (confirm)="onConfirmRequest()">
     </app-fare-summary-card>
 
-    <!-- REQUEST_EXPIRED — no driver accepted in time -->
+    <!-- ③ WAITING_CANDIDATES — pending spinner with manual refresh -->
+    <app-trip-request-status
+      *ngIf="uiState() === 'WAITING_CANDIDATES'"
+      [uiState]="'SEARCHING_DRIVER'"
+      [request]="rideStore.currentRequest()"
+      [isLoading]="rideStore.isLoading()"
+      (refreshRequested)="onRefreshCandidates()">
+    </app-trip-request-status>
+
+    <!-- ④ CANDIDATES_AVAILABLE — list of driver candidates -->
+    <app-ride-candidates-list
+      *ngIf="uiState() === 'CANDIDATES_AVAILABLE'"
+      [candidates]="rideStore.candidates()"
+      (candidateSelected)="onCandidateSelected($event)"
+      (refreshRequested)="onRefreshCandidates()">
+    </app-ride-candidates-list>
+
+    <!-- ⑤ DRIVER_SELECTED — ride created, waiting for driver to move -->
+    <div class="ride-status-card" *ngIf="uiState() === 'DRIVER_SELECTED'">
+      <div class="ride-status-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="ride-status-info">
+        <h3>¡Conductor confirmado!</h3>
+        <p>El conductor se dirigirá hacia tu punto de recojo en breve.</p>
+        <span class="ride-status-badge">{{ rideStatusLabel() }}</span>
+        <br>
+        <button mat-stroked-button color="primary" class="refresh-mini" (click)="onRefreshRide()">
+          <mat-icon>refresh</mat-icon> Actualizar estado
+        </button>
+      </div>
+    </div>
+
+    <!-- ⑥ RIDE_IN_PROGRESS — driver in transit / arrived / started -->
+    <div class="ride-status-card" *ngIf="uiState() === 'RIDE_IN_PROGRESS'">
+      <div class="ride-status-icon">
+        <mat-icon>two_wheeler</mat-icon>
+      </div>
+      <div class="ride-status-info">
+        <h3>Viaje en progreso</h3>
+        <p>Tu conductor está en camino. Actualiza para ver el estado más reciente.</p>
+        <span class="ride-status-badge">{{ rideStatusLabel() }}</span>
+        <br>
+        <button mat-stroked-button color="primary" class="refresh-mini" (click)="onRefreshRide()">
+          <mat-icon>refresh</mat-icon> Actualizar estado
+        </button>
+      </div>
+    </div>
+
+    <!-- ⑦ RIDE_COMPLETED -->
+    <div class="ride-status-card completed-card" *ngIf="uiState() === 'RIDE_COMPLETED'">
+      <div class="ride-status-icon">
+        <mat-icon>flag</mat-icon>
+      </div>
+      <div class="ride-status-info">
+        <h3>¡Viaje completado!</h3>
+        <p>Gracias por usar nuestra plataforma. ¿Deseas solicitar otro viaje?</p>
+        <button mat-flat-button color="primary" style="margin-top:10px" (click)="onStartNewRequest()">
+          Nuevo viaje
+        </button>
+      </div>
+    </div>
+
+    <!-- ⑧ REQUEST_EXPIRED -->
     <div class="error-card" *ngIf="uiState() === 'REQUEST_EXPIRED'">
       <mat-icon>timer_off</mat-icon>
       <div class="error-info">
         <h4>Solicitud vencida</h4>
-        <p>Ningún conductor aceptó tu solicitud a tiempo. Puedes intentarlo nuevamente.</p>
+        <p>Ningún conductor se postuló a tiempo. Puedes intentarlo nuevamente.</p>
         <button mat-stroked-button color="primary" (click)="onStartNewRequest()">
           Nueva solicitud
         </button>
       </div>
     </div>
 
-    <app-trip-request-status
-      *ngIf="uiState() === 'SEARCHING_DRIVER' || uiState() === 'DRIVER_ASSIGNED'"
-      [uiState]="uiState()"
-      [request]="rideStore.currentRequest()"
-      [isLoading]="rideStore.isLoading()"
-      (refreshRequested)="onRefreshRequestStatus()">
-    </app-trip-request-status>
-
-    <!-- ⑤ ERROR — Recoverable error state -->
+    <!-- ⑨ ERROR -->
     <div class="error-card" *ngIf="uiState() === 'ERROR'">
       <mat-icon>error_outline</mat-icon>
       <div class="error-info">

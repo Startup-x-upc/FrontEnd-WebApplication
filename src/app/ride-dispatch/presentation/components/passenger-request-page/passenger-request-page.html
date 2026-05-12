@@ -19,7 +19,8 @@
       [activeField]="activeField"
       (activeFieldChanged)="onActiveFieldChanged($event)"
       (clearOriginRequested)="onClearOrigin()"
-      (clearDestinationRequested)="onClearDestination()">
+      (clearDestinationRequested)="onClearDestination()"
+      (currentLocationDetected)="onCurrentLocationDetected($event)">
     </app-trip-location-form>
 
     <!-- Map (always visible) -->

@@ -56,10 +56,23 @@ function coordSubtitle(value: string): string | null {
   template: `
     <div class="location-form-card">
 
-      <!-- Map interaction hint -->
-      <p class="step-hint">
-        <mat-icon class="step-icon">touch_app</mat-icon>
-        Toca el mapa para indicar tu origen y destino
+      <!-- Map interaction hint + geolocation CTA -->
+      <div class="hint-row">
+        <p class="step-hint">
+          <mat-icon class="step-icon">touch_app</mat-icon>
+          Toca el mapa para indicar tu origen y destino
+        </p>
+        <button mat-stroked-button type="button" class="geo-btn"
+                [disabled]="geoLoading()"
+                (click)="useCurrentLocation()"
+                aria-label="Usar mi ubicación actual">
+          <mat-icon>my_location</mat-icon>
+          {{ geoLoading() ? 'Localizando...' : 'Mi ubicación' }}
+        </button>
+      </div>
+      <p class="geo-error" *ngIf="geoError()">
+        <mat-icon class="geo-error-icon">location_off</mat-icon>
+        {{ geoError() }}
       </p>
 
       <!-- Origin row -->
@@ -124,21 +137,61 @@ function coordSubtitle(value: string): string | null {
       box-shadow: 0 2px 8px rgba(0,0,0,0.07);
     }
 
-    /* Step hint */
+    /* Hint row */
+    .hint-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
     .step-hint {
       display: flex;
       align-items: center;
       gap: 6px;
       font-size: 12px;
       color: #9ca3af;
-      margin: 0 0 14px;
+      margin: 0;
       line-height: 1.4;
+      flex: 1;
     }
     .step-icon {
       font-size: 15px;
       height: 15px;
       width: 15px;
       vertical-align: middle;
+    }
+    .geo-btn {
+      font-size: 12px;
+      font-weight: 600;
+      height: 32px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .geo-btn mat-icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+      margin-right: 4px;
+    }
+    .geo-error {
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      font-size: 11px;
+      color: #dc2626;
+      background: #fef2f2;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin: -6px 0 8px;
+      line-height: 1.4;
+    }
+    .geo-error-icon {
+      font-size: 13px;
+      height: 13px;
+      width: 13px;
+      flex-shrink: 0;
+      margin-top: 1px;
     }
 
     .location-row {
@@ -255,6 +308,11 @@ export class TripLocationFormComponent implements OnChanges {
   @Output() clearDestinationRequested = new EventEmitter<void>();
   /** Emitted when the user clicks a row to set it active. */
   @Output() activeFieldChanged = new EventEmitter<'origin' | 'destination'>();
+  /** Emitted when geolocation resolves — carries the coordinate string "lat,lng". */
+  @Output() currentLocationDetected = new EventEmitter<string>();
+
+  geoError = signal<string | null>(null);
+  geoLoading = signal<boolean>(false);
 
   /** Kept for structural compatibility (inputs are map-driven). */
   form = new FormGroup({
@@ -299,5 +357,27 @@ export class TripLocationFormComponent implements OnChanges {
     if (this.activeField !== field) {
       this.activeFieldChanged.emit(field);
     }
+  }
+
+  /** Requests the device GPS location and emits it as a coordinate string. */
+  useCurrentLocation(): void {
+    if (!navigator.geolocation) {
+      this.geoError.set('Tu dispositivo no soporta geolocalización.');
+      return;
+    }
+    this.geoLoading.set(true);
+    this.geoError.set(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coordStr = `${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`;
+        this.geoLoading.set(false);
+        this.currentLocationDetected.emit(coordStr);
+      },
+      () => {
+        this.geoLoading.set(false);
+        this.geoError.set('No se pudo obtener tu ubicación. Toca el mapa para fijarla manualmente.');
+      },
+      { timeout: 8000 },
+    );
   }
 }

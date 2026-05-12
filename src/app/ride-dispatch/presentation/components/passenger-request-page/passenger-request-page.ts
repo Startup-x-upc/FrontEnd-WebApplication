@@ -253,6 +253,13 @@ export class PassengerRequestPageComponent {
     this.activeField = field;
   }
 
+  /** Receives the geolocation coordinate from TripLocationForm and sets it as origin. */
+  onCurrentLocationDetected(coordStr: string): void {
+    this.rideStore.setOrigin(coordStr);
+    this.activeField = 'destination';
+    this.recalculateDistance();
+  }
+
   /** Clears the origin and resets the flow to PREPARING. */
   onClearOrigin(): void {
     this.rideStore.setOrigin('');

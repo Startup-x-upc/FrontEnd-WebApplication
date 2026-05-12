@@ -63,7 +63,10 @@ function coordSubtitle(value: string): string | null {
       </p>
 
       <!-- Origin row -->
-      <div class="location-row" [class.location-row--set]="originDisplay()">
+      <div class="location-row" 
+           [class.location-row--set]="originDisplay()"
+           [class.location-row--active]="activeField === 'origin'"
+           (click)="setActiveField('origin')">
         <div class="location-dot origin-dot"></div>
         <div class="location-text">
           <span class="location-label">Punto de partida</span>
@@ -86,7 +89,10 @@ function coordSubtitle(value: string): string | null {
       <div class="connector-line"></div>
 
       <!-- Destination row -->
-      <div class="location-row" [class.location-row--set]="destinationDisplay()">
+      <div class="location-row" 
+           [class.location-row--set]="destinationDisplay()"
+           [class.location-row--active]="activeField === 'destination'"
+           (click)="setActiveField('destination')">
         <div class="location-dot dest-dot"></div>
         <div class="location-text">
           <span class="location-label">Destino</span>
@@ -135,7 +141,6 @@ function coordSubtitle(value: string): string | null {
       vertical-align: middle;
     }
 
-    /* Location row */
     .location-row {
       display: flex;
       align-items: center;
@@ -144,11 +149,20 @@ function coordSubtitle(value: string): string | null {
       border-radius: 8px;
       border: 1.5px solid #f3f4f6;
       background: #fafafa;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .location-row:hover {
+      background: #f3f4f6;
     }
     .location-row--set {
       background: white;
       border-color: #e5e7eb;
+    }
+    .location-row--active {
+      border-color: #1a73e8;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
     }
 
     /* Colored dot */
@@ -232,10 +246,15 @@ export class TripLocationFormComponent implements OnChanges {
   @Input() origin: string = '';
   /** Raw destination string from parent (may be coordinates or address). */
   @Input() destination: string = '';
+  /** The currently active field for map clicks. */
+  @Input() activeField: 'origin' | 'destination' = 'origin';
+
   /** Emitted when the user requests clearing the origin. */
   @Output() clearOriginRequested = new EventEmitter<void>();
   /** Emitted when the user requests clearing the destination. */
   @Output() clearDestinationRequested = new EventEmitter<void>();
+  /** Emitted when the user clicks a row to set it active. */
+  @Output() activeFieldChanged = new EventEmitter<'origin' | 'destination'>();
 
   /** Kept for structural compatibility (inputs are map-driven). */
   form = new FormGroup({
@@ -273,5 +292,12 @@ export class TripLocationFormComponent implements OnChanges {
   /** Requests the parent to clear the destination location. */
   clearDestination(): void {
     this.clearDestinationRequested.emit();
+  }
+
+  /** Changes the active field for map input. */
+  setActiveField(field: 'origin' | 'destination'): void {
+    if (this.activeField !== field) {
+      this.activeFieldChanged.emit(field);
+    }
   }
 }

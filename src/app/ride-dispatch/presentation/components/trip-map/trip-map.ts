@@ -1,11 +1,22 @@
-import { Component, Input, Output, EventEmitter, AfterViewInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  AfterViewInit,
+  OnChanges,
+  SimpleChanges,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
+import { MatIcon } from '@angular/material/icon';
 
 /**
  * @summary SVG path for a map pin (material-style drop-pin).
  */
-const PIN_PATH = 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z';
+const PIN_PATH =
+  'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z';
 
 /**
  * @summary Builds a colored SVG pin DivIcon for Leaflet.
@@ -26,7 +37,7 @@ function buildPinIcon(fillColor: string, strokeColor: string, size = 36): L.DivI
     html: svg,
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
-    popupAnchor: [0, -size]
+    popupAnchor: [0, -size],
   });
 }
 
@@ -47,7 +58,7 @@ function buildDriverIcon(): L.DivIcon {
     html: svg,
     iconSize: [32, 32],
     iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
+    popupAnchor: [0, -16],
   });
 }
 
@@ -66,7 +77,7 @@ const DEST_STROKE = '#dc2626';
 @Component({
   selector: 'app-trip-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIcon],
   template: `
     <div class="map-wrapper">
       <div id="trip-map" class="map-frame"></div>
@@ -85,10 +96,6 @@ const DEST_STROKE = '#dc2626';
           <span class="legend-dot" style="background:#1a73e8"></span>
           <span>Conductor</span>
         </div>
-        <div class="legend-item" *ngIf="hasRoute">
-          <span class="legend-line"></span>
-          <span>Ruta</span>
-        </div>
       </div>
 
       <!-- Map hint overlay (only when map is empty) -->
@@ -98,102 +105,89 @@ const DEST_STROKE = '#dc2626';
       </div>
     </div>
   `,
-  styles: [`
-    .map-wrapper {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      min-height: 400px;
-    }
-    .map-frame {
-      width: 100%;
-      height: 100%;
-      min-height: 400px;
-      border-radius: 12px;
-    }
-    /* Suppress Leaflet outline on focus */
-    :host ::ng-deep .leaflet-container:focus {
-      outline: none;
-    }
-    :host ::ng-deep .custom-map-icon {
-      background: transparent !important;
-      border: none !important;
-    }
-    /* Route polyline style (applied via Leaflet, reinforced here) */
-    :host ::ng-deep .route-polyline {
-      stroke: #1a73e8;
-      stroke-width: 4;
-      stroke-dasharray: none;
-      opacity: 0.75;
-    }
+  styles: [
+    `
+      .map-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 400px;
+      }
+      .map-frame {
+        width: 100%;
+        height: 100%;
+        min-height: 400px;
+        border-radius: 12px;
+      }
+      /* Suppress Leaflet outline on focus */
+      :host ::ng-deep .leaflet-container:focus {
+        outline: none;
+      }
+      :host ::ng-deep .custom-map-icon {
+        background: transparent !important;
+        border: none !important;
+      }
 
-    /* Legend */
-    .map-legend {
-      position: absolute;
-      bottom: 16px;
-      left: 16px;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(4px);
-      border-radius: 8px;
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-      z-index: 1000;
-      pointer-events: none;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: #374151;
-      font-weight: 500;
-    }
-    .legend-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .legend-line {
-      width: 18px;
-      height: 3px;
-      background: #1a73e8;
-      border-radius: 2px;
-      flex-shrink: 0;
-      opacity: 0.75;
-    }
+      /* Legend */
+      .map-legend {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(4px);
+        border-radius: 8px;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        z-index: 1000;
+        pointer-events: none;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #374151;
+        font-weight: 500;
+      }
+      .legend-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
 
-    /* Empty state hint overlay */
-    .map-hint {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(4px);
-      border-radius: 24px;
-      padding: 10px 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: #4b5563;
-      font-weight: 500;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
-      z-index: 1000;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    .map-hint mat-icon {
-      font-size: 18px;
-      height: 18px;
-      width: 18px;
-      color: #1a73e8;
-    }
-  `]
+      /* Empty state hint overlay */
+      .map-hint {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(4px);
+        border-radius: 24px;
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #4b5563;
+        font-weight: 500;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .map-hint mat-icon {
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        color: #1a73e8;
+      }
+    `,
+  ],
 })
 export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   /** Raw origin coordinate string (lat,lng). */
@@ -203,25 +197,21 @@ export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   /** Array of nearby driver objects with lat/lng/name. */
   @Input() nearbyDrivers: any[] = [];
   /** Emitted when the user clicks on the map. */
-  @Output() mapClicked = new EventEmitter<{lat: number, lng: number}>();
+  @Output() mapClicked = new EventEmitter<{ lat: number; lng: number }>();
 
   /** Whether to show the legend overlay. */
   get showLegend(): boolean {
     return !!(this.origin || this.destination || this.nearbyDrivers.length > 0);
   }
 
-  /** Whether a route polyline should be shown. */
-  get hasRoute(): boolean {
-    return !!(this.origin && this.destination);
-  }
-
   private map: L.Map | undefined;
   private markers: L.Layer[] = [];
-  private routePolyline: L.Polyline | undefined;
 
   ngAfterViewInit(): void {
     this.initMap();
-    setTimeout(() => { this.map?.invalidateSize(); }, 150);
+    setTimeout(() => {
+      this.map?.invalidateSize();
+    }, 150);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -239,7 +229,7 @@ export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      maxZoom: 19
+      maxZoom: 19,
     }).addTo(this.map);
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
@@ -268,12 +258,8 @@ export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   /** Clears all markers and the route polyline from the map. */
   private clearMap(): void {
-    this.markers.forEach(m => m.remove());
+    this.markers.forEach((m) => m.remove());
     this.markers = [];
-    if (this.routePolyline) {
-      this.routePolyline.remove();
-      this.routePolyline = undefined;
-    }
   }
 
   /** Rebuilds markers and route based on current inputs. */
@@ -295,28 +281,17 @@ export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Destination marker (red pin)
     if (this.destination) {
-      destCoord = this.parseCoord(this.destination, -9.47500, -78.29500);
+      destCoord = this.parseCoord(this.destination, -9.475, -78.295);
       const marker = L.marker(destCoord, { icon: buildPinIcon(DEST_COLOR, DEST_STROKE) })
         .bindPopup('<b style="color:#dc2626">🏁 Destino</b>')
         .addTo(this.map!);
       this.markers.push(marker);
     }
 
-    // Route polyline (straight-line estimate when both points are set)
+    // Center map appropriately
     if (originCoord && destCoord) {
-      this.routePolyline = L.polyline([originCoord, destCoord], {
-        color: '#1a73e8',
-        weight: 4,
-        opacity: 0.72,
-        dashArray: '8 4'
-      }).addTo(this.map!);
-      this.markers.push(this.routePolyline);
-
-      // Fit map to show the full route
-      const group = L.featureGroup([
-        L.marker(originCoord),
-        L.marker(destCoord)
-      ]);
+      // Fit map to show both points without polyline
+      const group = L.featureGroup([L.marker(originCoord), L.marker(destCoord)]);
       this.map.fitBounds(group.getBounds(), { padding: [60, 60] });
     } else if (originCoord) {
       this.map.setView(originCoord, 16);
@@ -325,13 +300,15 @@ export class TripMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     }
 
     // Nearby driver markers (blue mototaxi icon)
-    this.nearbyDrivers.forEach(driver => {
+    this.nearbyDrivers.forEach((driver) => {
       const driverMarker = L.marker([driver.lat, driver.lng], { icon: buildDriverIcon() })
-        .bindPopup(`
+        .bindPopup(
+          `
           <div style="font-size:13px;min-width:120px;">
             <b>${driver.name ?? 'Conductor'}</b><br>
             <span style="color:#f59e0b;">★</span> ${driver.rating ?? ''}
-          </div>`)
+          </div>`,
+        )
         .addTo(this.map!);
       this.markers.push(driverMarker);
     });

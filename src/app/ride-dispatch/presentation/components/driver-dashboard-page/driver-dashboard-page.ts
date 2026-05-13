@@ -11,9 +11,21 @@ import { MonetizationStore } from '../../../../monetization/application/monetiza
 
 import { WalletBalanceCardComponent } from '../../../../monetization/presentation/components/wallet-balance-card/wallet-balance-card';
 import { PendingRequestCardComponent } from '../pending-request-card/pending-request-card';
+import { TripMapComponent } from '../trip-map/trip-map';
 import { RideRequest } from '../../../domain/model/ride-request.entity';
 import { RideStatus } from '../../../domain/model/ride.status';
 import { buildGoogleMapsDirectionsUrl } from '../../../../shared/utils/maps.utils';
+
+function isRawCoord(v: string): boolean {
+  const p = v.split(',');
+  return p.length === 2 && !isNaN(parseFloat(p[0])) && !isNaN(parseFloat(p[1]));
+}
+
+export function humanizeCoord(v: string | undefined, type: 'origin' | 'destination'): string {
+  if (!v) return '—';
+  if (isRawCoord(v)) return type === 'origin' ? 'Punto de recojo' : 'Destino';
+  return v;
+}
 
 /**
  * @summary Possible UI states for the driver dashboard.
@@ -48,7 +60,7 @@ export type DriverUiState =
 /**
  * @summary Main screen for the DRIVER role.
  * Implements the inDrive-style flow: browse open requests → apply →
- * wait for passenger decision → active ride progression with external Google Maps links.
+ * wait for passenger decision → active ride progression with integrated Leaflet previews & external Google Maps links.
  * @author Jesús Iván Castillo Vidal
  */
 @Component({
@@ -61,6 +73,7 @@ export type DriverUiState =
     MatProgressSpinnerModule,
     WalletBalanceCardComponent,
     PendingRequestCardComponent,
+    TripMapComponent,
   ],
   templateUrl: './driver-dashboard-page.html',
   styles: [`
@@ -115,17 +128,24 @@ export type DriverUiState =
     }
     .detail-banner mat-icon { color: #d97706; font-size: 20px; height: 20px; width: 20px; }
     .detail-banner span     { font-size: 13px; font-weight: 600; color: #92400e; }
+    
+    .detail-map-wrapper {
+      height: 260px; width: 100%; border-bottom: 1px solid #e5e7eb; position: relative; overflow: hidden;
+    }
+
     .detail-body            { padding: 22px; }
     .detail-section-label   { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
     .detail-route           { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; }
     .detail-route-row       { display: flex; align-items: flex-start; gap: 14px; }
     .detail-dot             { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
-    .detail-dot--origin     { background: #1a73e8; }
-    .detail-dot--dest       { background: #d97706; }
+    .detail-dot--origin     { background: #10b981; }
+    .detail-dot--dest       { background: #ef4444; }
     .detail-route-line      { width: 2px; height: 20px; background: #e5e7eb; margin-left: 5px; }
     .detail-route-info      { display: flex; flex-direction: column; }
     .detail-route-label     { font-size: 10px; color: #9ca3af; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
     .detail-route-value     { font-size: 14px; color: #1f2937; font-weight: 600; line-height: 1.4; }
+    .detail-route-coord     { font-size: 11px; color: #6b7280; margin-top: 2px; font-family: monospace; }
+    
     .detail-chips           { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
     .detail-chip            { display: flex; align-items: center; gap: 6px; background: #f3f4f6; padding: 8px 14px; border-radius: 20px; }
     .detail-chip mat-icon   { font-size: 16px; height: 16px; width: 16px; color: #6b7280; }
@@ -181,6 +201,11 @@ export type DriverUiState =
     .ride-banner--started mat-icon,
     .ride-banner--started .ride-banner-title { color: #065f46; }
     .ride-banner--started .ride-banner-sub   { color: #059669; }
+    
+    .active-map-wrapper {
+      height: 280px; width: 100%; border-bottom: 1px solid #e5e7eb; position: relative; overflow: hidden;
+    }
+    
     .ride-body { padding: 22px; }
     .maps-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
     .maps-btn { width: 100%; height: 44px; font-size: 14px; font-weight: 600; border-radius: 10px; }
@@ -200,6 +225,8 @@ export class DriverDashboardPageComponent {
   protected monetizationStore = inject(MonetizationStore);
 
   readonly selectedRequest = signal<RideRequest | null>(null);
+  readonly isRawCoord = isRawCoord;
+  readonly humanizeCoord = humanizeCoord;
 
   constructor() {
     const account = this.iamStore.currentAccount();
@@ -265,6 +292,10 @@ export class DriverDashboardPageComponent {
   openMapsToDestination(): void {
     const dest = this.rideStore.currentRide()?.destination;
     if (dest) window.open(buildGoogleMapsDirectionsUrl(dest), '_blank');
+  }
+
+  openRequestMapsToOrigin(request: RideRequest): void {
+    window.open(buildGoogleMapsDirectionsUrl(request.origin), '_blank');
   }
 
   // ── Driver actions ──────────────────────────────────────────────────
@@ -336,5 +367,40 @@ export class DriverDashboardPageComponent {
     const account = this.iamStore.currentAccount();
     if (account) this.driverMgmtStore.loadDriverByAccountId(account.id);
     this.rideStore.loadOpenRequests();
+  }
+
+  // ── Unified Active Ride Controller Helper Methods ───────────────────
+
+  getActiveRideIcon(): string {
+    const state = this.uiState();
+    if (state === 'RIDE_COMPLETED') return 'check_circle';
+    if (state === 'RIDE_STARTED') return 'two_wheeler';
+    if (state === 'DRIVER_ARRIVED') return 'location_on';
+    if (state === 'DRIVER_ON_THE_WAY') return 'two_wheeler';
+    return 'directions';
+  }
+
+  getActiveRideTitle(): string {
+    const state = this.uiState();
+    switch (state) {
+      case 'RIDE_ASSIGNED': return 'Viaje asignado';
+      case 'DRIVER_ON_THE_WAY': return 'En camino al pasajero';
+      case 'DRIVER_ARRIVED': return 'Conductor en el origen';
+      case 'RIDE_STARTED': return 'Viaje en curso';
+      case 'RIDE_COMPLETED': return '¡Viaje completado!';
+      default: return 'Viaje activo';
+    }
+  }
+
+  getActiveRideSubtitle(): string {
+    const state = this.uiState();
+    switch (state) {
+      case 'RIDE_ASSIGNED': return 'Dirígete al punto de recojo del pasajero';
+      case 'DRIVER_ON_THE_WAY': return 'Pulsa "Llegué" cuando estés en el punto de recojo';
+      case 'DRIVER_ARRIVED': return 'Cuando el pasajero suba, inicia el viaje';
+      case 'RIDE_STARTED': return 'Lleva al pasajero al destino y finaliza el viaje';
+      case 'RIDE_COMPLETED': return 'Buen trabajo. Ya puedes recibir nuevas solicitudes.';
+      default: return '';
+    }
   }
 }

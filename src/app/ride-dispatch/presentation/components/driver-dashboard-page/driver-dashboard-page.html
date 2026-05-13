@@ -103,176 +103,167 @@
       </div>
     </div>
 
-    <!-- ─── RIDE_ASSIGNED — navigate to pickup ───────────────────── -->
-    <div class="active-ride-card"
-         *ngIf="uiState() === 'RIDE_ASSIGNED'">
-      <div class="ride-banner ride-banner--assigned">
-        <mat-icon>directions</mat-icon>
+    <!-- ─── UNIFIED ACTIVE RIDE CARD ────────────────────────────── -->
+    <div class="active-ride-card" *ngIf="isInActiveRide()">
+      <div class="ride-banner"
+           [class.ride-banner--assigned]="uiState() !== 'RIDE_STARTED' && uiState() !== 'RIDE_COMPLETED'"
+           [class.ride-banner--started]="uiState() === 'RIDE_STARTED'"
+           [class.completed-banner]="uiState() === 'RIDE_COMPLETED'">
+        <mat-icon>{{ getActiveRideIcon() }}</mat-icon>
         <div class="ride-banner-text">
-          <span class="ride-banner-title">Viaje asignado</span>
-          <span class="ride-banner-sub">Dirígete al punto de recojo del pasajero</span>
+          <span class="ride-banner-title">{{ getActiveRideTitle() }}</span>
+          <span class="ride-banner-sub">{{ getActiveRideSubtitle() }}</span>
         </div>
       </div>
+
+      <!-- Leaflet Map for spatial context (only if trip is not completed) -->
+      <div class="active-map-wrapper" *ngIf="uiState() !== 'RIDE_COMPLETED'">
+        <app-trip-map
+          [origin]="rideStore.currentRide()?.origin || ''"
+          [destination]="rideStore.currentRide()?.destination || ''">
+        </app-trip-map>
+      </div>
+
       <div class="ride-body">
-        <p class="detail-section-label">Ruta del viaje</p>
-        <div class="detail-route">
-          <div class="detail-route-row">
-            <span class="detail-dot detail-dot--origin"></span>
-            <div class="detail-route-info">
-              <span class="detail-route-label">Origen</span>
-              <span class="detail-route-value">{{ rideStore.currentRide()?.origin }}</span>
+
+        <!-- RIDE_ASSIGNED View -->
+        <ng-container *ngIf="uiState() === 'RIDE_ASSIGNED'">
+          <p class="detail-section-label">Ruta del viaje</p>
+          <div class="detail-route">
+            <div class="detail-route-row">
+              <span class="detail-dot detail-dot--origin"></span>
+              <div class="detail-route-info">
+                <span class="detail-route-label">Punto de recojo</span>
+                <span class="detail-route-value">{{ humanizeCoord(rideStore.currentRide()?.origin, 'origin') }}</span>
+                <span class="detail-route-coord" *ngIf="isRawCoord(rideStore.currentRide()?.origin || '')">{{ rideStore.currentRide()?.origin }}</span>
+              </div>
+            </div>
+            <div class="detail-route-line"></div>
+            <div class="detail-route-row">
+              <span class="detail-dot detail-dot--dest"></span>
+              <div class="detail-route-info">
+                <span class="detail-route-label">Destino</span>
+                <span class="detail-route-value">{{ humanizeCoord(rideStore.currentRide()?.destination, 'destination') }}</span>
+                <span class="detail-route-coord" *ngIf="isRawCoord(rideStore.currentRide()?.destination || '')">{{ rideStore.currentRide()?.destination }}</span>
+              </div>
             </div>
           </div>
-          <div class="detail-route-line"></div>
-          <div class="detail-route-row">
-            <span class="detail-dot detail-dot--dest"></span>
-            <div class="detail-route-info">
-              <span class="detail-route-label">Destino</span>
-              <span class="detail-route-value">{{ rideStore.currentRide()?.destination }}</span>
+
+          <div class="detail-chips">
+            <div class="detail-chip">
+              <mat-icon>payments</mat-icon>
+              <div>
+                <div class="chip-value">S/ {{ rideStore.currentRide()?.estimatedFare | number:'1.2-2' }}</div>
+                <div class="chip-label">Tarifa estimada</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="detail-chips">
-          <div class="detail-chip">
-            <mat-icon>payments</mat-icon>
-            <div>
-              <div class="chip-value">S/ {{ rideStore.currentRide()?.estimatedFare | number:'1.2-2' }}</div>
-              <div class="chip-label">Tarifa estimada</div>
-            </div>
+          <div class="maps-actions">
+            <button mat-flat-button color="accent" class="maps-btn"
+                    (click)="openMapsToOrigin()"
+                    aria-label="Navegar al punto de origen en Google Maps">
+              <mat-icon>map</mat-icon> Navegar al origen
+            </button>
           </div>
-        </div>
 
-        <div class="maps-actions">
-          <button mat-flat-button color="accent" class="maps-btn"
-                  (click)="openMapsToOrigin()"
-                  aria-label="Navegar al punto de origen en Google Maps">
-            <mat-icon>map</mat-icon> Navegar al origen
+          <button mat-flat-button color="primary" class="ride-action-btn"
+                  [disabled]="rideStore.isLoading()"
+                  (click)="onMarkOnTheWay()"
+                  aria-label="Marcar que estoy en camino">
+            <mat-icon>two_wheeler</mat-icon> Estoy en camino
           </button>
-        </div>
+        </ng-container>
 
-        <button mat-flat-button color="primary" class="ride-action-btn"
-                [disabled]="rideStore.isLoading()"
-                (click)="onMarkOnTheWay()"
-                aria-label="Marcar que estoy en camino">
-          <mat-icon>two_wheeler</mat-icon> Estoy en camino
-        </button>
-      </div>
-    </div>
+        <!-- DRIVER_ON_THE_WAY View -->
+        <ng-container *ngIf="uiState() === 'DRIVER_ON_THE_WAY'">
+          <p class="detail-section-label">Punto de recojo</p>
+          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 4px;">
+            {{ humanizeCoord(rideStore.currentRide()?.origin, 'origin') }}
+          </p>
+          <p class="detail-route-coord" style="margin-bottom: 16px;" *ngIf="isRawCoord(rideStore.currentRide()?.origin || '')">
+            {{ rideStore.currentRide()?.origin }}
+          </p>
 
-    <!-- ─── DRIVER_ON_THE_WAY ────────────────────────────────────── -->
-    <div class="active-ride-card"
-         *ngIf="uiState() === 'DRIVER_ON_THE_WAY'">
-      <div class="ride-banner ride-banner--assigned">
-        <mat-icon>two_wheeler</mat-icon>
-        <div class="ride-banner-text">
-          <span class="ride-banner-title">En camino al pasajero</span>
-          <span class="ride-banner-sub">Pulsa "Llegué" cuando estés en el punto de recojo</span>
-        </div>
-      </div>
-      <div class="ride-body">
-        <p class="detail-section-label">Punto de recojo</p>
-        <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
-          {{ rideStore.currentRide()?.origin }}
-        </p>
-        <div class="maps-actions">
-          <button mat-stroked-button class="maps-btn"
-                  (click)="openMapsToOrigin()"
-                  aria-label="Navegar al origen en Google Maps">
-            <mat-icon>map</mat-icon> Abrir en Google Maps
+          <div class="maps-actions">
+            <button mat-stroked-button class="maps-btn"
+                    (click)="openMapsToOrigin()"
+                    aria-label="Navegar al origen en Google Maps">
+              <mat-icon>map</mat-icon> Abrir en Google Maps
+            </button>
+          </div>
+          <button mat-flat-button color="primary" class="ride-action-btn"
+                  [disabled]="rideStore.isLoading()"
+                  (click)="onMarkArrived()"
+                  aria-label="Marcar que llegué al punto de recojo">
+            <mat-icon>location_on</mat-icon> Llegué al origen
           </button>
-        </div>
-        <button mat-flat-button color="primary" class="ride-action-btn"
-                [disabled]="rideStore.isLoading()"
-                (click)="onMarkArrived()"
-                aria-label="Marcar que llegué al punto de recojo">
-          <mat-icon>location_on</mat-icon> Llegué al origen
-        </button>
-      </div>
-    </div>
+        </ng-container>
 
-    <!-- ─── DRIVER_ARRIVED ───────────────────────────────────────── -->
-    <div class="active-ride-card"
-         *ngIf="uiState() === 'DRIVER_ARRIVED'">
-      <div class="ride-banner ride-banner--assigned">
-        <mat-icon>location_on</mat-icon>
-        <div class="ride-banner-text">
-          <span class="ride-banner-title">Conductor en el origen</span>
-          <span class="ride-banner-sub">Cuando el pasajero suba, inicia el viaje</span>
-        </div>
-      </div>
-      <div class="ride-body">
-        <p class="detail-section-label">Destino del viaje</p>
-        <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
-          {{ rideStore.currentRide()?.destination }}
-        </p>
-        <div class="maps-actions">
-          <button mat-stroked-button class="maps-btn"
-                  (click)="openMapsToDestination()"
-                  aria-label="Navegar al destino en Google Maps">
-            <mat-icon>map</mat-icon> Ver destino en Google Maps
+        <!-- DRIVER_ARRIVED View -->
+        <ng-container *ngIf="uiState() === 'DRIVER_ARRIVED'">
+          <p class="detail-section-label">Destino del viaje</p>
+          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 4px;">
+            {{ humanizeCoord(rideStore.currentRide()?.destination, 'destination') }}
+          </p>
+          <p class="detail-route-coord" style="margin-bottom: 16px;" *ngIf="isRawCoord(rideStore.currentRide()?.destination || '')">
+            {{ rideStore.currentRide()?.destination }}
+          </p>
+
+          <div class="maps-actions">
+            <button mat-stroked-button class="maps-btn"
+                    (click)="openMapsToDestination()"
+                    aria-label="Navegar al destino en Google Maps">
+              <mat-icon>map</mat-icon> Ver destino en Google Maps
+            </button>
+          </div>
+          <button mat-flat-button color="primary" class="ride-action-btn"
+                  [disabled]="rideStore.isLoading()"
+                  (click)="onStartRide()"
+                  aria-label="Iniciar el viaje">
+            <mat-icon>play_arrow</mat-icon> Iniciar viaje
           </button>
-        </div>
-        <button mat-flat-button color="primary" class="ride-action-btn"
-                [disabled]="rideStore.isLoading()"
-                (click)="onStartRide()"
-                aria-label="Iniciar el viaje">
-          <mat-icon>play_arrow</mat-icon> Iniciar viaje
-        </button>
-      </div>
-    </div>
+        </ng-container>
 
-    <!-- ─── RIDE_STARTED ────────────────────────────────────────── -->
-    <div class="active-ride-card"
-         *ngIf="uiState() === 'RIDE_STARTED'">
-      <div class="ride-banner ride-banner--started">
-        <mat-icon>two_wheeler</mat-icon>
-        <div class="ride-banner-text">
-          <span class="ride-banner-title">Viaje en curso</span>
-          <span class="ride-banner-sub">Lleva al pasajero al destino y finaliza el viaje</span>
-        </div>
-      </div>
-      <div class="ride-body">
-        <p class="detail-section-label">Destino</p>
-        <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
-          {{ rideStore.currentRide()?.destination }}
-        </p>
-        <div class="maps-actions">
-          <button mat-stroked-button class="maps-btn"
-                  (click)="openMapsToDestination()"
-                  aria-label="Navegar al destino en Google Maps">
-            <mat-icon>map</mat-icon> Navegar al destino
+        <!-- RIDE_STARTED View -->
+        <ng-container *ngIf="uiState() === 'RIDE_STARTED'">
+          <p class="detail-section-label">Destino en curso</p>
+          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 4px;">
+            {{ humanizeCoord(rideStore.currentRide()?.destination, 'destination') }}
+          </p>
+          <p class="detail-route-coord" style="margin-bottom: 16px;" *ngIf="isRawCoord(rideStore.currentRide()?.destination || '')">
+            {{ rideStore.currentRide()?.destination }}
+          </p>
+
+          <div class="maps-actions">
+            <button mat-stroked-button class="maps-btn"
+                    (click)="openMapsToDestination()"
+                    aria-label="Navegar al destino en Google Maps">
+              <mat-icon>map</mat-icon> Navegar al destino
+            </button>
+          </div>
+          <button mat-flat-button color="primary" class="ride-action-btn"
+                  [disabled]="rideStore.isLoading()"
+                  (click)="onCompleteRide()"
+                  aria-label="Finalizar viaje">
+            <mat-icon>flag</mat-icon> Finalizar viaje
           </button>
-        </div>
-        <button mat-flat-button color="primary" class="ride-action-btn"
-                [disabled]="rideStore.isLoading()"
-                (click)="onCompleteRide()"
-                aria-label="Finalizar viaje">
-          <mat-icon>flag</mat-icon> Finalizar viaje
-        </button>
-      </div>
-    </div>
+        </ng-container>
 
-    <!-- ─── RIDE_COMPLETED ───────────────────────────────────────── -->
-    <div class="active-ride-card" *ngIf="uiState() === 'RIDE_COMPLETED'">
-      <div class="ride-banner completed-banner">
-        <mat-icon>check_circle</mat-icon>
-        <div class="ride-banner-text">
-          <span class="ride-banner-title">¡Viaje completado!</span>
-          <span class="ride-banner-sub">Buen trabajo. Ya puedes recibir nuevas solicitudes.</span>
-        </div>
-      </div>
-      <div class="ride-body">
-        <p style="font-size:13px; color:#6b7280; margin:0;">
-          El viaje ha finalizado exitosamente. Tu disponibilidad ha sido restaurada.
-        </p>
+        <!-- RIDE_COMPLETED View -->
+        <ng-container *ngIf="uiState() === 'RIDE_COMPLETED'">
+          <p style="font-size:13px; color:#6b7280; margin:0;">
+            El viaje ha finalizado exitosamente. Tu disponibilidad ha sido restaurada.
+          </p>
+        </ng-container>
+
       </div>
     </div>
 
     <!-- ─── LIST + DETAIL VIEW (non-ride states) ──────────────────── -->
     <ng-container *ngIf="!isInActiveRide() && uiState() !== 'CANDIDATE_SUBMITTED'">
 
-      <!-- DETAIL VIEW -->
+      <!-- DETAIL VIEW — With Leaflet integration -->
       <div class="detail-view" *ngIf="selectedRequest()">
         <button mat-button class="detail-back" (click)="onBackToList()">
           <mat-icon>arrow_back</mat-icon> Volver a solicitudes
@@ -281,17 +272,26 @@
         <div class="detail-card">
           <div class="detail-banner">
             <mat-icon>notifications_active</mat-icon>
-            <span>Nueva solicitud — postúlate para que el pasajero te elija</span>
+            <span>Detalle de solicitud — evalúa la ruta antes de postularte</span>
+          </div>
+
+          <!-- Preview Map -->
+          <div class="detail-map-wrapper">
+            <app-trip-map
+              [origin]="selectedRequest()!.origin"
+              [destination]="selectedRequest()!.destination">
+            </app-trip-map>
           </div>
 
           <div class="detail-body">
-            <p class="detail-section-label">Ruta del viaje</p>
+            <p class="detail-section-label">Ruta preliminar</p>
             <div class="detail-route">
               <div class="detail-route-row">
                 <span class="detail-dot detail-dot--origin"></span>
                 <div class="detail-route-info">
-                  <span class="detail-route-label">Origen</span>
-                  <span class="detail-route-value">{{ selectedRequest()!.origin }}</span>
+                  <span class="detail-route-label">Punto de recojo</span>
+                  <span class="detail-route-value">{{ humanizeCoord(selectedRequest()!.origin, 'origin') }}</span>
+                  <span class="detail-route-coord" *ngIf="isRawCoord(selectedRequest()!.origin)">{{ selectedRequest()!.origin }}</span>
                 </div>
               </div>
               <div class="detail-route-line"></div>
@@ -299,7 +299,8 @@
                 <span class="detail-dot detail-dot--dest"></span>
                 <div class="detail-route-info">
                   <span class="detail-route-label">Destino</span>
-                  <span class="detail-route-value">{{ selectedRequest()!.destination }}</span>
+                  <span class="detail-route-value">{{ humanizeCoord(selectedRequest()!.destination, 'destination') }}</span>
+                  <span class="detail-route-coord" *ngIf="isRawCoord(selectedRequest()!.destination)">{{ selectedRequest()!.destination }}</span>
                 </div>
               </div>
             </div>
@@ -320,6 +321,14 @@
                   <div class="chip-label">Distancia</div>
                 </div>
               </div>
+            </div>
+
+            <div class="maps-actions" style="margin-bottom: 20px;">
+              <button mat-stroked-button class="maps-btn"
+                      (click)="openRequestMapsToOrigin(selectedRequest()!)"
+                      aria-label="Abrir punto de recojo en Google Maps">
+                <mat-icon>map</mat-icon> Abrir punto de recojo en Google Maps
+              </button>
             </div>
 
             <div class="detail-actions">
@@ -343,7 +352,7 @@
         </div>
       </div>
 
-      <!-- LIST VIEW -->
+      <!-- LIST VIEW (Lightweight list, no map) -->
       <ng-container *ngIf="!selectedRequest()">
         <div class="requests-header">
           <span class="requests-title">Solicitudes abiertas</span>

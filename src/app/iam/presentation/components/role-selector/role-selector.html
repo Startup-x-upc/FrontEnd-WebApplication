@@ -1,0 +1,50 @@
+<div class="role-container">
+  <div class="role-header">
+    <h1>Únete a Chapa Tu Ruta</h1>
+    <p>¿Cómo quieres usar la plataforma?</p>
+  </div>
+
+  <div class="role-cards">
+    <!-- Passenger Card -->
+    <mat-card class="role-card">
+      <mat-card-header>
+        <div class="card-icon">👤</div>
+        <mat-card-title>Soy pasajero</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Quiero solicitar mototaxis de forma rápida y segura desde mi dispositivo.</p>
+        <ul>
+          <li>✓ Conductores calificados</li>
+          <li>✓ Precio estimado antes de confirmar</li>
+          <li>✓ Historial completo de viajes</li>
+        </ul>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" routerLink="/register/passenger">Registrarme como pasajero</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Driver Card -->
+    <mat-card class="role-card driver-card">
+      <mat-card-header>
+        <div class="card-icon">🛺</div>
+        <mat-card-title>Soy conductor</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Quiero recibir carreras, gestionar mi disponibilidad y ganancias.</p>
+        <ul>
+          <li>✓ Más carreras, menos tiempo en vacío</li>
+          <li>✓ Solo 5% de comisión por viaje</li>
+          <li>✓ Wallet seguro con pago Stripe</li>
+        </ul>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="accent" routerLink="/register/driver">Registrarme como conductor</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <p class="login-prompt">
+    ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+  </p>
+</div>

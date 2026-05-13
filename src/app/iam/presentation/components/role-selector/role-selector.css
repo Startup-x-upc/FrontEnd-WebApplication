@@ -1,0 +1,95 @@
+.role-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 60px 20px;
+}
+
+.role-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 50px;
+}
+
+.role-header h1 {
+  font-size: 36px;
+  margin-bottom: 16px;
+}
+
+.role-header p {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.role-cards {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.role-card {
+  max-width: 400px;
+  width: 100%;
+  border-radius: 20px;
+  padding: 20px;
+  transition: transform 0.3s;
+}
+
+.role-card:hover {
+  transform: translateY(-5px);
+}
+
+.card-icon {
+  font-size: 48px;
+  margin-right: 16px;
+}
+
+mat-card-title {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+mat-card-content ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 16px;
+}
+
+mat-card-content li {
+  padding: 8px 0;
+  color: #555;
+}
+
+mat-card-actions {
+  padding: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+}
+
+.login-prompt {
+  text-align: center;
+  margin-top: 40px;
+  color: white;
+}
+
+.login-prompt a {
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid white;
+}
+
+@media (max-width: 768px) {
+  .role-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  .role-header h1 {
+    font-size: 28px;
+  }
+}

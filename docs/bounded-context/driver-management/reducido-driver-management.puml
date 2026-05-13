@@ -1,0 +1,129 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "drivermanagement.application.facade" {
+    class DriverManagementFacade <<Facade>>
+}
+
+package "drivermanagement.domain.model" {
+    class Driver
+    class DriverDocument
+    class VerificationReview
+
+    interface ISubmitDriverRegistrationCommand <<Command>>
+    interface IApproveDriverDocumentsCommand <<Command>>
+    interface IRejectDriverDocumentsCommand <<Command>>
+    interface IUpdateDriverDocumentsCommand <<Command>>
+    interface IDisableDriverCommand <<Command>>
+    interface IEnableDriverCommand <<Command>>
+
+    interface IGetPendingDriversQuery <<Query>>
+    interface IGetDriverVerificationStatusQuery <<Query>>
+    interface IGetDriverDetailsQuery <<Query>>
+    interface IGetDriversForAdminQuery <<Query>>
+    interface ICanDriverBeOperationalQuery <<Query>>
+}
+
+package "drivermanagement.domain.events" {
+    class DriverSubmittedForVerificationEvent <<DomainEvent>>
+    class DriverDocumentsRegisteredEvent <<DomainEvent>>
+    class DriverDocumentsUpdatedEvent <<DomainEvent>>
+    class DriverDocumentsApprovedEvent <<DomainEvent>>
+    class DriverDocumentsRejectedEvent <<DomainEvent>>
+    class DriverEnabledEvent <<DomainEvent>>
+    class DriverDisabledEvent <<DomainEvent>>
+}
+
+package "drivermanagement.domain.repositories" {
+    interface IDriverRepository <<Repository>>
+    interface IDriverDocumentRepository <<Repository>>
+    interface IVerificationReviewRepository <<Repository>>
+}
+
+package "drivermanagement.domain.services.commandservices" {
+    interface IDriverCommandService
+}
+
+package "drivermanagement.domain.services.queryservices" {
+    interface IDriverQueryService
+}
+
+package "drivermanagement.infrastructure.repositories" {
+    class DriverRepositoryImpl
+    class DriverDocumentRepositoryImpl
+    class VerificationReviewRepositoryImpl
+}
+
+package "drivermanagement.interfaces.rest.controllers" {
+    class DriverManagementController
+}
+
+package "drivermanagement.interfaces.rest.resources" {
+    class SubmitDriverRegistrationRequest
+    class DriverActionRequest
+    class DriverQueryRequest
+    class DriverResponse
+}
+
+package "drivermanagement.interfaces.rest.assemblers" {
+    class DriverRequestAssembler
+    class DriverResponseAssembler
+}
+
+' =========================
+' RELACIONES PRINCIPALES
+' =========================
+
+Driver "1" -- "1" DriverDocument
+Driver "1" -- "0..*" VerificationReview
+
+DriverManagementController --> DriverManagementFacade
+DriverManagementController --> DriverRequestAssembler
+DriverManagementController --> DriverResponseAssembler
+
+DriverRequestAssembler --> SubmitDriverRegistrationRequest
+DriverResponseAssembler --> DriverResponse
+
+DriverManagementFacade --> IDriverCommandService
+DriverManagementFacade --> IDriverQueryService
+
+IDriverCommandService ..> ISubmitDriverRegistrationCommand
+IDriverCommandService ..> IApproveDriverDocumentsCommand
+IDriverCommandService ..> IRejectDriverDocumentsCommand
+IDriverCommandService ..> IUpdateDriverDocumentsCommand
+IDriverCommandService ..> IDisableDriverCommand
+IDriverCommandService ..> IEnableDriverCommand
+
+IDriverQueryService ..> IGetPendingDriversQuery
+IDriverQueryService ..> IGetDriverVerificationStatusQuery
+IDriverQueryService ..> IGetDriverDetailsQuery
+IDriverQueryService ..> IGetDriversForAdminQuery
+IDriverQueryService ..> ICanDriverBeOperationalQuery
+
+IDriverCommandService --> IDriverRepository
+IDriverCommandService --> IDriverDocumentRepository
+IDriverCommandService --> IVerificationReviewRepository
+
+IDriverQueryService --> IDriverRepository
+IDriverQueryService --> IDriverDocumentRepository
+
+DriverRepositoryImpl ..|> IDriverRepository
+DriverDocumentRepositoryImpl ..|> IDriverDocumentRepository
+VerificationReviewRepositoryImpl ..|> IVerificationReviewRepository
+
+DriverRepositoryImpl --> Driver
+DriverDocumentRepositoryImpl --> DriverDocument
+VerificationReviewRepositoryImpl --> VerificationReview
+
+IDriverCommandService ..> DriverSubmittedForVerificationEvent
+IDriverCommandService ..> DriverDocumentsRegisteredEvent
+IDriverCommandService ..> DriverDocumentsUpdatedEvent
+IDriverCommandService ..> DriverDocumentsApprovedEvent
+IDriverCommandService ..> DriverDocumentsRejectedEvent
+IDriverCommandService ..> DriverEnabledEvent
+IDriverCommandService ..> DriverDisabledEvent
+
+@enduml

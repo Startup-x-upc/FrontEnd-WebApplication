@@ -1,0 +1,157 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "ridedispatch.application.facade" {
+    class RideDispatchFacade <<Facade>>
+}
+
+package "ridedispatch.domain.model" {
+    class DriverAvailability
+    class RideRequest
+    class Ride
+
+    interface IToggleDriverAvailabilityCommand <<Command>>
+    interface IDetectPassengerOriginCommand <<Command>>
+    interface ISelectDestinationCommand <<Command>>
+    interface ISubmitRideRequestCommand <<Command>>
+    interface IAcceptRideRequestCommand <<Command>>
+    interface IRejectRideRequestCommand <<Command>>
+    interface IExpireRideRequestCommand <<Command>>
+    interface IStartRideCommand <<Command>>
+    interface ICancelRideCommand <<Command>>
+    interface ICompleteRideCommand <<Command>>
+
+    interface IGetNearbyDriversQuery <<Query>>
+    interface IGetOpenRideRequestsForDriverQuery <<Query>>
+    interface IGetRideRequestStatusQuery <<Query>>
+    interface IGetActiveRideForPassengerQuery <<Query>>
+    interface IGetActiveRideForDriverQuery <<Query>>
+    interface IGetPickupRouteQuery <<Query>>
+    interface ICanDriverReceiveRequestsQuery <<Query>>
+}
+
+package "ridedispatch.domain.events" {
+    class DriverAvailabilityActivatedEvent <<DomainEvent>>
+    class DriverAvailabilityDeactivatedEvent <<DomainEvent>>
+    class PassengerOriginDetectedEvent <<DomainEvent>>
+    class DestinationSelectedEvent <<DomainEvent>>
+    class RideRequestSubmittedEvent <<DomainEvent>>
+    class RideRequestBroadcastedEvent <<DomainEvent>>
+    class RideRequestAcceptedEvent <<DomainEvent>>
+    class RideRequestRejectedEvent <<DomainEvent>>
+    class RideRequestExpiredEvent <<DomainEvent>>
+    class RideAssignedEvent <<DomainEvent>>
+    class RideStartedEvent <<DomainEvent>>
+    class RideCancelledEvent <<DomainEvent>>
+    class RideCompletedEvent <<DomainEvent>>
+}
+
+package "ridedispatch.domain.repositories" {
+    interface IDriverAvailabilityRepository <<Repository>>
+    interface IRideRequestRepository <<Repository>>
+    interface IRideRepository <<Repository>>
+}
+
+package "ridedispatch.domain.services.commandservices" {
+    interface IRideDispatchCommandService
+}
+
+package "ridedispatch.domain.services.queryservices" {
+    interface IRideDispatchQueryService
+}
+
+package "ridedispatch.infrastructure.repositories" {
+    class DriverAvailabilityRepositoryImpl
+    class RideRequestRepositoryImpl
+    class RideRepositoryImpl
+}
+
+package "ridedispatch.interfaces.rest.controllers" {
+    class RideDispatchController
+}
+
+package "ridedispatch.interfaces.rest.resources" {
+    class DriverAvailabilityRequest
+    class RideRequestActionRequest
+    class RideQueryRequest
+    class RideDispatchResponse
+}
+
+package "ridedispatch.interfaces.rest.assemblers" {
+    class RideDispatchRequestAssembler
+    class RideDispatchResponseAssembler
+}
+
+' =========================
+' RELACIONES PRINCIPALES
+' =========================
+
+DriverAvailability "1" -- "0..*" RideRequest
+RideRequest "1" -- "0..1" Ride : becomes >
+Ride --> DriverAvailability : assigned driver >
+
+RideDispatchController --> RideDispatchFacade
+RideDispatchController --> RideDispatchRequestAssembler
+RideDispatchController --> RideDispatchResponseAssembler
+
+RideDispatchRequestAssembler --> DriverAvailabilityRequest
+RideDispatchRequestAssembler --> RideRequestActionRequest
+RideDispatchRequestAssembler --> RideQueryRequest
+RideDispatchResponseAssembler --> RideDispatchResponse
+
+RideDispatchFacade --> IRideDispatchCommandService
+RideDispatchFacade --> IRideDispatchQueryService
+
+IRideDispatchCommandService ..> IToggleDriverAvailabilityCommand
+IRideDispatchCommandService ..> IDetectPassengerOriginCommand
+IRideDispatchCommandService ..> ISelectDestinationCommand
+IRideDispatchCommandService ..> ISubmitRideRequestCommand
+IRideDispatchCommandService ..> IAcceptRideRequestCommand
+IRideDispatchCommandService ..> IRejectRideRequestCommand
+IRideDispatchCommandService ..> IExpireRideRequestCommand
+IRideDispatchCommandService ..> IStartRideCommand
+IRideDispatchCommandService ..> ICancelRideCommand
+IRideDispatchCommandService ..> ICompleteRideCommand
+
+IRideDispatchQueryService ..> IGetNearbyDriversQuery
+IRideDispatchQueryService ..> IGetOpenRideRequestsForDriverQuery
+IRideDispatchQueryService ..> IGetRideRequestStatusQuery
+IRideDispatchQueryService ..> IGetActiveRideForPassengerQuery
+IRideDispatchQueryService ..> IGetActiveRideForDriverQuery
+IRideDispatchQueryService ..> IGetPickupRouteQuery
+IRideDispatchQueryService ..> ICanDriverReceiveRequestsQuery
+
+IRideDispatchCommandService --> IDriverAvailabilityRepository
+IRideDispatchCommandService --> IRideRequestRepository
+IRideDispatchCommandService --> IRideRepository
+
+IRideDispatchQueryService --> IDriverAvailabilityRepository
+IRideDispatchQueryService --> IRideRequestRepository
+IRideDispatchQueryService --> IRideRepository
+
+DriverAvailabilityRepositoryImpl ..|> IDriverAvailabilityRepository
+RideRequestRepositoryImpl ..|> IRideRequestRepository
+RideRepositoryImpl ..|> IRideRepository
+
+DriverAvailabilityRepositoryImpl --> DriverAvailability
+RideRequestRepositoryImpl --> RideRequest
+RideRepositoryImpl --> Ride
+
+IRideDispatchCommandService ..> DriverAvailabilityActivatedEvent
+IRideDispatchCommandService ..> DriverAvailabilityDeactivatedEvent
+IRideDispatchCommandService ..> PassengerOriginDetectedEvent
+IRideDispatchCommandService ..> DestinationSelectedEvent
+IRideDispatchCommandService ..> RideRequestSubmittedEvent
+IRideDispatchCommandService ..> RideRequestBroadcastedEvent
+IRideDispatchCommandService ..> RideRequestAcceptedEvent
+IRideDispatchCommandService ..> RideRequestRejectedEvent
+IRideDispatchCommandService ..> RideRequestExpiredEvent
+IRideDispatchCommandService ..> RideAssignedEvent
+IRideDispatchCommandService ..> RideStartedEvent
+IRideDispatchCommandService ..> RideCancelledEvent
+IRideDispatchCommandService ..> RideCompletedEvent
+
+@enduml

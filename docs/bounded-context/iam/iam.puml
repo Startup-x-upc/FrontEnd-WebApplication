@@ -1,0 +1,430 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "iam.application.facade" {
+    class IamFacade <<Facade>> {
+        + registerPassenger(command: IRegisterPassengerCommand): Account
+        + registerDriver(command: IRegisterDriverCommand): Account
+        + signIn(command: ISignInCommand): Session
+        + signOut(command: ISignOutCommand): void
+        + updateProfile(command: IUpdateProfileCommand): Profile
+        + getAuthStatus(query: IGetAuthStatusQuery): Account
+        + getCurrentSession(query: IGetCurrentSessionQuery): Session
+        + getMyProfile(query: IGetMyProfileQuery): Profile
+        + getDriverAccessStatus(query: IGetDriverAccessStatusQuery): Account
+    }
+}
+
+package "iam.domain.model.entities" {
+    enum UserRole {
+        PASSENGER
+        DRIVER
+        ADMIN
+    }
+
+    enum AccessStatus {
+        ACTIVE
+        PENDING_VERIFICATION
+        RESTRICTED
+    }
+
+    class Account {
+        - accountId: UUID
+        - email: String
+        - passwordHash: String
+        - role: UserRole
+        - accessStatus: AccessStatus
+        + activate(): void
+        + markPendingVerification(): void
+        + enableDriverAccess(): void
+        + restrictAccess(): void
+        + validateCredentials(rawPassword: String): boolean
+    }
+
+    class Profile {
+        - profileId: UUID
+        - accountId: UUID
+        - fullName: String
+        - photoUrl: String
+        + updateProfile(fullName: String, photoUrl: String): void
+    }
+
+    class Session {
+        - sessionId: UUID
+        - accountId: UUID
+        - isActive: boolean
+        + start(): void
+        + invalidate(): void
+    }
+}
+
+package "iam.domain.model.commands" {
+    interface IRegisterPassengerCommand <<Command>> {
+        + getEmail(): String
+        + getPassword(): String
+    }
+
+    interface IRegisterDriverCommand <<Command>> {
+        + getEmail(): String
+        + getPassword(): String
+        + getLicenseNumber(): String
+        + getSoatNumber(): String
+    }
+
+    interface ISignInCommand <<Command>> {
+        + getEmail(): String
+        + getPassword(): String
+    }
+
+    interface ISignOutCommand <<Command>> {
+        + getSessionId(): UUID
+    }
+
+    interface IUpdateProfileCommand <<Command>> {
+        + getAccountId(): UUID
+        + getFullName(): String
+        + getPhotoUrl(): String
+    }
+}
+
+package "iam.domain.model.queries" {
+    interface IGetAuthStatusQuery <<Query>> {
+        + getAccountId(): UUID
+    }
+
+    interface IGetCurrentSessionQuery <<Query>> {
+        + getAccountId(): UUID
+    }
+
+    interface IGetMyProfileQuery <<Query>> {
+        + getAccountId(): UUID
+    }
+
+    interface IGetDriverAccessStatusQuery <<Query>> {
+        + getAccountId(): UUID
+    }
+}
+
+package "iam.domain.events" {
+    class PassengerAccountRegisteredEvent <<DomainEvent>> {
+        + accountId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverAccountRegisteredEvent <<DomainEvent>> {
+        + accountId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverPendingVerificationEvent <<DomainEvent>> {
+        + accountId: UUID
+        + occurredOn: DateTime
+    }
+
+    class UserSignedInEvent <<DomainEvent>> {
+        + sessionId: UUID
+        + accountId: UUID
+        + occurredOn: DateTime
+    }
+
+    class UserSignedOutEvent <<DomainEvent>> {
+        + sessionId: UUID
+        + occurredOn: DateTime
+    }
+
+    class ProfileUpdatedEvent <<DomainEvent>> {
+        + profileId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverAccessEnabledEvent <<DomainEvent>> {
+        + accountId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverAccessRestrictedEvent <<DomainEvent>> {
+        + accountId: UUID
+        + occurredOn: DateTime
+    }
+}
+
+package "iam.domain.repositories" {
+    interface IAccountRepository <<Repository>> {
+        + save(account: Account): void
+        + findById(accountId: UUID): Account
+        + findByEmail(email: String): Account
+        + existsByEmail(email: String): boolean
+    }
+
+    interface IProfileRepository <<Repository>> {
+        + save(profile: Profile): void
+        + findByAccountId(accountId: UUID): Profile
+    }
+
+    interface ISessionRepository <<Repository>> {
+        + save(session: Session): void
+        + findActiveByAccountId(accountId: UUID): Session
+        + findById(sessionId: UUID): Session
+    }
+}
+
+package "iam.domain.services.commandservices" {
+    interface IAccountCommandService {
+        + registerPassenger(command: IRegisterPassengerCommand): Account
+        + registerDriver(command: IRegisterDriverCommand): Account
+        + signIn(command: ISignInCommand): Session
+        + signOut(command: ISignOutCommand): void
+        + enableDriverAccess(accountId: UUID): void
+        + restrictDriverAccess(accountId: UUID): void
+    }
+
+    interface IProfileCommandService {
+        + updateProfile(command: IUpdateProfileCommand): Profile
+    }
+}
+
+package "iam.domain.services.queryservices" {
+    interface IAccountQueryService {
+        + getAuthStatus(query: IGetAuthStatusQuery): Account
+        + getCurrentSession(query: IGetCurrentSessionQuery): Session
+        + getDriverAccessStatus(query: IGetDriverAccessStatusQuery): Account
+    }
+
+    interface IProfileQueryService {
+        + getMyProfile(query: IGetMyProfileQuery): Profile
+    }
+}
+
+package "iam.infrastructure.repositories" {
+    class AccountRepositoryImpl {
+        + save(account: Account): void
+        + findById(accountId: UUID): Account
+        + findByEmail(email: String): Account
+        + existsByEmail(email: String): boolean
+    }
+
+    class ProfileRepositoryImpl {
+        + save(profile: Profile): void
+        + findByAccountId(accountId: UUID): Profile
+    }
+
+    class SessionRepositoryImpl {
+        + save(session: Session): void
+        + findActiveByAccountId(accountId: UUID): Session
+        + findById(sessionId: UUID): Session
+    }
+}
+
+package "iam.interfaces.rest.controllers" {
+    class IamController {
+        + registerPassenger(request: RegisterPassengerRequest): AccountResponse
+        + registerDriver(request: RegisterDriverRequest): AccountResponse
+        + signIn(request: SignInRequest): SessionResponse
+        + signOut(request: SignOutRequest): void
+        + updateProfile(request: UpdateProfileRequest): ProfileResponse
+        + getAuthStatus(request: AuthStatusRequest): AuthStatusResponse
+        + getCurrentSession(request: CurrentSessionRequest): SessionResponse
+        + getMyProfile(request: MyProfileRequest): ProfileResponse
+        + getDriverAccessStatus(request: DriverAccessStatusRequest): DriverAccessStatusResponse
+    }
+}
+
+package "iam.interfaces.rest.resources.requests" {
+    class RegisterPassengerRequest {
+        + email: String
+        + password: String
+    }
+
+    class RegisterDriverRequest {
+        + email: String
+        + password: String
+        + licenseNumber: String
+        + soatNumber: String
+    }
+
+    class SignInRequest {
+        + email: String
+        + password: String
+    }
+
+    class SignOutRequest {
+        + sessionId: UUID
+    }
+
+    class UpdateProfileRequest {
+        + accountId: UUID
+        + fullName: String
+        + photoUrl: String
+    }
+
+    class AuthStatusRequest {
+        + accountId: UUID
+    }
+
+    class CurrentSessionRequest {
+        + accountId: UUID
+    }
+
+    class MyProfileRequest {
+        + accountId: UUID
+    }
+
+    class DriverAccessStatusRequest {
+        + accountId: UUID
+    }
+}
+
+package "iam.interfaces.rest.resources.responses" {
+    class AccountResponse {
+        + accountId: UUID
+        + email: String
+        + role: String
+        + accessStatus: String
+    }
+
+    class ProfileResponse {
+        + profileId: UUID
+        + accountId: UUID
+        + fullName: String
+        + photoUrl: String
+    }
+
+    class AuthStatusResponse {
+        + accountId: UUID
+        + role: String
+        + accessStatus: String
+    }
+
+    class SessionResponse {
+        + sessionId: UUID
+        + accountId: UUID
+        + isActive: boolean
+    }
+
+    class DriverAccessStatusResponse {
+        + accountId: UUID
+        + accessStatus: String
+    }
+}
+
+package "iam.interfaces.rest.assemblers" {
+    class AccountResponseAssembler {
+        + toResponse(account: Account): AccountResponse
+        + toAuthStatusResponse(account: Account): AuthStatusResponse
+        + toDriverAccessStatusResponse(account: Account): DriverAccessStatusResponse
+    }
+
+    class ProfileResponseAssembler {
+        + toResponse(profile: Profile): ProfileResponse
+    }
+
+    class SessionResponseAssembler {
+        + toResponse(session: Session): SessionResponse
+    }
+}
+
+' =========================
+' RELACIONES DE DOMINIO
+' =========================
+Account "1" -- "1" Profile : owns >
+Account "1" -- "0..*" Session : opens >
+Account --> UserRole
+Account --> AccessStatus
+
+' =========================
+' COMMANDS / QUERIES IMPLEMENTADOS POR REQUESTS
+' =========================
+RegisterPassengerRequest ..|> IRegisterPassengerCommand
+RegisterDriverRequest ..|> IRegisterDriverCommand
+SignInRequest ..|> ISignInCommand
+SignOutRequest ..|> ISignOutCommand
+UpdateProfileRequest ..|> IUpdateProfileCommand
+
+AuthStatusRequest ..|> IGetAuthStatusQuery
+CurrentSessionRequest ..|> IGetCurrentSessionQuery
+MyProfileRequest ..|> IGetMyProfileQuery
+DriverAccessStatusRequest ..|> IGetDriverAccessStatusQuery
+
+' =========================
+' CONTROLLER / FACADE
+' =========================
+IamController --> IamFacade : uses
+IamController --> AccountResponseAssembler : uses
+IamController --> ProfileResponseAssembler : uses
+IamController --> SessionResponseAssembler : uses
+
+' =========================
+' FACADE / SERVICES
+' =========================
+IamFacade --> IAccountCommandService : delegates
+IamFacade --> IProfileCommandService : delegates
+IamFacade --> IAccountQueryService : delegates
+IamFacade --> IProfileQueryService : delegates
+
+' =========================
+' SERVICES / COMMANDS-QUERIES
+' =========================
+IAccountCommandService ..> IRegisterPassengerCommand : handles
+IAccountCommandService ..> IRegisterDriverCommand : handles
+IAccountCommandService ..> ISignInCommand : handles
+IAccountCommandService ..> ISignOutCommand : handles
+
+IProfileCommandService ..> IUpdateProfileCommand : handles
+
+IAccountQueryService ..> IGetAuthStatusQuery : handles
+IAccountQueryService ..> IGetCurrentSessionQuery : handles
+IAccountQueryService ..> IGetDriverAccessStatusQuery : handles
+
+IProfileQueryService ..> IGetMyProfileQuery : handles
+
+' =========================
+' SERVICES / REPOSITORIES
+' =========================
+IAccountCommandService --> IAccountRepository : uses
+IAccountCommandService --> ISessionRepository : uses
+IProfileCommandService --> IProfileRepository : uses
+
+IAccountQueryService --> IAccountRepository : uses
+IAccountQueryService --> ISessionRepository : uses
+IProfileQueryService --> IProfileRepository : uses
+
+' =========================
+' REPOSITORY IMPLEMENTATIONS
+' =========================
+AccountRepositoryImpl ..|> IAccountRepository
+ProfileRepositoryImpl ..|> IProfileRepository
+SessionRepositoryImpl ..|> ISessionRepository
+
+AccountRepositoryImpl --> Account : persists
+ProfileRepositoryImpl --> Profile : persists
+SessionRepositoryImpl --> Session : persists
+
+' =========================
+' EVENTS
+' =========================
+IAccountCommandService ..> PassengerAccountRegisteredEvent : publishes
+IAccountCommandService ..> DriverAccountRegisteredEvent : publishes
+IAccountCommandService ..> DriverPendingVerificationEvent : publishes
+IAccountCommandService ..> UserSignedInEvent : publishes
+IAccountCommandService ..> UserSignedOutEvent : publishes
+IProfileCommandService ..> ProfileUpdatedEvent : publishes
+IAccountCommandService ..> DriverAccessEnabledEvent : publishes
+IAccountCommandService ..> DriverAccessRestrictedEvent : publishes
+
+' =========================
+' ASSEMBLERS / RESPONSES
+' =========================
+AccountResponseAssembler --> Account : uses
+AccountResponseAssembler --> AccountResponse : creates
+AccountResponseAssembler --> AuthStatusResponse : creates
+AccountResponseAssembler --> DriverAccessStatusResponse : creates
+
+ProfileResponseAssembler --> Profile : uses
+ProfileResponseAssembler --> ProfileResponse : creates
+
+SessionResponseAssembler --> Session : uses
+SessionResponseAssembler --> SessionResponse : creates
+
+@enduml

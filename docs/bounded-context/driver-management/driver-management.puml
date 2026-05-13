@@ -1,0 +1,484 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "drivermanagement.application.facade" {
+    class DriverManagementFacade <<Facade>> {
+        + submitDriverRegistration(command: ISubmitDriverRegistrationCommand): Driver
+        + approveDriverDocuments(command: IApproveDriverDocumentsCommand): Driver
+        + rejectDriverDocuments(command: IRejectDriverDocumentsCommand): Driver
+        + updateDriverDocuments(command: IUpdateDriverDocumentsCommand): DriverDocument
+        + disableDriver(command: IDisableDriverCommand): Driver
+        + enableDriver(command: IEnableDriverCommand): Driver
+        + getPendingDrivers(query: IGetPendingDriversQuery): List<Driver>
+        + getDriverVerificationStatus(query: IGetDriverVerificationStatusQuery): Driver
+        + getDriverDetails(query: IGetDriverDetailsQuery): Driver
+        + getDriversForAdmin(query: IGetDriversForAdminQuery): List<Driver>
+        + canDriverBeOperational(query: ICanDriverBeOperationalQuery): boolean
+    }
+}
+
+package "drivermanagement.domain.model.entities" {
+    enum VerificationStatus {
+        PENDING
+        APPROVED
+        REJECTED
+    }
+
+    enum OperationalStatus {
+        ENABLED
+        DISABLED
+    }
+
+    class Driver {
+        - driverId: UUID
+        - accountId: UUID
+        - fullName: String
+        - vehicleType: String
+        - verificationStatus: VerificationStatus
+        - operationalStatus: OperationalStatus
+        + submitForVerification(): void
+        + approveVerification(): void
+        + rejectVerification(reason: String): void
+        + enable(): void
+        + disable(reason: String): void
+        + canOperate(): boolean
+    }
+
+    class DriverDocument {
+        - documentId: UUID
+        - driverId: UUID
+        - licenseNumber: String
+        - soatNumber: String
+        - licenseExpiryDate: Date
+        - soatExpiryDate: Date
+        + updateDocuments(licenseNumber: String, soatNumber: String, licenseExpiryDate: Date, soatExpiryDate: Date): void
+        + areDocumentsComplete(): boolean
+        + hasExpiredDocuments(): boolean
+    }
+
+    class VerificationReview {
+        - reviewId: UUID
+        - driverId: UUID
+        - reviewedBy: UUID
+        - reviewReason: String
+        - reviewedAt: DateTime
+        + approve(): void
+        + reject(reason: String): void
+    }
+}
+
+package "drivermanagement.domain.model.commands" {
+    interface ISubmitDriverRegistrationCommand <<Command>> {
+        + getAccountId(): UUID
+        + getFullName(): String
+        + getVehicleType(): String
+        + getLicenseNumber(): String
+        + getSoatNumber(): String
+        + getLicenseExpiryDate(): Date
+        + getSoatExpiryDate(): Date
+    }
+
+    interface IApproveDriverDocumentsCommand <<Command>> {
+        + getDriverId(): UUID
+        + getReviewedBy(): UUID
+    }
+
+    interface IRejectDriverDocumentsCommand <<Command>> {
+        + getDriverId(): UUID
+        + getReviewedBy(): UUID
+        + getReason(): String
+    }
+
+    interface IUpdateDriverDocumentsCommand <<Command>> {
+        + getDriverId(): UUID
+        + getLicenseNumber(): String
+        + getSoatNumber(): String
+        + getLicenseExpiryDate(): Date
+        + getSoatExpiryDate(): Date
+    }
+
+    interface IDisableDriverCommand <<Command>> {
+        + getDriverId(): UUID
+        + getReason(): String
+    }
+
+    interface IEnableDriverCommand <<Command>> {
+        + getDriverId(): UUID
+    }
+}
+
+package "drivermanagement.domain.model.queries" {
+    interface IGetPendingDriversQuery <<Query>> {
+        + getPage(): int
+        + getSize(): int
+    }
+
+    interface IGetDriverVerificationStatusQuery <<Query>> {
+        + getDriverId(): UUID
+    }
+
+    interface IGetDriverDetailsQuery <<Query>> {
+        + getDriverId(): UUID
+    }
+
+    interface IGetDriversForAdminQuery <<Query>> {
+        + getVerificationStatus(): String
+        + getOperationalStatus(): String
+        + getPage(): int
+        + getSize(): int
+    }
+
+    interface ICanDriverBeOperationalQuery <<Query>> {
+        + getDriverId(): UUID
+    }
+}
+
+package "drivermanagement.domain.events" {
+    class DriverSubmittedForVerificationEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverDocumentsRegisteredEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverDocumentsUpdatedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverDocumentsApprovedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + reviewedBy: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverDocumentsRejectedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + reviewedBy: UUID
+        + reason: String
+        + occurredOn: DateTime
+    }
+
+    class DriverEnabledEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverDisabledEvent <<DomainEvent>> {
+        + driverId: UUID
+        + reason: String
+        + occurredOn: DateTime
+    }
+}
+
+package "drivermanagement.domain.repositories" {
+    interface IDriverRepository <<Repository>> {
+        + save(driver: Driver): void
+        + findById(driverId: UUID): Driver
+        + findByAccountId(accountId: UUID): Driver
+        + findPendingDrivers(page: int, size: int): List<Driver>
+        + findForAdmin(verificationStatus: String, operationalStatus: String, page: int, size: int): List<Driver>
+    }
+
+    interface IDriverDocumentRepository <<Repository>> {
+        + save(document: DriverDocument): void
+        + findByDriverId(driverId: UUID): DriverDocument
+    }
+
+    interface IVerificationReviewRepository <<Repository>> {
+        + save(review: VerificationReview): void
+        + findByDriverId(driverId: UUID): VerificationReview
+    }
+}
+
+package "drivermanagement.domain.services.commandservices" {
+    interface IDriverCommandService {
+        + submitDriverRegistration(command: ISubmitDriverRegistrationCommand): Driver
+        + approveDriverDocuments(command: IApproveDriverDocumentsCommand): Driver
+        + rejectDriverDocuments(command: IRejectDriverDocumentsCommand): Driver
+        + updateDriverDocuments(command: IUpdateDriverDocumentsCommand): DriverDocument
+        + disableDriver(command: IDisableDriverCommand): Driver
+        + enableDriver(command: IEnableDriverCommand): Driver
+    }
+}
+
+package "drivermanagement.domain.services.queryservices" {
+    interface IDriverQueryService {
+        + getPendingDrivers(query: IGetPendingDriversQuery): List<Driver>
+        + getDriverVerificationStatus(query: IGetDriverVerificationStatusQuery): Driver
+        + getDriverDetails(query: IGetDriverDetailsQuery): Driver
+        + getDriversForAdmin(query: IGetDriversForAdminQuery): List<Driver>
+        + canDriverBeOperational(query: ICanDriverBeOperationalQuery): boolean
+    }
+}
+
+package "drivermanagement.infrastructure.repositories" {
+    class DriverRepositoryImpl {
+        + save(driver: Driver): void
+        + findById(driverId: UUID): Driver
+        + findByAccountId(accountId: UUID): Driver
+        + findPendingDrivers(page: int, size: int): List<Driver>
+        + findForAdmin(verificationStatus: String, operationalStatus: String, page: int, size: int): List<Driver>
+    }
+
+    class DriverDocumentRepositoryImpl {
+        + save(document: DriverDocument): void
+        + findByDriverId(driverId: UUID): DriverDocument
+    }
+
+    class VerificationReviewRepositoryImpl {
+        + save(review: VerificationReview): void
+        + findByDriverId(driverId: UUID): VerificationReview
+    }
+}
+
+package "drivermanagement.interfaces.rest.controllers" {
+    class DriverManagementController {
+        + submitDriverRegistration(request: SubmitDriverRegistrationRequest): DriverResponse
+        + approveDriverDocuments(request: ApproveDriverDocumentsRequest): DriverResponse
+        + rejectDriverDocuments(request: RejectDriverDocumentsRequest): DriverResponse
+        + updateDriverDocuments(request: UpdateDriverDocumentsRequest): DriverDocumentResponse
+        + disableDriver(request: DisableDriverRequest): DriverResponse
+        + enableDriver(request: EnableDriverRequest): DriverResponse
+        + getPendingDrivers(request: PendingDriversRequest): DriverListResponse
+        + getDriverVerificationStatus(request: DriverVerificationStatusRequest): DriverVerificationStatusResponse
+        + getDriverDetails(request: DriverDetailsRequest): DriverDetailResponse
+        + getDriversForAdmin(request: DriversForAdminRequest): DriverListResponse
+        + canDriverBeOperational(request: CanDriverBeOperationalRequest): OperationalCheckResponse
+    }
+}
+
+package "drivermanagement.interfaces.rest.resources.requests" {
+    class SubmitDriverRegistrationRequest {
+        + accountId: UUID
+        + fullName: String
+        + vehicleType: String
+        + licenseNumber: String
+        + soatNumber: String
+        + licenseExpiryDate: Date
+        + soatExpiryDate: Date
+    }
+
+    class ApproveDriverDocumentsRequest {
+        + driverId: UUID
+        + reviewedBy: UUID
+    }
+
+    class RejectDriverDocumentsRequest {
+        + driverId: UUID
+        + reviewedBy: UUID
+        + reason: String
+    }
+
+    class UpdateDriverDocumentsRequest {
+        + driverId: UUID
+        + licenseNumber: String
+        + soatNumber: String
+        + licenseExpiryDate: Date
+        + soatExpiryDate: Date
+    }
+
+    class DisableDriverRequest {
+        + driverId: UUID
+        + reason: String
+    }
+
+    class EnableDriverRequest {
+        + driverId: UUID
+    }
+
+    class PendingDriversRequest {
+        + page: int
+        + size: int
+    }
+
+    class DriverVerificationStatusRequest {
+        + driverId: UUID
+    }
+
+    class DriverDetailsRequest {
+        + driverId: UUID
+    }
+
+    class DriversForAdminRequest {
+        + verificationStatus: String
+        + operationalStatus: String
+        + page: int
+        + size: int
+    }
+
+    class CanDriverBeOperationalRequest {
+        + driverId: UUID
+    }
+}
+
+package "drivermanagement.interfaces.rest.resources.responses" {
+    class DriverResponse {
+        + driverId: UUID
+        + accountId: UUID
+        + fullName: String
+        + vehicleType: String
+        + verificationStatus: String
+        + operationalStatus: String
+    }
+
+    class DriverDocumentResponse {
+        + documentId: UUID
+        + driverId: UUID
+        + licenseNumber: String
+        + soatNumber: String
+        + licenseExpiryDate: Date
+        + soatExpiryDate: Date
+    }
+
+    class DriverVerificationStatusResponse {
+        + driverId: UUID
+        + verificationStatus: String
+        + operationalStatus: String
+    }
+
+    class DriverDetailResponse {
+        + driverId: UUID
+        + accountId: UUID
+        + fullName: String
+        + vehicleType: String
+        + verificationStatus: String
+        + operationalStatus: String
+        + licenseNumber: String
+        + soatNumber: String
+    }
+
+    class DriverListResponse {
+        + drivers: List<DriverResponse>
+    }
+
+    class OperationalCheckResponse {
+        + driverId: UUID
+        + canOperate: boolean
+    }
+}
+
+package "drivermanagement.interfaces.rest.assemblers" {
+    class DriverResponseAssembler {
+        + toResponse(driver: Driver): DriverResponse
+        + toVerificationStatusResponse(driver: Driver): DriverVerificationStatusResponse
+        + toDetailResponse(driver: Driver, document: DriverDocument): DriverDetailResponse
+        + toListResponse(drivers: List<Driver>): DriverListResponse
+    }
+
+    class DriverDocumentResponseAssembler {
+        + toResponse(document: DriverDocument): DriverDocumentResponse
+    }
+
+    class OperationalCheckResponseAssembler {
+        + toResponse(driverId: UUID, canOperate: boolean): OperationalCheckResponse
+    }
+}
+
+' =========================
+' RELACIONES DE DOMINIO
+' =========================
+Driver --> VerificationStatus
+Driver --> OperationalStatus
+Driver "1" -- "1" DriverDocument : owns >
+Driver "1" -- "0..*" VerificationReview : reviewed through >
+
+' =========================
+' REQUESTS IMPLEMENTAN COMMANDS / QUERIES
+' =========================
+SubmitDriverRegistrationRequest ..|> ISubmitDriverRegistrationCommand
+ApproveDriverDocumentsRequest ..|> IApproveDriverDocumentsCommand
+RejectDriverDocumentsRequest ..|> IRejectDriverDocumentsCommand
+UpdateDriverDocumentsRequest ..|> IUpdateDriverDocumentsCommand
+DisableDriverRequest ..|> IDisableDriverCommand
+EnableDriverRequest ..|> IEnableDriverCommand
+
+PendingDriversRequest ..|> IGetPendingDriversQuery
+DriverVerificationStatusRequest ..|> IGetDriverVerificationStatusQuery
+DriverDetailsRequest ..|> IGetDriverDetailsQuery
+DriversForAdminRequest ..|> IGetDriversForAdminQuery
+CanDriverBeOperationalRequest ..|> ICanDriverBeOperationalQuery
+
+' =========================
+' CONTROLLER / FACADE
+' =========================
+DriverManagementController --> DriverManagementFacade : uses
+DriverManagementController --> DriverResponseAssembler : uses
+DriverManagementController --> DriverDocumentResponseAssembler : uses
+DriverManagementController --> OperationalCheckResponseAssembler : uses
+
+' =========================
+' FACADE / SERVICES
+' =========================
+DriverManagementFacade --> IDriverCommandService : delegates
+DriverManagementFacade --> IDriverQueryService : delegates
+
+' =========================
+' SERVICES / COMMANDS-QUERIES
+' =========================
+IDriverCommandService ..> ISubmitDriverRegistrationCommand : handles
+IDriverCommandService ..> IApproveDriverDocumentsCommand : handles
+IDriverCommandService ..> IRejectDriverDocumentsCommand : handles
+IDriverCommandService ..> IUpdateDriverDocumentsCommand : handles
+IDriverCommandService ..> IDisableDriverCommand : handles
+IDriverCommandService ..> IEnableDriverCommand : handles
+
+IDriverQueryService ..> IGetPendingDriversQuery : handles
+IDriverQueryService ..> IGetDriverVerificationStatusQuery : handles
+IDriverQueryService ..> IGetDriverDetailsQuery : handles
+IDriverQueryService ..> IGetDriversForAdminQuery : handles
+IDriverQueryService ..> ICanDriverBeOperationalQuery : handles
+
+' =========================
+' SERVICES / REPOSITORIES
+' =========================
+IDriverCommandService --> IDriverRepository : uses
+IDriverCommandService --> IDriverDocumentRepository : uses
+IDriverCommandService --> IVerificationReviewRepository : uses
+
+IDriverQueryService --> IDriverRepository : uses
+IDriverQueryService --> IDriverDocumentRepository : uses
+
+' =========================
+' REPOSITORY IMPLEMENTATIONS
+' =========================
+DriverRepositoryImpl ..|> IDriverRepository
+DriverDocumentRepositoryImpl ..|> IDriverDocumentRepository
+VerificationReviewRepositoryImpl ..|> IVerificationReviewRepository
+
+DriverRepositoryImpl --> Driver : persists
+DriverDocumentRepositoryImpl --> DriverDocument : persists
+VerificationReviewRepositoryImpl --> VerificationReview : persists
+
+' =========================
+' EVENTS
+' =========================
+IDriverCommandService ..> DriverSubmittedForVerificationEvent : publishes
+IDriverCommandService ..> DriverDocumentsRegisteredEvent : publishes
+IDriverCommandService ..> DriverDocumentsUpdatedEvent : publishes
+IDriverCommandService ..> DriverDocumentsApprovedEvent : publishes
+IDriverCommandService ..> DriverDocumentsRejectedEvent : publishes
+IDriverCommandService ..> DriverEnabledEvent : publishes
+IDriverCommandService ..> DriverDisabledEvent : publishes
+
+' =========================
+' ASSEMBLERS / RESPONSES
+' =========================
+DriverResponseAssembler --> Driver : uses
+DriverResponseAssembler --> DriverDocument : uses
+DriverResponseAssembler --> DriverResponse : creates
+DriverResponseAssembler --> DriverVerificationStatusResponse : creates
+DriverResponseAssembler --> DriverDetailResponse : creates
+DriverResponseAssembler --> DriverListResponse : creates
+
+DriverDocumentResponseAssembler --> DriverDocument : uses
+DriverDocumentResponseAssembler --> DriverDocumentResponse : creates
+
+OperationalCheckResponseAssembler --> OperationalCheckResponse : creates
+
+@enduml

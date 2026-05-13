@@ -1,0 +1,470 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "monetization.application.facade" {
+    class MonetizationFacade <<Facade>> {
+        + calculateEstimatedFare(command: ICalculateEstimatedFareCommand): FarePolicy
+        + configureFarePolicy(command: IConfigureFarePolicyCommand): FarePolicy
+        + topUpWallet(command: ITopUpWalletCommand): Wallet
+        + registerTopUpFailure(command: IRegisterTopUpFailureCommand): WalletTransaction
+        + applyRideCommission(command: IApplyRideCommissionCommand): WalletTransaction
+        + blockDriverMonetizationAccess(command: IBlockDriverMonetizationAccessCommand): Wallet
+        + unblockDriverMonetizationAccess(command: IUnblockDriverMonetizationAccessCommand): Wallet
+        + getEstimatedFare(query: IGetEstimatedFareQuery): FarePolicy
+        + getCurrentFarePolicy(query: IGetCurrentFarePolicyQuery): FarePolicy
+        + getWalletBalance(query: IGetWalletBalanceQuery): Wallet
+        + getWalletTransactionHistory(query: IGetWalletTransactionHistoryQuery): List<WalletTransaction>
+        + canDriverOperateFromMonetization(query: ICanDriverOperateFromMonetizationQuery): boolean
+    }
+}
+
+package "monetization.domain.model.entities" {
+    enum WalletStatus {
+        ACTIVE
+        BLOCKED
+    }
+
+    enum TransactionType {
+        TOP_UP
+        TOP_UP_FAILED
+        COMMISSION
+    }
+
+    class FarePolicy {
+        - farePolicyId: UUID
+        - baseFare: Decimal
+        - pricePerKm: Decimal
+        - minimumFare: Decimal
+        + configure(baseFare: Decimal, pricePerKm: Decimal, minimumFare: Decimal): void
+        + calculate(distanceKm: Decimal): Decimal
+    }
+
+    class Wallet {
+        - walletId: UUID
+        - driverId: UUID
+        - balance: Decimal
+        - status: WalletStatus
+        + topUp(amount: Decimal): void
+        + applyCommission(amount: Decimal): void
+        + block(): void
+        + unblock(): void
+        + hasPositiveBalance(): boolean
+    }
+
+    class WalletTransaction {
+        - transactionId: UUID
+        - walletId: UUID
+        - tripId: UUID
+        - type: TransactionType
+        - amount: Decimal
+        - resultingBalance: Decimal
+        + record(): void
+    }
+}
+
+package "monetization.domain.model.commands" {
+    interface ICalculateEstimatedFareCommand <<Command>> {
+        + getOrigin(): String
+        + getDestination(): String
+        + getDistanceKm(): Decimal
+    }
+
+    interface IConfigureFarePolicyCommand <<Command>> {
+        + getBaseFare(): Decimal
+        + getPricePerKm(): Decimal
+        + getMinimumFare(): Decimal
+    }
+
+    interface ITopUpWalletCommand <<Command>> {
+        + getDriverId(): UUID
+        + getAmount(): Decimal
+    }
+
+    interface IRegisterTopUpFailureCommand <<Command>> {
+        + getDriverId(): UUID
+        + getAmount(): Decimal
+        + getReason(): String
+    }
+
+    interface IApplyRideCommissionCommand <<Command>> {
+        + getDriverId(): UUID
+        + getTripId(): UUID
+        + getRideFare(): Decimal
+    }
+
+    interface IBlockDriverMonetizationAccessCommand <<Command>> {
+        + getDriverId(): UUID
+    }
+
+    interface IUnblockDriverMonetizationAccessCommand <<Command>> {
+        + getDriverId(): UUID
+    }
+}
+
+package "monetization.domain.model.queries" {
+    interface IGetEstimatedFareQuery <<Query>> {
+        + getOrigin(): String
+        + getDestination(): String
+        + getDistanceKm(): Decimal
+    }
+
+    interface IGetCurrentFarePolicyQuery <<Query>> {
+    }
+
+    interface IGetWalletBalanceQuery <<Query>> {
+        + getDriverId(): UUID
+    }
+
+    interface IGetWalletTransactionHistoryQuery <<Query>> {
+        + getDriverId(): UUID
+        + getPage(): Integer
+        + getSize(): Integer
+    }
+
+    interface ICanDriverOperateFromMonetizationQuery <<Query>> {
+        + getDriverId(): UUID
+    }
+}
+
+package "monetization.domain.events" {
+    class EstimatedFareCalculatedEvent <<DomainEvent>> {
+        + occurredOn: DateTime
+    }
+
+    class FarePolicyConfiguredEvent <<DomainEvent>> {
+        + occurredOn: DateTime
+    }
+
+    class WalletTopUpRequestedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class WalletTopUpSucceededEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class WalletTopUpFailedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class WalletBalanceUpdatedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class WalletTransactionRecordedEvent <<DomainEvent>> {
+        + walletId: UUID
+        + occurredOn: DateTime
+    }
+
+    class RideCommissionAppliedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + tripId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverWalletDepletedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverWalletOperationallyBlockedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverMonetizationAccessRestoredEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+}
+
+package "monetization.domain.repositories" {
+    interface IFarePolicyRepository <<Repository>> {
+        + save(farePolicy: FarePolicy): void
+        + getCurrent(): FarePolicy
+    }
+
+    interface IWalletRepository <<Repository>> {
+        + save(wallet: Wallet): void
+        + findByDriverId(driverId: UUID): Wallet
+    }
+
+    interface IWalletTransactionRepository <<Repository>> {
+        + save(walletTransaction: WalletTransaction): void
+        + findByDriverId(driverId: UUID, page: Integer, size: Integer): List<WalletTransaction>
+    }
+}
+
+package "monetization.domain.services.commandservices" {
+    interface IMonetizationCommandService {
+        + calculateEstimatedFare(command: ICalculateEstimatedFareCommand): FarePolicy
+        + configureFarePolicy(command: IConfigureFarePolicyCommand): FarePolicy
+        + topUpWallet(command: ITopUpWalletCommand): Wallet
+        + registerTopUpFailure(command: IRegisterTopUpFailureCommand): WalletTransaction
+        + applyRideCommission(command: IApplyRideCommissionCommand): WalletTransaction
+        + blockDriverMonetizationAccess(command: IBlockDriverMonetizationAccessCommand): Wallet
+        + unblockDriverMonetizationAccess(command: IUnblockDriverMonetizationAccessCommand): Wallet
+    }
+}
+
+package "monetization.domain.services.queryservices" {
+    interface IMonetizationQueryService {
+        + getEstimatedFare(query: IGetEstimatedFareQuery): FarePolicy
+        + getCurrentFarePolicy(query: IGetCurrentFarePolicyQuery): FarePolicy
+        + getWalletBalance(query: IGetWalletBalanceQuery): Wallet
+        + getWalletTransactionHistory(query: IGetWalletTransactionHistoryQuery): List<WalletTransaction>
+        + canDriverOperateFromMonetization(query: ICanDriverOperateFromMonetizationQuery): boolean
+    }
+}
+
+package "monetization.infrastructure.repositories" {
+    class FarePolicyRepositoryImpl {
+        + save(farePolicy: FarePolicy): void
+        + getCurrent(): FarePolicy
+    }
+
+    class WalletRepositoryImpl {
+        + save(wallet: Wallet): void
+        + findByDriverId(driverId: UUID): Wallet
+    }
+
+    class WalletTransactionRepositoryImpl {
+        + save(walletTransaction: WalletTransaction): void
+        + findByDriverId(driverId: UUID, page: Integer, size: Integer): List<WalletTransaction>
+    }
+}
+
+package "monetization.interfaces.rest.controllers" {
+    class MonetizationController {
+        + calculateEstimatedFare(request: EstimatedFareRequest): FareQuoteResponse
+        + configureFarePolicy(request: ConfigureFarePolicyRequest): FarePolicyResponse
+        + topUpWallet(request: TopUpWalletRequest): WalletResponse
+        + registerTopUpFailure(request: TopUpFailureRequest): WalletTransactionResponse
+        + applyRideCommission(request: ApplyRideCommissionRequest): WalletTransactionResponse
+        + getCurrentFarePolicy(request: CurrentFarePolicyRequest): FarePolicyResponse
+        + getWalletBalance(request: WalletBalanceRequest): WalletResponse
+        + getWalletTransactionHistory(request: WalletTransactionHistoryRequest): WalletTransactionHistoryResponse
+        + canDriverOperateFromMonetization(request: MonetizationOperationalCheckRequest): MonetizationOperationalCheckResponse
+    }
+}
+
+package "monetization.interfaces.rest.resources.requests" {
+    class EstimatedFareRequest {
+        + origin: String
+        + destination: String
+        + distanceKm: Decimal
+    }
+
+    class ConfigureFarePolicyRequest {
+        + baseFare: Decimal
+        + pricePerKm: Decimal
+        + minimumFare: Decimal
+    }
+
+    class TopUpWalletRequest {
+        + driverId: UUID
+        + amount: Decimal
+    }
+
+    class TopUpFailureRequest {
+        + driverId: UUID
+        + amount: Decimal
+        + reason: String
+    }
+
+    class ApplyRideCommissionRequest {
+        + driverId: UUID
+        + tripId: UUID
+        + rideFare: Decimal
+    }
+
+    class CurrentFarePolicyRequest {
+    }
+
+    class WalletBalanceRequest {
+        + driverId: UUID
+    }
+
+    class WalletTransactionHistoryRequest {
+        + driverId: UUID
+        + page: Integer
+        + size: Integer
+    }
+
+    class MonetizationOperationalCheckRequest {
+        + driverId: UUID
+    }
+}
+
+package "monetization.interfaces.rest.resources.responses" {
+    class FareQuoteResponse {
+        + estimatedFare: Decimal
+    }
+
+    class FarePolicyResponse {
+        + baseFare: Decimal
+        + pricePerKm: Decimal
+        + minimumFare: Decimal
+    }
+
+    class WalletResponse {
+        + walletId: UUID
+        + driverId: UUID
+        + balance: Decimal
+        + status: String
+    }
+
+    class WalletTransactionResponse {
+        + transactionId: UUID
+        + walletId: UUID
+        + tripId: UUID
+        + type: String
+        + amount: Decimal
+        + resultingBalance: Decimal
+    }
+
+    class WalletTransactionHistoryResponse {
+        + transactions: List<WalletTransactionResponse>
+    }
+
+    class MonetizationOperationalCheckResponse {
+        + driverId: UUID
+        + canOperate: boolean
+    }
+}
+
+package "monetization.interfaces.rest.assemblers" {
+    class FarePolicyResponseAssembler {
+        + toPolicyResponse(farePolicy: FarePolicy): FarePolicyResponse
+        + toQuoteResponse(estimatedFare: Decimal): FareQuoteResponse
+    }
+
+    class WalletResponseAssembler {
+        + toResponse(wallet: Wallet): WalletResponse
+    }
+
+    class WalletTransactionResponseAssembler {
+        + toResponse(walletTransaction: WalletTransaction): WalletTransactionResponse
+        + toHistoryResponse(transactions: List<WalletTransaction>): WalletTransactionHistoryResponse
+    }
+
+    class MonetizationOperationalCheckResponseAssembler {
+        + toResponse(driverId: UUID, canOperate: boolean): MonetizationOperationalCheckResponse
+    }
+}
+
+' =========================
+' RELACIONES DE DOMINIO
+' =========================
+Wallet --> WalletStatus
+WalletTransaction --> TransactionType
+Wallet "1" -- "0..*" WalletTransaction : records >
+FarePolicy --> Wallet : influences ride monetization >
+
+' =========================
+' REQUESTS IMPLEMENTAN COMMANDS / QUERIES
+' =========================
+EstimatedFareRequest ..|> ICalculateEstimatedFareCommand
+EstimatedFareRequest ..|> IGetEstimatedFareQuery
+ConfigureFarePolicyRequest ..|> IConfigureFarePolicyCommand
+TopUpWalletRequest ..|> ITopUpWalletCommand
+TopUpFailureRequest ..|> IRegisterTopUpFailureCommand
+ApplyRideCommissionRequest ..|> IApplyRideCommissionCommand
+CurrentFarePolicyRequest ..|> IGetCurrentFarePolicyQuery
+WalletBalanceRequest ..|> IGetWalletBalanceQuery
+WalletTransactionHistoryRequest ..|> IGetWalletTransactionHistoryQuery
+MonetizationOperationalCheckRequest ..|> ICanDriverOperateFromMonetizationQuery
+
+' =========================
+' CONTROLLER / FACADE
+' =========================
+MonetizationController --> MonetizationFacade : uses
+MonetizationController --> FarePolicyResponseAssembler : uses
+MonetizationController --> WalletResponseAssembler : uses
+MonetizationController --> WalletTransactionResponseAssembler : uses
+MonetizationController --> MonetizationOperationalCheckResponseAssembler : uses
+
+' =========================
+' FACADE / SERVICES
+' =========================
+MonetizationFacade --> IMonetizationCommandService : delegates
+MonetizationFacade --> IMonetizationQueryService : delegates
+
+' =========================
+' SERVICES / COMMANDS-QUERIES
+' =========================
+IMonetizationCommandService ..> ICalculateEstimatedFareCommand : handles
+IMonetizationCommandService ..> IConfigureFarePolicyCommand : handles
+IMonetizationCommandService ..> ITopUpWalletCommand : handles
+IMonetizationCommandService ..> IRegisterTopUpFailureCommand : handles
+IMonetizationCommandService ..> IApplyRideCommissionCommand : handles
+IMonetizationCommandService ..> IBlockDriverMonetizationAccessCommand : handles
+IMonetizationCommandService ..> IUnblockDriverMonetizationAccessCommand : handles
+
+IMonetizationQueryService ..> IGetEstimatedFareQuery : handles
+IMonetizationQueryService ..> IGetCurrentFarePolicyQuery : handles
+IMonetizationQueryService ..> IGetWalletBalanceQuery : handles
+IMonetizationQueryService ..> IGetWalletTransactionHistoryQuery : handles
+IMonetizationQueryService ..> ICanDriverOperateFromMonetizationQuery : handles
+
+' =========================
+' SERVICES / REPOSITORIES
+' =========================
+IMonetizationCommandService --> IFarePolicyRepository : uses
+IMonetizationCommandService --> IWalletRepository : uses
+IMonetizationCommandService --> IWalletTransactionRepository : uses
+
+IMonetizationQueryService --> IFarePolicyRepository : uses
+IMonetizationQueryService --> IWalletRepository : uses
+IMonetizationQueryService --> IWalletTransactionRepository : uses
+
+' =========================
+' REPOSITORY IMPLEMENTATIONS
+' =========================
+FarePolicyRepositoryImpl ..|> IFarePolicyRepository
+WalletRepositoryImpl ..|> IWalletRepository
+WalletTransactionRepositoryImpl ..|> IWalletTransactionRepository
+
+FarePolicyRepositoryImpl --> FarePolicy : persists
+WalletRepositoryImpl --> Wallet : persists
+WalletTransactionRepositoryImpl --> WalletTransaction : persists
+
+' =========================
+' EVENTS
+' =========================
+IMonetizationCommandService ..> EstimatedFareCalculatedEvent : publishes
+IMonetizationCommandService ..> FarePolicyConfiguredEvent : publishes
+IMonetizationCommandService ..> WalletTopUpRequestedEvent : publishes
+IMonetizationCommandService ..> WalletTopUpSucceededEvent : publishes
+IMonetizationCommandService ..> WalletTopUpFailedEvent : publishes
+IMonetizationCommandService ..> WalletBalanceUpdatedEvent : publishes
+IMonetizationCommandService ..> WalletTransactionRecordedEvent : publishes
+IMonetizationCommandService ..> RideCommissionAppliedEvent : publishes
+IMonetizationCommandService ..> DriverWalletDepletedEvent : publishes
+IMonetizationCommandService ..> DriverWalletOperationallyBlockedEvent : publishes
+IMonetizationCommandService ..> DriverMonetizationAccessRestoredEvent : publishes
+
+' =========================
+' ASSEMBLERS / RESPONSES
+' =========================
+FarePolicyResponseAssembler --> FarePolicy : uses
+FarePolicyResponseAssembler --> FarePolicyResponse : creates
+FarePolicyResponseAssembler --> FareQuoteResponse : creates
+
+WalletResponseAssembler --> Wallet : uses
+WalletResponseAssembler --> WalletResponse : creates
+
+WalletTransactionResponseAssembler --> WalletTransaction : uses
+WalletTransactionResponseAssembler --> WalletTransactionResponse : creates
+WalletTransactionResponseAssembler --> WalletTransactionHistoryResponse : creates
+
+MonetizationOperationalCheckResponseAssembler --> MonetizationOperationalCheckResponse : creates
+
+@enduml

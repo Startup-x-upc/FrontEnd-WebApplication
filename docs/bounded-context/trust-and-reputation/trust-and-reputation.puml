@@ -1,0 +1,493 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "trustreputation.application.facade" {
+    class TrustReputationFacade <<Facade>> {
+        + rateDriver(command: IRateDriverCommand): TripRating
+        + ratePassenger(command: IRatePassengerCommand): TripRating
+        + skipDriverRating(command: ISkipDriverRatingCommand): TripRating
+        + skipPassengerRating(command: ISkipPassengerRatingCommand): TripRating
+        + recordLowPassengerRatingComment(command: IRecordLowPassengerRatingCommentCommand): TripRating
+        + openTripForRating(command: IOpenTripForRatingCommand): TripRating
+        + getDriverReputation(query: IGetDriverReputationQuery): DriverReputation
+        + getPassengerReputation(query: IGetPassengerReputationQuery): PassengerReputation
+        + getRateableTripForPassenger(query: IGetRateableTripForPassengerQuery): TripRating
+        + getRateableTripForDriver(query: IGetRateableTripForDriverQuery): TripRating
+        + getPublicDriverRatingCard(query: IGetPublicDriverRatingCardQuery): DriverReputation
+        + getMyReputation(query: IGetMyReputationQuery): Object
+    }
+}
+
+package "trustreputation.domain.model.entities" {
+    enum RatingStatus {
+        PENDING
+        RATED
+        SKIPPED
+        EXPIRED
+    }
+
+    enum RatedPartyType {
+        DRIVER
+        PASSENGER
+    }
+
+    class TripRating {
+        - tripRatingId: UUID
+        - tripId: UUID
+        - driverId: UUID
+        - passengerId: UUID
+        - driverRatingStatus: RatingStatus
+        - passengerRatingStatus: RatingStatus
+        - driverScore: Integer
+        - passengerScore: Integer
+        - passengerComment: String
+        - rateableUntil: DateTime
+        + openForRating(): void
+        + rateDriver(score: Integer): void
+        + ratePassenger(score: Integer): void
+        + skipDriverRating(): void
+        + skipPassengerRating(): void
+        + recordPassengerLowRatingComment(comment: String): void
+        + isStillRateable(now: DateTime): boolean
+    }
+
+    class DriverReputation {
+        - driverId: UUID
+        - averageScore: Decimal
+        - totalRatings: Integer
+        + recalculate(score: Integer): void
+        + hasRatings(): boolean
+    }
+
+    class PassengerReputation {
+        - passengerId: UUID
+        - averageScore: Decimal
+        - totalRatings: Integer
+        + recalculate(score: Integer): void
+        + hasRatings(): boolean
+    }
+}
+
+package "trustreputation.domain.model.commands" {
+    interface IOpenTripForRatingCommand <<Command>> {
+        + getTripId(): UUID
+        + getDriverId(): UUID
+        + getPassengerId(): UUID
+        + getRateableUntil(): DateTime
+    }
+
+    interface IRateDriverCommand <<Command>> {
+        + getTripId(): UUID
+        + getDriverId(): UUID
+        + getPassengerId(): UUID
+        + getScore(): Integer
+    }
+
+    interface IRatePassengerCommand <<Command>> {
+        + getTripId(): UUID
+        + getDriverId(): UUID
+        + getPassengerId(): UUID
+        + getScore(): Integer
+    }
+
+    interface ISkipDriverRatingCommand <<Command>> {
+        + getTripId(): UUID
+        + getPassengerId(): UUID
+    }
+
+    interface ISkipPassengerRatingCommand <<Command>> {
+        + getTripId(): UUID
+        + getDriverId(): UUID
+    }
+
+    interface IRecordLowPassengerRatingCommentCommand <<Command>> {
+        + getTripId(): UUID
+        + getDriverId(): UUID
+        + getComment(): String
+    }
+}
+
+package "trustreputation.domain.model.queries" {
+    interface IGetDriverReputationQuery <<Query>> {
+        + getDriverId(): UUID
+    }
+
+    interface IGetPassengerReputationQuery <<Query>> {
+        + getPassengerId(): UUID
+    }
+
+    interface IGetRateableTripForPassengerQuery <<Query>> {
+        + getTripId(): UUID
+        + getPassengerId(): UUID
+    }
+
+    interface IGetRateableTripForDriverQuery <<Query>> {
+        + getTripId(): UUID
+        + getDriverId(): UUID
+    }
+
+    interface IGetPublicDriverRatingCardQuery <<Query>> {
+        + getDriverId(): UUID
+    }
+
+    interface IGetMyReputationQuery <<Query>> {
+        + getAccountId(): UUID
+        + getRatedPartyType(): RatedPartyType
+    }
+}
+
+package "trustreputation.domain.events" {
+    class TripBecameRateableEvent <<DomainEvent>> {
+        + tripId: UUID
+        + driverId: UUID
+        + passengerId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverRatedEvent <<DomainEvent>> {
+        + tripId: UUID
+        + driverId: UUID
+        + score: Integer
+        + occurredOn: DateTime
+    }
+
+    class PassengerRatedEvent <<DomainEvent>> {
+        + tripId: UUID
+        + passengerId: UUID
+        + score: Integer
+        + occurredOn: DateTime
+    }
+
+    class DriverRatingSkippedEvent <<DomainEvent>> {
+        + tripId: UUID
+        + passengerId: UUID
+        + occurredOn: DateTime
+    }
+
+    class PassengerRatingSkippedEvent <<DomainEvent>> {
+        + tripId: UUID
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class LowPassengerRatingCommentRecordedEvent <<DomainEvent>> {
+        + tripId: UUID
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class DriverReputationUpdatedEvent <<DomainEvent>> {
+        + driverId: UUID
+        + occurredOn: DateTime
+    }
+
+    class PassengerReputationUpdatedEvent <<DomainEvent>> {
+        + passengerId: UUID
+        + occurredOn: DateTime
+    }
+}
+
+package "trustreputation.domain.repositories" {
+    interface ITripRatingRepository <<Repository>> {
+        + save(tripRating: TripRating): void
+        + findByTripId(tripId: UUID): TripRating
+        + findRateableTripForPassenger(tripId: UUID, passengerId: UUID): TripRating
+        + findRateableTripForDriver(tripId: UUID, driverId: UUID): TripRating
+    }
+
+    interface IDriverReputationRepository <<Repository>> {
+        + save(driverReputation: DriverReputation): void
+        + findByDriverId(driverId: UUID): DriverReputation
+    }
+
+    interface IPassengerReputationRepository <<Repository>> {
+        + save(passengerReputation: PassengerReputation): void
+        + findByPassengerId(passengerId: UUID): PassengerReputation
+    }
+}
+
+package "trustreputation.domain.services.commandservices" {
+    interface ITrustReputationCommandService {
+        + openTripForRating(command: IOpenTripForRatingCommand): TripRating
+        + rateDriver(command: IRateDriverCommand): TripRating
+        + ratePassenger(command: IRatePassengerCommand): TripRating
+        + skipDriverRating(command: ISkipDriverRatingCommand): TripRating
+        + skipPassengerRating(command: ISkipPassengerRatingCommand): TripRating
+        + recordLowPassengerRatingComment(command: IRecordLowPassengerRatingCommentCommand): TripRating
+    }
+}
+
+package "trustreputation.domain.services.queryservices" {
+    interface ITrustReputationQueryService {
+        + getDriverReputation(query: IGetDriverReputationQuery): DriverReputation
+        + getPassengerReputation(query: IGetPassengerReputationQuery): PassengerReputation
+        + getRateableTripForPassenger(query: IGetRateableTripForPassengerQuery): TripRating
+        + getRateableTripForDriver(query: IGetRateableTripForDriverQuery): TripRating
+        + getPublicDriverRatingCard(query: IGetPublicDriverRatingCardQuery): DriverReputation
+        + getMyReputation(query: IGetMyReputationQuery): Object
+    }
+}
+
+package "trustreputation.infrastructure.repositories" {
+    class TripRatingRepositoryImpl {
+        + save(tripRating: TripRating): void
+        + findByTripId(tripId: UUID): TripRating
+        + findRateableTripForPassenger(tripId: UUID, passengerId: UUID): TripRating
+        + findRateableTripForDriver(tripId: UUID, driverId: UUID): TripRating
+    }
+
+    class DriverReputationRepositoryImpl {
+        + save(driverReputation: DriverReputation): void
+        + findByDriverId(driverId: UUID): DriverReputation
+    }
+
+    class PassengerReputationRepositoryImpl {
+        + save(passengerReputation: PassengerReputation): void
+        + findByPassengerId(passengerId: UUID): PassengerReputation
+    }
+}
+
+package "trustreputation.interfaces.rest.controllers" {
+    class TrustReputationController {
+        + openTripForRating(request: OpenTripForRatingRequest): TripRatingResponse
+        + rateDriver(request: RateDriverRequest): TripRatingResponse
+        + ratePassenger(request: RatePassengerRequest): TripRatingResponse
+        + skipDriverRating(request: SkipDriverRatingRequest): TripRatingResponse
+        + skipPassengerRating(request: SkipPassengerRatingRequest): TripRatingResponse
+        + recordLowPassengerRatingComment(request: LowPassengerRatingCommentRequest): TripRatingResponse
+        + getDriverReputation(request: DriverReputationRequest): DriverReputationResponse
+        + getPassengerReputation(request: PassengerReputationRequest): PassengerReputationResponse
+        + getRateableTripForPassenger(request: RateableTripForPassengerRequest): TripRatingResponse
+        + getRateableTripForDriver(request: RateableTripForDriverRequest): TripRatingResponse
+        + getPublicDriverRatingCard(request: PublicDriverRatingCardRequest): DriverReputationResponse
+        + getMyReputation(request: MyReputationRequest): ReputationSummaryResponse
+    }
+}
+
+package "trustreputation.interfaces.rest.resources.requests" {
+    class OpenTripForRatingRequest {
+        + tripId: UUID
+        + driverId: UUID
+        + passengerId: UUID
+        + rateableUntil: DateTime
+    }
+
+    class RateDriverRequest {
+        + tripId: UUID
+        + driverId: UUID
+        + passengerId: UUID
+        + score: Integer
+    }
+
+    class RatePassengerRequest {
+        + tripId: UUID
+        + driverId: UUID
+        + passengerId: UUID
+        + score: Integer
+    }
+
+    class SkipDriverRatingRequest {
+        + tripId: UUID
+        + passengerId: UUID
+    }
+
+    class SkipPassengerRatingRequest {
+        + tripId: UUID
+        + driverId: UUID
+    }
+
+    class LowPassengerRatingCommentRequest {
+        + tripId: UUID
+        + driverId: UUID
+        + comment: String
+    }
+
+    class DriverReputationRequest {
+        + driverId: UUID
+    }
+
+    class PassengerReputationRequest {
+        + passengerId: UUID
+    }
+
+    class RateableTripForPassengerRequest {
+        + tripId: UUID
+        + passengerId: UUID
+    }
+
+    class RateableTripForDriverRequest {
+        + tripId: UUID
+        + driverId: UUID
+    }
+
+    class PublicDriverRatingCardRequest {
+        + driverId: UUID
+    }
+
+    class MyReputationRequest {
+        + accountId: UUID
+        + ratedPartyType: String
+    }
+}
+
+package "trustreputation.interfaces.rest.resources.responses" {
+    class TripRatingResponse {
+        + tripId: UUID
+        + driverId: UUID
+        + passengerId: UUID
+        + driverRatingStatus: String
+        + passengerRatingStatus: String
+        + driverScore: Integer
+        + passengerScore: Integer
+        + passengerComment: String
+    }
+
+    class DriverReputationResponse {
+        + driverId: UUID
+        + averageScore: Decimal
+        + totalRatings: Integer
+    }
+
+    class PassengerReputationResponse {
+        + passengerId: UUID
+        + averageScore: Decimal
+        + totalRatings: Integer
+    }
+
+    class ReputationSummaryResponse {
+        + accountId: UUID
+        + ratedPartyType: String
+        + averageScore: Decimal
+        + totalRatings: Integer
+    }
+}
+
+package "trustreputation.interfaces.rest.assemblers" {
+    class TripRatingResponseAssembler {
+        + toResponse(tripRating: TripRating): TripRatingResponse
+    }
+
+    class DriverReputationResponseAssembler {
+        + toResponse(driverReputation: DriverReputation): DriverReputationResponse
+    }
+
+    class PassengerReputationResponseAssembler {
+        + toResponse(passengerReputation: PassengerReputation): PassengerReputationResponse
+    }
+
+    class ReputationSummaryResponseAssembler {
+        + toDriverSummary(accountId: UUID, driverReputation: DriverReputation): ReputationSummaryResponse
+        + toPassengerSummary(accountId: UUID, passengerReputation: PassengerReputation): ReputationSummaryResponse
+    }
+}
+
+' =========================
+' RELACIONES DE DOMINIO
+' =========================
+TripRating --> RatingStatus
+TripRating --> RatedPartyType
+TripRating --> DriverReputation : updates >
+TripRating --> PassengerReputation : updates >
+
+' =========================
+' REQUESTS IMPLEMENTAN COMMANDS / QUERIES
+' =========================
+OpenTripForRatingRequest ..|> IOpenTripForRatingCommand
+RateDriverRequest ..|> IRateDriverCommand
+RatePassengerRequest ..|> IRatePassengerCommand
+SkipDriverRatingRequest ..|> ISkipDriverRatingCommand
+SkipPassengerRatingRequest ..|> ISkipPassengerRatingCommand
+LowPassengerRatingCommentRequest ..|> IRecordLowPassengerRatingCommentCommand
+
+DriverReputationRequest ..|> IGetDriverReputationQuery
+PassengerReputationRequest ..|> IGetPassengerReputationQuery
+RateableTripForPassengerRequest ..|> IGetRateableTripForPassengerQuery
+RateableTripForDriverRequest ..|> IGetRateableTripForDriverQuery
+PublicDriverRatingCardRequest ..|> IGetPublicDriverRatingCardQuery
+MyReputationRequest ..|> IGetMyReputationQuery
+
+' =========================
+' CONTROLLER / FACADE
+' =========================
+TrustReputationController --> TrustReputationFacade : uses
+TrustReputationController --> TripRatingResponseAssembler : uses
+TrustReputationController --> DriverReputationResponseAssembler : uses
+TrustReputationController --> PassengerReputationResponseAssembler : uses
+TrustReputationController --> ReputationSummaryResponseAssembler : uses
+
+' =========================
+' FACADE / SERVICES
+' =========================
+TrustReputationFacade --> ITrustReputationCommandService : delegates
+TrustReputationFacade --> ITrustReputationQueryService : delegates
+
+' =========================
+' SERVICES / COMMANDS-QUERIES
+' =========================
+ITrustReputationCommandService ..> IOpenTripForRatingCommand : handles
+ITrustReputationCommandService ..> IRateDriverCommand : handles
+ITrustReputationCommandService ..> IRatePassengerCommand : handles
+ITrustReputationCommandService ..> ISkipDriverRatingCommand : handles
+ITrustReputationCommandService ..> ISkipPassengerRatingCommand : handles
+ITrustReputationCommandService ..> IRecordLowPassengerRatingCommentCommand : handles
+
+ITrustReputationQueryService ..> IGetDriverReputationQuery : handles
+ITrustReputationQueryService ..> IGetPassengerReputationQuery : handles
+ITrustReputationQueryService ..> IGetRateableTripForPassengerQuery : handles
+ITrustReputationQueryService ..> IGetRateableTripForDriverQuery : handles
+ITrustReputationQueryService ..> IGetPublicDriverRatingCardQuery : handles
+ITrustReputationQueryService ..> IGetMyReputationQuery : handles
+
+' =========================
+' SERVICES / REPOSITORIES
+' =========================
+ITrustReputationCommandService --> ITripRatingRepository : uses
+ITrustReputationCommandService --> IDriverReputationRepository : uses
+ITrustReputationCommandService --> IPassengerReputationRepository : uses
+
+ITrustReputationQueryService --> ITripRatingRepository : uses
+ITrustReputationQueryService --> IDriverReputationRepository : uses
+ITrustReputationQueryService --> IPassengerReputationRepository : uses
+
+' =========================
+' REPOSITORY IMPLEMENTATIONS
+' =========================
+TripRatingRepositoryImpl ..|> ITripRatingRepository
+DriverReputationRepositoryImpl ..|> IDriverReputationRepository
+PassengerReputationRepositoryImpl ..|> IPassengerReputationRepository
+
+TripRatingRepositoryImpl --> TripRating : persists
+DriverReputationRepositoryImpl --> DriverReputation : persists
+PassengerReputationRepositoryImpl --> PassengerReputation : persists
+
+' =========================
+' EVENTS
+' =========================
+ITrustReputationCommandService ..> TripBecameRateableEvent : publishes
+ITrustReputationCommandService ..> DriverRatedEvent : publishes
+ITrustReputationCommandService ..> PassengerRatedEvent : publishes
+ITrustReputationCommandService ..> DriverRatingSkippedEvent : publishes
+ITrustReputationCommandService ..> PassengerRatingSkippedEvent : publishes
+ITrustReputationCommandService ..> LowPassengerRatingCommentRecordedEvent : publishes
+ITrustReputationCommandService ..> DriverReputationUpdatedEvent : publishes
+ITrustReputationCommandService ..> PassengerReputationUpdatedEvent : publishes
+
+' =========================
+' ASSEMBLERS / RESPONSES
+' =========================
+TripRatingResponseAssembler --> TripRating : uses
+TripRatingResponseAssembler --> TripRatingResponse : creates
+
+DriverReputationResponseAssembler --> DriverReputation : uses
+DriverReputationResponseAssembler --> DriverReputationResponse : creates
+
+PassengerReputationResponseAssembler --> PassengerReputation : uses
+PassengerReputationResponseAssembler --> PassengerReputationResponse : creates
+
+ReputationSummaryResponseAssembler --> DriverReputation : uses
+ReputationSummaryResponseAssembler --> PassengerReputation : uses
+ReputationSummaryResponseAssembler --> ReputationSummaryResponse : creates
+
+@enduml

@@ -1,0 +1,328 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="logo">
+      <h1>Chapa<span>Tu</span>Ruta</h1>
+    </div>
+
+    <!-- Estado: Registro exitoso -->
+    <div *ngIf="isSubmitted()" class="success-state">
+      <div class="success-icon">✅</div>
+      <h2>¡Registro enviado!</h2>
+      <p class="success-message">
+        Tu solicitud como conductor fue recibida correctamente.<br>
+        Nuestro equipo verificará tu brevete y SOAT en un plazo de <strong>24 horas</strong>.
+        Te notificaremos por correo cuando tu cuenta esté activa.
+      </p>
+      <div class="success-details">
+        <div class="detail-item">
+          <span class="detail-icon">📄</span>
+          <span>Brevete y SOAT en revisión</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-icon">⏰</span>
+          <span>24 horas hábiles</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-icon">🔓</span>
+          <span>Activación automática al aprobar docs</span>
+        </div>
+      </div>
+      <button mat-flat-button color="primary" (click)="goToLogin()" class="login-btn">
+        Ir al inicio de sesión →
+      </button>
+    </div>
+
+    <!-- Estado: Formulario de registro -->
+    <div *ngIf="!isSubmitted()">
+      <h2>Registro de conductor</h2>
+      <p class="subtitle">Completa tus datos para empezar a trabajar con nosotros</p>
+
+      <mat-horizontal-stepper linear #stepper>
+        <!-- Paso 1: Datos Personales -->
+        <mat-step [stepControl]="personalForm">
+          <ng-template matStepLabel>Datos personales</ng-template>
+
+          <form [formGroup]="personalForm" class="step-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Nombre completo</mat-label>
+              <input matInput formControlName="fullName" placeholder="Carlos Ríos Huamán">
+              <mat-error>Nombre completo es requerido</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Teléfono celular</mat-label>
+              <input matInput formControlName="phone" placeholder="948123456">
+              <mat-hint>9 dígitos, sin espacios</mat-hint>
+              <mat-error>Teléfono válido es requerido</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Correo electrónico</mat-label>
+              <input matInput type="email" formControlName="email" placeholder="carlos@correo.com">
+              <mat-hint>Recibirás el enlace de confirmación aquí</mat-hint>
+              <mat-error>Ingresa un correo válido</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Ciudad donde operas</mat-label>
+              <mat-select formControlName="city">
+                <mat-option *ngFor="let city of cities" [value]="city">{{ city }}</mat-option>
+              </mat-select>
+              <mat-hint>La ciudad donde harás tus carreras</mat-hint>
+              <mat-error>Ciudad es requerida</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Contraseña</mat-label>
+              <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+              <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
+              <mat-hint>Mínimo 8 caracteres. Incluye letras y números</mat-hint>
+              <mat-error>Mínimo 8 caracteres</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Confirmar contraseña</mat-label>
+              <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
+              <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+                <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
+              <mat-error *ngIf="personalForm.hasError('passwordMismatch')">
+                Las contraseñas no coinciden
+              </mat-error>
+            </mat-form-field>
+          </form>
+
+          <div class="step-actions">
+            <button mat-button matStepperNext [disabled]="personalForm.invalid">Siguiente →</button>
+          </div>
+        </mat-step>
+
+        <!-- Paso 2: Documentos del vehículo -->
+        <mat-step [stepControl]="documentsForm">
+          <ng-template matStepLabel>Documentos del vehículo</ng-template>
+
+          <form [formGroup]="documentsForm" class="step-form">
+            <h3>Información del vehículo</h3>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Placa del vehículo</mat-label>
+              <input matInput formControlName="plateNumber" placeholder="ABC-123">
+              <mat-hint>Formato: 3 letras + guión + 3 números</mat-hint>
+              <mat-error>Formato inválido (ej: ABC-123)</mat-error>
+            </mat-form-field>
+
+            <div class="row-fields">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Marca</mat-label>
+                <input matInput formControlName="brand" placeholder="Honda">
+                <mat-error>Marca es requerida</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Modelo / Año</mat-label>
+                <input matInput formControlName="model" placeholder="Wave 2022">
+                <mat-error>Modelo es requerido</mat-error>
+              </mat-form-field>
+            </div>
+
+            <h3>Documentos legales</h3>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Número de brevete</mat-label>
+              <input matInput formControlName="licenseNumber" placeholder="Q123456789">
+              <mat-hint>Licencia de conducir vigente</mat-hint>
+              <mat-error *ngIf="documentsForm.get('licenseNumber')?.hasError('required')">
+                Número de brevete es requerido
+              </mat-error>
+              <mat-error *ngIf="documentsForm.get('licenseNumber')?.hasError('pattern')">
+                Formato inválido
+              </mat-error>
+            </mat-form-field>
+
+            <div class="row-fields">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Fecha de vencimiento del breve</mat-label>
+                <input matInput [matDatepicker]="licensePicker" formControlName="licenseExpiry">
+                <mat-datepicker-toggle matSuffix [for]="licensePicker"></mat-datepicker-toggle>
+                <mat-datepicker #licensePicker></mat-datepicker>
+                <mat-error>Fecha requerida</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Número de SOAT</mat-label>
+                <input matInput formControlName="soatNumber" placeholder="2024-XXXXX-XX">
+                <mat-error>Número de SOAT es requerido</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="row-fields">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Fecha de vencimiento del SOAT</mat-label>
+                <input matInput [matDatepicker]="soatPicker" formControlName="soatExpiry">
+                <mat-datepicker-toggle matSuffix [for]="soatPicker"></mat-datepicker-toggle>
+                <mat-datepicker #soatPicker></mat-datepicker>
+                <mat-error>Fecha requerida</mat-error>
+              </mat-form-field>
+            </div>
+
+            <h3>Fotos de documentos (opcional)</h3>
+
+            <div class="photo-upload-grid">
+              <div class="photo-item">
+                <div class="photo-preview" *ngIf="licensePhotoPreview()">
+                  <img [src]="licensePhotoPreview()" alt="Brevete">
+                </div>
+                <div class="photo-placeholder" *ngIf="!licensePhotoPreview()">
+                  <mat-icon>cloud_upload</mat-icon>
+                  <span>Foto del brevete</span>
+                </div>
+                <input type="file" accept="image/*" (change)="onFileSelected($event, 'licensePhoto')">
+                <div class="photo-actions">
+                                    <span class="file-name" *ngIf="documentsForm.get('licensePhoto')?.value">
+                                        {{ documentsForm.get('licensePhoto')?.value?.name }}
+                                    </span>
+                </div>
+              </div>
+
+              <div class="photo-item">
+                <div class="photo-preview" *ngIf="soatPhotoPreview()">
+                  <img [src]="soatPhotoPreview()" alt="SOAT">
+                </div>
+                <div class="photo-placeholder" *ngIf="!soatPhotoPreview()">
+                  <mat-icon>cloud_upload</mat-icon>
+                  <span>Foto del SOAT</span>
+                </div>
+                <input type="file" accept="image/*" (change)="onFileSelected($event, 'soatPhoto')">
+              </div>
+
+              <div class="photo-item">
+                <div class="photo-preview" *ngIf="vehiclePhotoPreview()">
+                  <img [src]="vehiclePhotoPreview()" alt="Vehículo">
+                </div>
+                <div class="photo-placeholder" *ngIf="!vehiclePhotoPreview()">
+                  <mat-icon>cloud_upload</mat-icon>
+                  <span>Foto del vehículo</span>
+                </div>
+                <input type="file" accept="image/*" (change)="onFileSelected($event, 'vehiclePhoto')">
+              </div>
+            </div>
+
+            <div class="error-banner" *ngIf="errorMessage()">
+              <mat-icon>error</mat-icon>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          </form>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>← Volver</button>
+            <button mat-button matStepperNext [disabled]="documentsForm.invalid">Siguiente: Confirmación →</button>
+          </div>
+        </mat-step>
+
+        <!-- Paso 3: Confirmación -->
+        <mat-step>
+          <ng-template matStepLabel>Confirmación</ng-template>
+
+          <div class="confirmation-content">
+            <h3>Verifica que todo esté correcto antes de enviar</h3>
+
+            <div class="confirmation-section">
+              <h4>Datos personales</h4>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="info-label">Nombre:</span>
+                  <span class="info-value">{{ personalForm.get('fullName')?.value }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Teléfono:</span>
+                  <span class="info-value">{{ personalForm.get('phone')?.value }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Correo:</span>
+                  <span class="info-value">{{ personalForm.get('email')?.value }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Ciudad:</span>
+                  <span class="info-value">{{ personalForm.get('city')?.value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="confirmation-section">
+              <h4>Documentos vehículo</h4>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="info-label">Placa:</span>
+                  <span class="info-value">{{ documentsForm.get('plateNumber')?.value }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Marca / Modelo:</span>
+                  <span class="info-value">{{ documentsForm.get('brand')?.value }} {{ documentsForm.get('model')?.value }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Brevete:</span>
+                  <span class="info-value">{{ documentsForm.get('licenseNumber')?.value }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">SOAT:</span>
+                  <span class="info-value">{{ documentsForm.get('soatNumber')?.value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="confirmation-section">
+              <h4>Documentos adjuntos</h4>
+              <div class="docs-status">
+                <div class="doc-status" [class.uploaded]="licensePhotoPreview()">
+                  <mat-icon>{{ licensePhotoPreview() ? 'check_circle' : 'pending' }}</mat-icon>
+                  <span>Brevete</span>
+                  <span class="status">{{ licensePhotoPreview() ? 'Subido' : 'Pendiente' }}</span>
+                </div>
+                <div class="doc-status" [class.uploaded]="soatPhotoPreview()">
+                  <mat-icon>{{ soatPhotoPreview() ? 'check_circle' : 'pending' }}</mat-icon>
+                  <span>SOAT</span>
+                  <span class="status">{{ soatPhotoPreview() ? 'Subido' : 'Pendiente' }}</span>
+                </div>
+                <div class="doc-status" [class.uploaded]="vehiclePhotoPreview()">
+                  <mat-icon>{{ vehiclePhotoPreview() ? 'check_circle' : 'pending' }}</mat-icon>
+                  <span>Foto del vehículo</span>
+                  <span class="status">{{ vehiclePhotoPreview() ? 'Subido' : 'Pendiente' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="terms-section">
+              <label class="terms-label">
+                <input type="checkbox" #termsCheckbox>
+                Acepto los términos y condiciones de ChapaTuRuta
+              </label>
+              <label class="terms-label">
+                <input type="checkbox" #privacyCheckbox>
+                Acepto la política de privacidad y el tratamiento de mis datos
+              </label>
+              <label class="terms-label">
+                <input type="checkbox" #docsCheckbox>
+                Confirmo que mis documentos son auténticos y vigentes
+              </label>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>← Volver a documentos</button>
+            <button mat-flat-button color="primary"
+                    [disabled]="!termsCheckbox.checked || !privacyCheckbox.checked || !docsCheckbox.checked || isLoading()"
+                    (click)="onSubmit()">
+              {{ isLoading() ? 'Enviando...' : 'Enviar registro como conductor →' }}
+            </button>
+          </div>
+        </mat-step>
+      </mat-horizontal-stepper>
+
+      <p class="login-prompt">
+        ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+      </p>
+    </div>
+  </div>
+</div>

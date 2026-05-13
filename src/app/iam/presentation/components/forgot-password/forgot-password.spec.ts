@@ -40,16 +40,37 @@ describe('ForgotPassword', () => {
   });
 
   it('should call onSubmit when form is valid', () => {
-    spyOn(component, 'onSubmit');
+    // Crear un mock de la función onSubmit
+    const onSubmitSpy = vi.spyOn(component, 'onSubmit');
+
     component.forgotForm.patchValue({ email: 'test@example.com' });
     component.onSubmit();
-    expect(component.onSubmit).toHaveBeenCalled();
+
+    expect(onSubmitSpy).toHaveBeenCalled();
   });
 
   it('should reset form when resetForm is called', () => {
     component.emailSent.set(true);
     component.resetForm();
+
     expect(component.emailSent()).toBeFalsy();
     expect(component.forgotForm.pristine).toBeTruthy();
+  });
+
+  it('should not submit when form is invalid', () => {
+    const onSubmitSpy = vi.spyOn(component, 'onSubmit');
+
+    component.onSubmit();
+
+    expect(component.forgotForm.valid).toBeFalsy();
+    expect(component.sending()).toBeFalsy();
+  });
+
+  it('should show sending state while submitting', () => {
+    component.forgotForm.patchValue({ email: 'test@example.com' });
+
+    component.onSubmit();
+
+    expect(component.sending()).toBeTruthy();
   });
 });

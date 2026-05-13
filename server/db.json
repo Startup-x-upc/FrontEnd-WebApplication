@@ -87,6 +87,17 @@
       "estimatedFare": 4,
       "selectedDriverId": null,
       "isExpired": false
+    },
+    {
+      "id": "KP1e2wiXIY4",
+      "passengerId": "u-001",
+      "origin": "-9.47277,-78.30154",
+      "destination": "-9.47222,-78.29526",
+      "distanceKm": 1,
+      "status": "OPEN",
+      "estimatedFare": 4,
+      "selectedDriverId": null,
+      "isExpired": false
     }
   ],
   "rideCandidates": [
@@ -133,6 +144,17 @@
       "photoUrl": "https://i.pravatar.cc/150?img=33",
       "status": "ACCEPTED",
       "appliedAt": "2026-05-13T00:15:15.373Z"
+    },
+    {
+      "id": "JaWGmqh_Uc0",
+      "requestId": "Sbi1_WYA93Q",
+      "driverId": "d-001",
+      "driverName": "Carlos Mendoza",
+      "vehicleType": "Mototaxi",
+      "ratingAverage": 4.8,
+      "photoUrl": "https://i.pravatar.cc/150?img=33",
+      "status": "PROPOSED",
+      "appliedAt": "2026-05-13T00:45:03.887Z"
     }
   ],
   "rides": [

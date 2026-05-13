@@ -7,7 +7,7 @@ export interface AuthResponse {
   /** Unique identifier of the user account. */
   id: string;
 
-  /** Email used for authentication. */
+  /** Email used for authentication.*/
   email: string;
 
   /** Hashed or plain password (mock only). */

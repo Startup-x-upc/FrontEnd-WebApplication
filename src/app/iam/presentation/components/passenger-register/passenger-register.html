@@ -1,0 +1,63 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="logo">
+      <h1>Chapa<span>Tu</span>Ruta</h1>
+    </div>
+
+    <h2>Crear cuenta de pasajero</h2>
+    <p class="subtitle">Completa tus datos para empezar</p>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre completo</mat-label>
+        <input matInput formControlName="fullName">
+        <mat-error>Nombre completo es requerido</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="phone">
+        <mat-error>Teléfono es requerido</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Correo electrónico</mat-label>
+        <input matInput type="email" formControlName="email">
+        <mat-error>Ingresa un correo válido</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contraseña</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error>Mínimo 8 caracteres</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirmar contraseña</mat-label>
+        <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
+        <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+          <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="registerForm.hasError('passwordMismatch')">
+          Las contraseñas no coinciden
+        </mat-error>
+      </mat-form-field>
+
+      <div class="error-banner" *ngIf="errorMessage()">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="registerForm.invalid || isLoading()">
+        {{ isLoading() ? 'Registrando...' : 'Continuar →' }}
+      </button>
+
+      <p class="login-prompt">
+        ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+      </p>
+    </form>
+  </div>
+</div>

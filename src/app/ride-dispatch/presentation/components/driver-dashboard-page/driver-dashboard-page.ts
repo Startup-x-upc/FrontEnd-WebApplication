@@ -115,46 +115,81 @@ export type DriverUiState =
 
     /* ── Detail view ──────────────────────────────────────────── */
     .detail-view   { display: flex; flex-direction: column; gap: 0; }
-    .detail-back   { align-self: flex-start; margin-bottom: 12px; font-size: 13px; }
-    .detail-back mat-icon { font-size: 16px; height: 16px; width: 16px; }
+    .detail-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .detail-back   { font-size: 13px; font-weight: 600; }
+    .detail-back mat-icon { font-size: 16px; height: 16px; width: 16px; margin-right: 4px; }
 
     .detail-card {
-      background: white; border-radius: 14px; border: 1px solid #e5e7eb;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden;
+      background: white; border-radius: 16px; border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;
     }
+    
+    /* Humanized Contextual Header */
+    .detail-header {
+      display: flex; align-items: center; gap: 14px; padding: 18px 22px;
+      border-bottom: 1px solid #e5e7eb; background: #fafafa;
+    }
+    .detail-avatar {
+      width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
+      border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .detail-avatar-fallback {
+      width: 52px; height: 52px; border-radius: 50%; background: #e5e7eb;
+      display: flex; align-items: center; justify-content: center; color: #6b7280;
+    }
+    .detail-header-info { display: flex; flex-direction: column; gap: 2px; }
+    .detail-passenger-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+    .detail-passenger-name { font-size: 16px; font-weight: 800; color: #111827; letter-spacing: -0.2px; }
+    .detail-passenger-rating { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #d97706; }
+    .detail-passenger-rating mat-icon { font-size: 14px; height: 14px; width: 14px; }
+    
     .detail-banner {
-      background: #fef3c7; padding: 12px 20px; display: flex;
-      align-items: center; gap: 10px; border-bottom: 1px solid #fde68a;
+      background: #fef3c7; padding: 10px 20px; display: flex;
+      align-items: center; gap: 8px; border-bottom: 1px solid #fde68a;
     }
-    .detail-banner mat-icon { color: #d97706; font-size: 20px; height: 20px; width: 20px; }
-    .detail-banner span     { font-size: 13px; font-weight: 600; color: #92400e; }
+    .detail-banner mat-icon { color: #d97706; font-size: 18px; height: 18px; width: 18px; }
+    .detail-banner span     { font-size: 12px; font-weight: 600; color: #92400e; }
     
     .detail-map-wrapper {
-      height: 260px; width: 100%; border-bottom: 1px solid #e5e7eb; position: relative; overflow: hidden;
+      height: 250px; width: 100%; border-bottom: 1px solid #e5e7eb; position: relative; overflow: hidden;
     }
 
-    .detail-body            { padding: 22px; }
-    .detail-section-label   { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-    .detail-route           { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; }
-    .detail-route-row       { display: flex; align-items: flex-start; gap: 14px; }
-    .detail-dot             { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
-    .detail-dot--origin     { background: #10b981; }
-    .detail-dot--dest       { background: #ef4444; }
-    .detail-route-line      { width: 2px; height: 20px; background: #e5e7eb; margin-left: 5px; }
-    .detail-route-info      { display: flex; flex-direction: column; }
-    .detail-route-label     { font-size: 10px; color: #9ca3af; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
-    .detail-route-value     { font-size: 14px; color: #1f2937; font-weight: 600; line-height: 1.4; }
-    .detail-route-coord     { font-size: 11px; color: #6b7280; margin-top: 2px; font-family: monospace; }
+    .detail-body            { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
     
-    .detail-chips           { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
-    .detail-chip            { display: flex; align-items: center; gap: 6px; background: #f3f4f6; padding: 8px 14px; border-radius: 20px; }
-    .detail-chip mat-icon   { font-size: 16px; height: 16px; width: 16px; color: #6b7280; }
-    .chip-value             { font-size: 14px; font-weight: 700; color: #1f2937; }
-    .chip-label             { font-size: 11px; color: #9ca3af; font-weight: 500; }
-    .detail-actions         { display: flex; gap: 10px; }
-    .apply-btn              { flex: 1; height: 48px; font-size: 15px; font-weight: 700; border-radius: 10px; }
+    /* Modular Box Composition Layout */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .info-block {
+      background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; transition: background 0.2s;
+    }
+    .info-block:hover { background: #f3f4f6; }
+    .info-block--full { grid-column: 1 / -1; }
+    
+    .block-label {
+      font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase;
+      letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px;
+    }
+    .block-label mat-icon { font-size: 14px; height: 14px; width: 14px; }
+    .block-label--origin { color: #10b981; }
+    .block-label--dest   { color: #ef4444; }
+    
+    .block-value { font-size: 14px; font-weight: 700; color: #1f2937; line-height: 1.3; }
+    .block-sub   { font-size: 11px; color: #6b7280; font-family: monospace; margin-top: 2px; }
+    
+    /* Economics Summary inside details */
+    .econ-summary { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .econ-large   { font-size: 20px; font-weight: 800; color: #16a34a; }
+    .dist-badge   { font-size: 12px; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; }
+
+    .detail-actions         { display: flex; gap: 12px; margin-top: 4px; }
+    .apply-btn              { flex: 1; height: 48px; font-size: 15px; font-weight: 800; border-radius: 12px; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2); }
     .apply-btn mat-icon     { margin-right: 6px; font-size: 20px; height: 20px; width: 20px; }
-    .skip-btn               { height: 48px; font-size: 14px; font-weight: 600; border-radius: 10px; padding: 0 20px; }
+    .skip-btn               { height: 48px; font-size: 14px; font-weight: 700; border-radius: 12px; padding: 0 20px; }
+
+    /* Discreet Google Maps Placement */
+    .detail-gmaps-btn { font-size: 12px; color: #4b5563 !important; }
+    .detail-gmaps-btn mat-icon { font-size: 16px; height: 16px; width: 16px; margin-right: 4px; }
+
 
     /* ── Shared state blocks ──────────────────────────────────── */
     .loading-state { display: flex; align-items: center; gap: 14px; padding: 24px; background: white; border-radius: 12px; border: 1px solid #e5e7eb; color: #6b7280; font-size: 13px; }
@@ -227,6 +262,13 @@ export class DriverDashboardPageComponent {
   readonly selectedRequest = signal<RideRequest | null>(null);
   readonly isRawCoord = isRawCoord;
   readonly humanizeCoord = humanizeCoord;
+
+  getMockPassengerRating(id: string | undefined): string {
+    if (!id) return '4.9';
+    const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const val = 4.5 + (sum % 6) / 10;
+    return val.toFixed(1);
+  }
 
   constructor() {
     const account = this.iamStore.currentAccount();

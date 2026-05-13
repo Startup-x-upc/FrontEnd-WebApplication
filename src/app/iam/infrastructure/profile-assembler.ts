@@ -11,7 +11,7 @@ export class ProfileAssembler {
   /**
    * Converts a raw ProfileResponse DTO into a Profile domain entity.
    *
-   * @param response - The raw profile object returned by json-server.
+   * @param response - The raw profile object returned by json-servers.
    * @returns A fully populated Profile entity.
    */
   static toEntity(response: ProfileResponse): Profile {

@@ -19,5 +19,9 @@ export class RideRequest implements BaseEntity {
   estimatedFare: number = 0;
   isExpired: boolean = false;
 
+  // CQRS Read Projections
+  passengerName?: string;
+  passengerPhotoUrl?: string;
+
   expire(): void { this.isExpired = true; }
 }

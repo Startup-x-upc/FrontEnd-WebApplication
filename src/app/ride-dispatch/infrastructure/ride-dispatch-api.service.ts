@@ -32,16 +32,42 @@ export class RideDispatchApiService {
 
   // ── Ride Requests ────────────────────────────────────────────────────
 
-  /** Returns all OPEN requests visible to available drivers. */
+  /** Returns all OPEN requests visible to available drivers, enriched with passenger profiles. */
   getOpenRideRequests(): Observable<RideRequest[]> {
-    return this.http.get<RideRequestResponse[]>(`${this.base}/rideRequests?status=OPEN`)
-      .pipe(map(rs => rs.map(RideRequestAssembler.toEntity)));
+    return forkJoin({
+      requests: this.http.get<RideRequestResponse[]>(`${this.base}/rideRequests?status=OPEN`),
+      profiles: this.http.get<any[]>(`${this.base}/profiles`),
+    }).pipe(
+      map(({ requests, profiles }) => {
+        return requests.map(req => {
+          const domain = RideRequestAssembler.toEntity(req);
+          const profile = profiles.find(p => p.accountId === req.passengerId);
+          if (profile) {
+            domain.passengerName = profile.fullName;
+            domain.passengerPhotoUrl = profile.photoUrl;
+          }
+          return domain;
+        });
+      })
+    );
   }
 
-  /** Returns a single ride request by its ID. */
+  /** Returns a single ride request by its ID, enriched with passenger profile. */
   getRideRequestById(requestId: string): Observable<RideRequest> {
-    return this.http.get<RideRequestResponse>(`${this.base}/rideRequests/${requestId}`)
-      .pipe(map(RideRequestAssembler.toEntity));
+    return this.http.get<RideRequestResponse>(`${this.base}/rideRequests/${requestId}`).pipe(
+      switchMap(req => {
+        const domain = RideRequestAssembler.toEntity(req);
+        return this.http.get<any[]>(`${this.base}/profiles?accountId=${req.passengerId}`).pipe(
+          map(profiles => {
+            if (profiles && profiles.length > 0) {
+              domain.passengerName = profiles[0].fullName;
+              domain.passengerPhotoUrl = profiles[0].photoUrl;
+            }
+            return domain;
+          })
+        );
+      })
+    );
   }
 
   /** Returns all requests submitted by a given passenger. */

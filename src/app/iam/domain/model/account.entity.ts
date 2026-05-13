@@ -10,7 +10,7 @@ export type UserRole = 'PASSENGER' | 'DRIVER' | 'ADMIN';
  * @author Jesús Iván Castillo Vidal
  */
 export class Account {
-  /** Unique identifier for the account. */
+  /** Unique identifier for the accounts. */
   id: string;
 
   /** Email address used for authentication. */

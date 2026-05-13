@@ -2,7 +2,7 @@ import { ProfileResponse } from './profile-response';
 import { Profile } from '../domain/model/profile.entity';
 
 /**
- * @summary Maps ProfileResponse DTOs from the API into Profile domain entities.
+ * @summary Maps ProfileResponse DTO from the API into Profile domain entity.
  * Uses static methods — no @Injectable, no side effects.
  * @author Jesús Iván Castillo Vidal
  */

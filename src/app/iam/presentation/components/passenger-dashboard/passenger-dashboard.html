@@ -1,0 +1,82 @@
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <h2>Chapa<span>Tu</span>Ruta</h2>
+    </div>
+
+    <div class="user-info">
+      <div class="avatar">👤</div>
+      <h3>{{ iamStore.currentProfile()?.fullName || 'Martín García' }}</h3>
+      <span class="role">Pasajero</span>
+    </div>
+
+    <nav class="nav-menu">
+      <a routerLink="/dashboard/passenger" class="nav-item active">
+        <mat-icon>home</mat-icon> Inicio
+      </a>
+      <a routerLink="/ride/request" class="nav-item">
+        <mat-icon>car_rental</mat-icon> Solicitar viaje
+      </a>
+      <a routerLink="/ride/history" class="nav-item">
+        <mat-icon>history</mat-icon> Mis viajes
+      </a>
+      <a routerLink="/profile" class="nav-item">
+        <mat-icon>person</mat-icon> Mi perfil
+      </a>
+    </nav>
+
+    <button class="logout-btn" (click)="logout()">
+      <mat-icon>exit_to_app</mat-icon> Cerrar sesión
+    </button>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="welcome-section">
+      <h1>Hola, {{ iamStore.currentProfile()?.fullName?.split(' ')[0] || 'Martín' }}</h1>
+      <p>Buenos días, ¿a dónde vamos hoy?</p>
+    </div>
+
+    <div class="stats-row">
+      <mat-card class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-info">
+          <span class="stat-value">4.2</span>
+          <span class="stat-label">Rating</span>
+        </div>
+      </mat-card>
+      <mat-card class="stat-card">
+        <div class="stat-icon">🚗</div>
+        <div class="stat-info">
+          <span class="stat-value">18</span>
+          <span class="stat-label">Viajes</span>
+        </div>
+      </mat-card>
+    </div>
+
+    <mat-card class="last-trip-card">
+      <h3>ÚLTIMO VIAJE</h3>
+      <div class="trip-info">
+        <span class="route">{{ lastTrip().origin }} → {{ lastTrip().destination }}</span>
+        <span class="time">{{ lastTrip().time }}</span>
+        <span class="fare">S/{{ lastTrip().fare }}</span>
+      </div>
+    </mat-card>
+
+    <div class="destinations-section">
+      <h3>DESTINOS RECIENTES</h3>
+      <div class="destinations-list">
+        <div *ngFor="let dest of recentDestinations()" class="destination-item">
+          <div class="dest-info">
+            <span class="dest-name">{{ dest.name }}</span>
+            <span class="dest-detail">{{ dest.distance }} km · S/{{ dest.fare }}</span>
+          </div>
+          <button mat-icon-button color="primary">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

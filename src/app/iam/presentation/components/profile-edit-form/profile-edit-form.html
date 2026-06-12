@@ -1,0 +1,60 @@
+<div class="edit-form-card">
+  <div class="edit-header">
+    <mat-icon>edit</mat-icon>
+    <span>Editar información</span>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <!-- Full Name -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre completo</mat-label>
+      <input matInput type="text" formControlName="fullName"
+             placeholder="Tu nombre completo" autocomplete="name"
+             aria-label="Nombre completo" />
+      <mat-icon matPrefix>badge</mat-icon>
+      @if (fullName.invalid && fullName.touched) {
+        <mat-error>
+          @if (fullName.errors?.['required']) { El nombre es obligatorio. }
+          @if (fullName.errors?.['minlength']) { Mínimo 3 caracteres. }
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Photo URL -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>URL de foto</mat-label>
+      <input matInput type="url" formControlName="photoUrl"
+             placeholder="https://i.pravatar.cc/150" autocomplete="url"
+             aria-label="URL de foto de perfil" />
+      <mat-icon matPrefix>photo</mat-icon>
+      @if (photoUrl.invalid && photoUrl.touched) {
+        <mat-error>Ingresa una URL válida (opcional).</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Photo preview -->
+    @if (photoPreview) {
+      <div class="photo-preview">
+        <span class="preview-label">Vista previa</span>
+        <img [src]="photoPreview" alt="Vista previa de foto de perfil"
+             class="preview-img"
+             (error)="$any($event.target).style.display = 'none'" />
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button mat-stroked-button type="button" class="cancel-btn"
+              [disabled]="saving" (click)="onCancel()"
+              aria-label="Cancelar edición">
+        Cancelar
+      </button>
+      <button mat-flat-button color="primary" type="submit"
+              class="save-btn" [disabled]="saving || form.invalid"
+              aria-label="Guardar cambios">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </form>
+</div>

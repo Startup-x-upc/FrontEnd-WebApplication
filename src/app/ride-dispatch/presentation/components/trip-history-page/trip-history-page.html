@@ -1,0 +1,104 @@
+<div class="history-page">
+  <div class="page-header">
+    <h1>Historial de viajes</h1>
+    @if (role === 'DRIVER') {
+      <p>Revisa tus carreras completadas, tarifas cobradas y comisiones</p>
+    } @else {
+      <p>Revisa tus viajes realizados y sus costos</p>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Cargando historial...</span>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error) {
+    <div class="error-card" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <div class="error-info">
+        <h4>Error al cargar</h4>
+        <p>{{ error }}</p>
+        <button mat-stroked-button color="warn" (click)="onRetry()">
+          <mat-icon>refresh</mat-icon> Reintentar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Trip list -->
+  @if (!isLoading && !error) {
+    @if (trips.length === 0) {
+      <div class="empty-state">
+        <mat-icon>history</mat-icon>
+        <h3>Sin viajes aún</h3>
+        @if (role === 'DRIVER') {
+          <p>Aún no has completado ninguna carrera. ¡Actívate y empieza a recibir solicitudes!</p>
+        } @else {
+          <p>Aún no has realizado ningún viaje. ¡Solicita tu primer viaje ahora!</p>
+        }
+      </div>
+    } @else {
+      <div class="trip-list">
+        @for (trip of trips; track trip.id) {
+          <div class="trip-card">
+            <!-- Route info -->
+            <div class="trip-route">
+              <div class="route-point">
+                <span class="route-dot route-dot--origin"></span>
+                <div class="route-text">
+                  <span class="route-label">Origen</span>
+                  <span class="route-value">{{ formatCoord(trip.origin) }}</span>
+                </div>
+              </div>
+              <div class="route-line"></div>
+              <div class="route-point">
+                <span class="route-dot route-dot--dest"></span>
+                <div class="route-text">
+                  <span class="route-label">Destino</span>
+                  <span class="route-value">{{ formatCoord(trip.destination) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Economics -->
+            <div class="trip-economics">
+              <div class="econ-item">
+                <mat-icon>payments</mat-icon>
+                <div>
+                  <span class="econ-label">Tarifa</span>
+                  <span class="econ-value">S/ {{ trip.estimatedFare | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              @if (role === 'DRIVER') {
+                <div class="econ-item econ-item--commission">
+                  <mat-icon>trending_down</mat-icon>
+                  <div>
+                    <span class="econ-label">Comisión (5%)</span>
+                    <span class="econ-value">- S/ {{ commission(trip.estimatedFare) | number:'1.2-2' }}</span>
+                  </div>
+                </div>
+                <div class="econ-item econ-item--earned">
+                  <mat-icon>savings</mat-icon>
+                  <div>
+                    <span class="econ-label">Ganancia</span>
+                    <span class="econ-value">S/ {{ (trip.estimatedFare - commission(trip.estimatedFare)) | number:'1.2-2' }}</span>
+                  </div>
+                </div>
+              }
+
+              <div class="trip-status-badge">
+                {{ trip.status === 'COMPLETED' ? 'Completado' : trip.status }}
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

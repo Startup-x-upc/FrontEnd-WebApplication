@@ -1,0 +1,59 @@
+.recharge-card {
+  background: white; border-radius: 12px; padding: 20px;
+  border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.recharge-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: #374151;
+}
+.recharge-header mat-icon { font-size: 18px; height: 18px; width: 18px; color: #1a73e8; }
+
+.disclaimer {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px; background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 8px; font-size: 11px; color: #1e40af; line-height: 1.4;
+}
+.disclaimer mat-icon { font-size: 14px; height: 14px; width: 14px; flex-shrink: 0; }
+
+.current-balance { text-align: center; }
+.balance-label { display: block; font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
+.balance-value { display: block; font-size: 24px; font-weight: 700; color: #111827; margin-top: 2px; }
+
+/* Quick chips */
+.quick-chips { display: flex; flex-direction: column; gap: 8px; }
+.chips-label { font-size: 11px; font-weight: 600; color: #9ca3af; }
+.chips-row { display: flex; gap: 8px; }
+.chip {
+  flex: 1; padding: 10px 0; border: 1px solid #d1d5db; border-radius: 10px;
+  background: white; font-size: 14px; font-weight: 700; color: #374151;
+  cursor: pointer; transition: all 0.15s;
+}
+.chip:hover { border-color: #1a73e8; color: #1a73e8; }
+.chip--selected { background: #1a73e8; color: white; border-color: #1a73e8; }
+
+/* Custom amount */
+.custom-amount { display: flex; flex-direction: column; gap: 6px; }
+.custom-label { font-size: 11px; font-weight: 600; color: #9ca3af; }
+.custom-input-row { display: flex; align-items: center; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; }
+.currency-prefix {
+  padding: 0 14px; font-size: 16px; font-weight: 700; color: #6b7280;
+  background: #f9fafb; border-right: 1px solid #e5e7eb; height: 44px;
+  display: flex; align-items: center;
+}
+.amount-input {
+  flex: 1; border: none; outline: none; padding: 0 14px;
+  font-size: 16px; font-weight: 600; color: #1f2937; height: 44px;
+}
+
+/* Error */
+.recharge-error {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: 8px; font-size: 12px; color: #dc2626;
+}
+.recharge-error mat-icon { font-size: 16px; height: 16px; width: 16px; }
+
+/* Submit */
+.recharge-btn { width: 100%; height: 48px; font-size: 15px; font-weight: 700; border-radius: 10px; }
+.recharge-btn mat-icon { margin-right: 6px; }

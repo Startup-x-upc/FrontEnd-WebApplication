@@ -1,0 +1,50 @@
+.history-page { display: flex; flex-direction: column; gap: 20px; max-width: 640px; margin: 0 auto; }
+.page-header h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0; }
+.page-header p { color: #6b7280; margin: 4px 0 0; font-size: 13px; }
+
+.loading-state { display: flex; align-items: center; gap: 14px; padding: 24px; background: white; border-radius: 12px; border: 1px solid #e5e7eb; color: #6b7280; font-size: 13px; }
+
+.error-card { display: flex; align-items: flex-start; gap: 12px; padding: 18px; border-radius: 12px; background: #fff7f7; border: 1px solid #fecaca; }
+.error-card mat-icon { color: #dc2626; flex-shrink: 0; font-size: 20px; height: 20px; width: 20px; }
+.error-info h4 { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #b91c1c; }
+.error-info p { margin: 0 0 8px; font-size: 13px; color: #6b7280; }
+.error-info button { font-size: 12px; }
+
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 24px; background: white; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center; }
+.empty-state mat-icon { font-size: 48px; height: 48px; width: 48px; color: #d1d5db; }
+.empty-state h3 { margin: 0; font-size: 16px; font-weight: 600; color: #1f2937; }
+.empty-state p { margin: 0; font-size: 13px; color: #9ca3af; line-height: 1.5; }
+
+.trip-list { display: flex; flex-direction: column; gap: 10px; }
+.trip-card {
+  background: white; border-radius: 12px; padding: 18px 20px;
+  border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+/* Route */
+.trip-route { display: flex; flex-direction: column; gap: 0; }
+.route-point { display: flex; align-items: flex-start; gap: 10px; }
+.route-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.route-dot--origin { background: #10b981; }
+.route-dot--dest { background: #ef4444; }
+.route-text { display: flex; flex-direction: column; gap: 2px; }
+.route-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+.route-value { font-size: 13px; color: #374151; font-family: monospace; }
+.route-line { width: 2px; height: 14px; background: #e5e7eb; margin-left: 4px; }
+
+/* Economics */
+.trip-economics { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid #f3f4f6; }
+.econ-item { display: flex; align-items: center; gap: 6px; }
+.econ-item mat-icon { font-size: 16px; height: 16px; width: 16px; color: #9ca3af; }
+.econ-label { display: block; font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
+.econ-value { display: block; font-size: 14px; font-weight: 700; color: #1f2937; }
+.econ-item--commission mat-icon { color: #dc2626; }
+.econ-item--commission .econ-value { color: #dc2626; }
+.econ-item--earned mat-icon { color: #059669; }
+.econ-item--earned .econ-value { color: #059669; }
+
+.trip-status-badge {
+  margin-left: auto; padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; background: #d1fae5; color: #065f46;
+}

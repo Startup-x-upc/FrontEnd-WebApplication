@@ -293,4 +293,30 @@ export class RideDispatchApiService {
       { isBusy: false, activeRideId: null },
     ).pipe(map(DriverAvailabilityAssembler.toEntity));
   }
+
+  // ── Trip History (US-24, US-25) ──────────────────────────────────────
+
+  /**
+   * Retrieves completed trips for a passenger, sorted by ID descending.
+   * @param passengerId - The passenger's account ID.
+   */
+  getPassengerTrips(passengerId: string): Observable<Ride[]> {
+    return this.http
+      .get<RideResponse[]>(
+        `${this.base}/rides?passengerId=${passengerId}&status=COMPLETED&_sort=id&_order=desc`
+      )
+      .pipe(map((responses) => responses.map(RideAssembler.toEntity)));
+  }
+
+  /**
+   * Retrieves completed trips for a driver, sorted by ID descending.
+   * @param driverId - The driver's ID.
+   */
+  getDriverTrips(driverId: string): Observable<Ride[]> {
+    return this.http
+      .get<RideResponse[]>(
+        `${this.base}/rides?driverId=${driverId}&status=COMPLETED&_sort=id&_order=desc`
+      )
+      .pipe(map((responses) => responses.map(RideAssembler.toEntity)));
+  }
 }

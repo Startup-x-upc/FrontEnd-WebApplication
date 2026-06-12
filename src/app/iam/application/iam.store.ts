@@ -56,6 +56,12 @@ export class IamStore {
   /** The current error message, or null if there is none. */
   readonly error = computed(() => this.errorSignal());
 
+  /** Internal signal holding a success/info message (e.g., registration confirmation). */
+  private messageSignal = signal<string | null>(null);
+
+  /** The current info/success message, or null if there is none. */
+  readonly message = computed(() => this.messageSignal());
+
   constructor() {
     // Rehydrate session from localStorage on startup
     this.rehydrateSession();
@@ -126,6 +132,123 @@ export class IamStore {
    */
   clearError(): void {
     this.errorSignal.set(null);
+  }
+
+  /** Clears the current info message. */
+  clearMessage(): void {
+    this.messageSignal.set(null);
+  }
+
+  // ─── Registration actions (Sprint 3) ────────────────────────────────────
+
+  /**
+   * Registers a new passenger account and automatically signs in.
+   * On success, persists the session and redirects to the passenger dashboard.
+   *
+   * @param email - The email address for the new account.
+   * @param password - The plain-text password.
+   */
+  registerPassenger(email: string, password: string): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.messageSignal.set(null);
+
+    this.iamApi.registerPassenger(email, password).subscribe({
+      next: (account: Account) => {
+        this.currentAccountSignal.set(account);
+        this.loadProfile(account.id);
+        this.messageSignal.set('Registro exitoso. ¡Bienvenido a ChapaTuRuta!');
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('El correo ya está registrado. Intenta con otro.');
+      },
+    });
+  }
+
+  /**
+   * Registers a new driver account with PENDING_VERIFICATION status.
+   * On success, shows a confirmation message and redirects to login
+   * (driver must wait for admin verification).
+   *
+   * @param email - The email address for the new account.
+   * @param password - The plain-text password.
+   * @param fullName - The driver's full name.
+   * @param vehicleType - The vehicle type (default: 'Mototaxi').
+   */
+  registerDriver(
+    email: string,
+    password: string,
+    fullName: string = '',
+    vehicleType: string = 'Mototaxi',
+  ): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.messageSignal.set(null);
+
+    this.iamApi.registerDriver(email, password, fullName, vehicleType).subscribe({
+      next: () => {
+        this.loadingSignal.set(false);
+        this.messageSignal.set(
+          'Registro enviado. Tu cuenta está pendiente de verificación por el administrador.',
+        );
+        this.router.navigate(['/login'], {
+          queryParams: { registered: 'driver_pending' },
+        });
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('El correo ya está registrado. Intenta con otro.');
+      },
+    });
+  }
+
+  /**
+   * Checks if an email is already registered.
+   * Updates the error signal if the email exists.
+   *
+   * @param email - The email address to check.
+   */
+  checkEmail(email: string): void {
+    this.iamApi.checkEmailExists(email).subscribe({
+      next: (exists: boolean) => {
+        if (exists) {
+          this.errorSignal.set('El correo ya está registrado.');
+        }
+      },
+    });
+  }
+
+  // ─── Profile actions (Sprint 3) ─────────────────────────────────────────
+
+  /**
+   * Updates the current user's profile with the given data.
+   * On success, updates the profile signal and persists the session.
+   *
+   * @param data - Partial profile data (fullName, photoUrl).
+   */
+  updateProfile(data: { fullName?: string; photoUrl?: string }): void {
+    const profile = this.currentProfileSignal();
+    if (!profile?.id) {
+      this.errorSignal.set('No hay un perfil cargado para actualizar.');
+      return;
+    }
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.messageSignal.set(null);
+
+    this.iamApi.updateProfile(profile.id, data).subscribe({
+      next: (updated: Profile) => {
+        this.currentProfileSignal.set(updated);
+        this.loadingSignal.set(false);
+        this.messageSignal.set('Perfil actualizado correctamente.');
+        this.persistSession();
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo actualizar el perfil.');
+      },
+    });
   }
 
   // ─── Private helpers ──────────────────────────────────────────────────────

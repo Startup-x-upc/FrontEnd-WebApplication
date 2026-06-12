@@ -6,6 +6,7 @@ import { RideCandidate } from '../domain/model/ride-candidate.entity';
 import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideStatus } from '../domain/model/ride.status';
 import { RideDispatchApiService } from '../infrastructure/ride-dispatch-api.service';
+import { MonetizationStore } from '../../monetization/application/monetization.store';
 
 /**
  * @summary Application service for the Ride Dispatch bounded context.
@@ -18,6 +19,7 @@ import { RideDispatchApiService } from '../infrastructure/ride-dispatch-api.serv
 @Injectable({ providedIn: 'root' })
 export class RideDispatchStore {
   private api = inject(RideDispatchApiService);
+  private monetizationStore = inject(MonetizationStore);
 
   // ── Shared signals ────────────────────────────────────────────────────
   private loadingSignal         = signal<boolean>(false);
@@ -36,10 +38,22 @@ export class RideDispatchStore {
   /** Driver availability record. */
   private driverAvailabilitySignal = signal<DriverAvailability | null>(null);
 
+  // ── Trip history signals (US-24, US-25) ────────────────────────────
+  private passengerTripsSignal = signal<Ride[]>([]);
+  private driverTripsSignal = signal<Ride[]>([]);
+
   readonly openRequests       = computed(() => this.openRequestsSignal());
   readonly openRequestCount   = computed(() => this.openRequestsSignal().length);
   readonly activeCandidate    = computed(() => this.activeCandidateSignal());
   readonly currentRide        = computed(() => this.currentRideSignal());
+  /** Completed trips for the passenger (US-24). */
+  readonly passengerTrips     = computed(() => this.passengerTripsSignal());
+  /** Completed trips for the driver (US-25). */
+  readonly driverTrips        = computed(() => this.driverTripsSignal());
+  /** Count of passenger trips. */
+  readonly passengerTripCount = computed(() => this.passengerTripsSignal().length);
+  /** Count of driver trips. */
+  readonly driverTripCount    = computed(() => this.driverTripsSignal().length);
   readonly driverAvailability = computed(() => this.driverAvailabilitySignal());
 
   // ── Passenger-side signals ────────────────────────────────────────────
@@ -289,6 +303,12 @@ export class RideDispatchStore {
         this.currentRideSignal.set(updated);
         // Mark driver free when ride is completed
         if (nextStatus === RideStatus.COMPLETED && avail?.id) {
+          // Apply 5% platform commission (US-29)
+          this.monetizationStore.applyCommission(
+            ride.driverId,
+            ride.id,
+            ride.estimatedFare
+          );
           return this.api.markDriverFree(avail.id);
         }
         return of(null);
@@ -364,6 +384,40 @@ export class RideDispatchStore {
       error: () => {
         this.loadingSignal.set(false);
         this.errorSignal.set('No se pudo cambiar la disponibilidad.');
+      },
+    });
+  }
+
+  // ── Trip history (US-24, US-25) ──────────────────────────────────────
+
+  /** Loads completed trips for a passenger. */
+  loadPassengerTrips(passengerId: string): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.api.getPassengerTrips(passengerId).subscribe({
+      next: (trips) => {
+        this.passengerTripsSignal.set(trips);
+        this.loadingSignal.set(false);
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo cargar el historial de viajes.');
+      },
+    });
+  }
+
+  /** Loads completed trips for a driver. */
+  loadDriverTrips(driverId: string): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.api.getDriverTrips(driverId).subscribe({
+      next: (trips) => {
+        this.driverTripsSignal.set(trips);
+        this.loadingSignal.set(false);
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo cargar el historial de viajes.');
       },
     });
   }

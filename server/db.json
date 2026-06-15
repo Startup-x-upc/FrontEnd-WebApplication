@@ -52,7 +52,9 @@
       "operationalStatus": "ENABLED",
       "ratingAverage": 4.8,
       "ratingCount": 120,
-      "photoUrl": "https://i.pravatar.cc/150?img=33"
+      "photoUrl": "https://i.pravatar.cc/150?img=33",
+      "licenseNumber": "Q12345678",
+      "soatNumber": "S987654321"
     }
   ],
   "driverAvailability": [

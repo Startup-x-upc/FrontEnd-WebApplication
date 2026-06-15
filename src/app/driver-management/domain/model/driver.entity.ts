@@ -11,6 +11,8 @@ export class Driver implements BaseEntity {
   photoUrl: string = '';
   isAvailable: boolean = false;
   accessStatus: DriverAccessStatus = 'PENDING_VERIFICATION';
+  licenseNumber: string = '';
+  soatNumber: string = '';
 
 
   approve(): void  { this.accessStatus = 'ACTIVE'; }

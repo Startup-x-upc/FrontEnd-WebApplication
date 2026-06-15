@@ -43,10 +43,16 @@ export class RegisterPassengerForm {
 
   /** Reactive form group for passenger registration. */
   protected form = new FormGroup({
+    fullName: new FormControl('', [Validators.required, Validators.minLength(3)]),
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required, Validators.minLength(4)]),
     confirmPassword: new FormControl('', [Validators.required]),
   });
+
+  /** Shortcut accessor for the fullName form control. */
+  get fullName(): FormControl {
+    return this.form.get('fullName') as FormControl;
+  }
 
   /** Shortcut accessor for the email form control. */
   get email(): FormControl {
@@ -100,6 +106,7 @@ export class RegisterPassengerForm {
 
     const email = this.form.value.email ?? '';
     const password = this.form.value.password ?? '';
-    this.store.registerPassenger(email, password);
+    const fullName = this.form.value.fullName ?? '';
+    this.store.registerPassenger(email, password, fullName);
   }
 }

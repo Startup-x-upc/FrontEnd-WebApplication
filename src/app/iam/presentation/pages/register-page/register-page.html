@@ -1,0 +1,64 @@
+<div class="register-layout">
+  <!-- Role Selection View -->
+  @if (selectedRole === null) {
+    <div class="selection-container">
+      <div class="selection-header">
+        <h1 class="title">Únete a ChapaTuRuta</h1>
+        <p class="subtitle">Selecciona tu perfil para iniciar el registro en la plataforma</p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- Passenger Card -->
+        <div class="role-card passenger-card" (click)="selectRole('passenger')" tabindex="0" role="button" aria-label="Registrarme como Pasajero">
+          <div class="card-icon-container">
+            <mat-icon>person</mat-icon>
+          </div>
+          <h2 class="card-title">Quiero viajar</h2>
+          <p class="card-description">
+            Solicita traslados rápidos, seguros y formales. Conoce la tarifa estimada antes de subirte al mototaxi.
+          </p>
+          <button mat-flat-button color="primary" class="card-action-btn">
+            Soy Pasajero
+          </button>
+        </div>
+
+        <!-- Driver Card -->
+        <div class="role-card driver-card" (click)="selectRole('driver')" tabindex="0" role="button" aria-label="Registrarme como Conductor">
+          <div class="card-icon-container">
+            <mat-icon>two_wheeler</mat-icon>
+          </div>
+          <h2 class="card-title">Quiero manejar</h2>
+          <p class="card-description">
+            Regístrate como conductor autorizado, asocia tus documentos (Brevete y SOAT) y recibe solicitudes de viaje en tu zona.
+          </p>
+          <button mat-flat-button color="accent" class="card-action-btn">
+            Soy Conductor
+          </button>
+        </div>
+      </div>
+
+      <div class="selection-footer">
+        <span>¿Ya tienes una cuenta registrada?</span>
+        <a routerLink="/login" class="login-link">Iniciar sesión aquí</a>
+      </div>
+    </div>
+  } @else {
+    <!-- Form View -->
+    <div class="form-container">
+      <div class="back-navigation">
+        <button mat-button class="back-btn" (click)="clearSelection()" aria-label="Volver a selección de perfil">
+          <mat-icon>arrow_back</mat-icon>
+          <span>Cambiar de perfil (Pasajero / Conductor)</span>
+        </button>
+      </div>
+
+      <div class="active-form-wrapper">
+        @if (selectedRole === 'passenger') {
+          <app-register-passenger-form></app-register-passenger-form>
+        } @else if (selectedRole === 'driver') {
+          <app-register-driver-form></app-register-driver-form>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -48,6 +48,8 @@ export class RegisterDriverForm {
     password: new FormControl('', [Validators.required, Validators.minLength(4)]),
     confirmPassword: new FormControl('', [Validators.required]),
     vehicleType: new FormControl('Mototaxi', [Validators.required]),
+    licenseNumber: new FormControl('', [Validators.required, Validators.minLength(6)]),
+    soatNumber: new FormControl('', [Validators.required, Validators.minLength(6)]),
   });
 
   get fullName(): FormControl { return this.form.get('fullName') as FormControl; }
@@ -55,6 +57,8 @@ export class RegisterDriverForm {
   get password(): FormControl { return this.form.get('password') as FormControl; }
   get confirmPassword(): FormControl { return this.form.get('confirmPassword') as FormControl; }
   get vehicleType(): FormControl { return this.form.get('vehicleType') as FormControl; }
+  get licenseNumber(): FormControl { return this.form.get('licenseNumber') as FormControl; }
+  get soatNumber(): FormControl { return this.form.get('soatNumber') as FormControl; }
 
   /** True when passwords do not match and both fields have been touched. */
   get passwordsMismatch(): boolean {
@@ -89,6 +93,8 @@ export class RegisterDriverForm {
       this.form.value.password ?? '',
       this.form.value.fullName ?? '',
       this.form.value.vehicleType ?? 'Mototaxi',
+      this.form.value.licenseNumber ?? '',
+      this.form.value.soatNumber ?? '',
     );
   }
 }

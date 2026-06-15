@@ -147,13 +147,14 @@ export class IamStore {
    *
    * @param email - The email address for the new account.
    * @param password - The plain-text password.
+   * @param fullName - The passenger's full name.
    */
-  registerPassenger(email: string, password: string): void {
+  registerPassenger(email: string, password: string, fullName: string = ''): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.messageSignal.set(null);
 
-    this.iamApi.registerPassenger(email, password).subscribe({
+    this.iamApi.registerPassenger(email, password, fullName).subscribe({
       next: (account: Account) => {
         this.currentAccountSignal.set(account);
         this.loadProfile(account.id);
@@ -175,18 +176,22 @@ export class IamStore {
    * @param password - The plain-text password.
    * @param fullName - The driver's full name.
    * @param vehicleType - The vehicle type (default: 'Mototaxi').
+   * @param licenseNumber - The driver's license number (Brevete).
+   * @param soatNumber - The driver's SOAT number.
    */
   registerDriver(
     email: string,
     password: string,
     fullName: string = '',
     vehicleType: string = 'Mototaxi',
+    licenseNumber: string = '',
+    soatNumber: string = '',
   ): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.messageSignal.set(null);
 
-    this.iamApi.registerDriver(email, password, fullName, vehicleType).subscribe({
+    this.iamApi.registerDriver(email, password, fullName, vehicleType, licenseNumber, soatNumber).subscribe({
       next: () => {
         this.loadingSignal.set(false);
         this.messageSignal.set(

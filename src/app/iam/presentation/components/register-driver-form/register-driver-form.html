@@ -55,14 +55,27 @@
         }
       </mat-form-field>
 
-      <!-- Vehicle Type -->
+
+
+      <!-- License Number -->
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Tipo de vehículo</mat-label>
-        <input matInput type="text" formControlName="vehicleType"
-               placeholder="Mototaxi" aria-label="Tipo de vehículo" />
-        <mat-icon matPrefix>directions_car</mat-icon>
-        @if (vehicleType.invalid && vehicleType.touched) {
-          <mat-error>El tipo de vehículo es obligatorio.</mat-error>
+        <mat-label>Número de Brevete (Licencia)</mat-label>
+        <input matInput type="text" formControlName="licenseNumber"
+               placeholder="Q12345678" aria-label="Número de Brevete" />
+        <mat-icon matPrefix>description</mat-icon>
+        @if (licenseNumber.invalid && licenseNumber.touched) {
+          <mat-error>El número de brevete es obligatorio (mínimo 6 caracteres).</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- SOAT Number -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Número de SOAT vigente</mat-label>
+        <input matInput type="text" formControlName="soatNumber"
+               placeholder="S987654321" aria-label="Número de SOAT" />
+        <mat-icon matPrefix>verified_user</mat-icon>
+        @if (soatNumber.invalid && soatNumber.touched) {
+          <mat-error>El número de SOAT es obligatorio (mínimo 6 caracteres).</mat-error>
         }
       </mat-form-field>
 

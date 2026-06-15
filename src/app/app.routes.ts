@@ -7,17 +7,24 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   // ── Registration (Sprint 3) ────────────────────────────────────────
   {
+    path: 'register',
+    loadComponent: () =>
+      import('./iam/presentation/pages/register-page/register-page').then(
+        (m) => m.RegisterPage,
+      ),
+  },
+  {
     path: 'register/passenger',
     loadComponent: () =>
-      import('./iam/presentation/components/register-passenger-form/register-passenger-form').then(
-        (m) => m.RegisterPassengerForm,
+      import('./iam/presentation/pages/register-page/register-page').then(
+        (m) => m.RegisterPage,
       ),
   },
   {
     path: 'register/driver',
     loadComponent: () =>
-      import('./iam/presentation/components/register-driver-form/register-driver-form').then(
-        (m) => m.RegisterDriverForm,
+      import('./iam/presentation/pages/register-page/register-page').then(
+        (m) => m.RegisterPage,
       ),
   },
   // ── Login ──────────────────────────────────────────────────────────

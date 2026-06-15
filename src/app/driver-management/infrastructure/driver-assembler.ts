@@ -12,6 +12,8 @@ export class DriverAssembler {
     entity.photoUrl = response.photoUrl ?? '';
     entity.isAvailable = response.operationalStatus === 'ENABLED';
     entity.accessStatus = response.verificationStatus as DriverAccessStatus;
+    entity.licenseNumber = response.licenseNumber ?? '';
+    entity.soatNumber = response.soatNumber ?? '';
     return entity;
   }
 }

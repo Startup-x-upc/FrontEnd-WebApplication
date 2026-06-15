@@ -25,6 +25,21 @@
 
     <!-- Form -->
     <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Full Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre completo</mat-label>
+        <input matInput type="text" formControlName="fullName"
+               placeholder="María Quispe" autocomplete="name"
+               aria-label="Nombre completo" />
+        <mat-icon matPrefix>badge</mat-icon>
+        @if (fullName.invalid && fullName.touched) {
+          <mat-error>
+            @if (fullName.errors?.['required']) { El nombre es obligatorio. }
+            @if (fullName.errors?.['minlength']) { Mínimo 3 caracteres. }
+          </mat-error>
+        }
+      </mat-form-field>
+
       <!-- Email -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Correo electrónico</mat-label>

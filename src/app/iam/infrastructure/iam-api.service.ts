@@ -88,7 +88,16 @@ export class IamApiService {
    * @param password - The plain-text password (mock only).
    * @returns Observable<Account> with the newly created account.
    */
-  registerPassenger(email: string, password: string): Observable<Account> {
+  /**
+   * Registers a new passenger account.
+   * Creates a user entry (role: PASSENGER) and a corresponding profile.
+   *
+   * @param email - The email address for the new account.
+   * @param password - The plain-text password (mock only).
+   * @param fullName - The passenger's full name.
+   * @returns Observable<Account> with the newly created account.
+   */
+  registerPassenger(email: string, password: string, fullName: string = ''): Observable<Account> {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/users`, {
         email,
@@ -100,7 +109,7 @@ export class IamApiService {
           return this.http
             .post<ProfileResponse>(`${this.baseUrl}/profiles`, {
               accountId: user.id,
-              fullName: '',
+              fullName,
               email: user.email,
               photoUrl: '',
             })
@@ -118,6 +127,8 @@ export class IamApiService {
    * @param password - The plain-text password (mock only).
    * @param fullName - The driver's full name.
    * @param vehicleType - The vehicle type (default: 'Mototaxi').
+   * @param licenseNumber - The driver's license number (Brevete).
+   * @param soatNumber - The driver's SOAT number.
    * @returns Observable<Account> with the newly created account.
    */
   registerDriver(
@@ -125,6 +136,8 @@ export class IamApiService {
     password: string,
     fullName: string = '',
     vehicleType: string = 'Mototaxi',
+    licenseNumber: string = '',
+    soatNumber: string = '',
   ): Observable<Account> {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/users`, {
@@ -153,8 +166,21 @@ export class IamApiService {
                     ratingAverage: 0,
                     ratingCount: 0,
                     photoUrl: '',
+                    licenseNumber,
+                    soatNumber,
                   })
-                  .pipe(map(() => AccountAssembler.toEntity(user)));
+                  .pipe(
+                    switchMap((driver: any) => {
+                      // Automatically initialize wallet for the new driver
+                      return this.http
+                        .post(`${this.baseUrl}/wallets`, {
+                          driverId: driver.id,
+                          balance: 0,
+                          status: 'ACTIVE',
+                        })
+                        .pipe(map(() => AccountAssembler.toEntity(user)));
+                    })
+                  );
               })
             );
         })

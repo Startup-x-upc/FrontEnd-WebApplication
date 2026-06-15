@@ -452,6 +452,45 @@ export class RideDispatchStore {
     });
   }
 
+  // ── Cancel ride (US-18) ───────────────────────────────────────────────
+
+  /**
+   * Cancels a ride before it starts (ACCEPTED / DRIVER_ON_THE_WAY / DRIVER_ARRIVED).
+   * Marks ride as CANCELLED and frees the driver's availability.
+   */
+  cancelRide(): void {
+    const ride  = this.currentRideSignal();
+    const avail = this.driverAvailabilitySignal();
+    if (!ride?.id) return;
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.api.updateRideStatus(ride.id, RideStatus.CANCELLED).pipe(
+      switchMap(updated => {
+        this.currentRideSignal.set(updated);
+        if (avail?.id) {
+          return this.api.markDriverFree(avail.id);
+        }
+        return of(null);
+      })
+    ).subscribe({
+      next: updatedAvail => {
+        if (updatedAvail) {
+          this.driverAvailabilitySignal.set(updatedAvail);
+        }
+        // Clear ride context so user returns to initial state
+        this.currentRideSignal.set(null);
+        this.currentRequestSignal.set(null);
+        this.candidatesSignal.set([]);
+        this.activeCandidateSignal.set(null);
+        this.loadingSignal.set(false);
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo cancelar el viaje.');
+      },
+    });
+  }
+
   // ── Shared utilities ──────────────────────────────────────────────────
 
   clearError(): void { this.errorSignal.set(null); }

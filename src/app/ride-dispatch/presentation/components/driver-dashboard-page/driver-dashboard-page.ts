@@ -8,10 +8,12 @@ import { IamStore } from '../../../../iam/application/iam.store';
 import { DriverManagementStore } from '../../../../driver-management/application/driver-management.store';
 import { RideDispatchStore } from '../../../application/ride-dispatch.store';
 import { MonetizationStore } from '../../../../monetization/application/monetization.store';
+import { TrustReputationStore } from '../../../../trust-reputation/application/trust-reputation.store';
 
 import { WalletBalanceCardComponent } from '../../../../monetization/presentation/components/wallet-balance-card/wallet-balance-card';
 import { PendingRequestCardComponent } from '../pending-request-card/pending-request-card';
 import { TripMapComponent } from '../trip-map/trip-map';
+import { RatingFormComponent } from '../../../../trust-reputation/presentation/components/rating-form/rating-form';
 import { RideRequest } from '../../../domain/model/ride-request.entity';
 import { RideStatus } from '../../../domain/model/ride.status';
 import { buildGoogleMapsDirectionsUrl } from '../../../../shared/utils/maps.utils';
@@ -74,6 +76,7 @@ export type DriverUiState =
     WalletBalanceCardComponent,
     PendingRequestCardComponent,
     TripMapComponent,
+    RatingFormComponent,
   ],
   templateUrl: './driver-dashboard-page.html',
   styles: [`
@@ -504,6 +507,49 @@ export type DriverUiState =
       border-radius: 10px;
     }
 
+    /* ── Cancel Button ── */
+    .cancel-ride-btn {
+      width: 100%;
+      height: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      color: #dc2626 !important;
+      border-color: #fecaca !important;
+      margin-top: 8px;
+    }
+    .cancel-ride-btn mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+
+    /* ── Rating Done Message ── */
+    .rating-done-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 20px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 14px;
+      text-align: center;
+      width: 100%;
+    }
+    .rating-done-message mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #16a34a;
+    }
+    .rating-done-message span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #166534;
+    }
+
     /* ── Animated Radar/Hourglass Visual ── */
     .stepper-searching-animation {
       position: relative;
@@ -559,6 +605,10 @@ export class DriverDashboardPageComponent {
   protected driverMgmtStore  = inject(DriverManagementStore);
   protected rideStore        = inject(RideDispatchStore);
   protected monetizationStore = inject(MonetizationStore);
+  protected trustStore       = inject(TrustReputationStore);
+
+  /** Tracks whether the driver has submitted or skipped the passenger rating. */
+  readonly ratingSubmitted = signal(false);
 
   readonly activeRideSteps = [
     { label: 'Viaje aceptado', icon: 'check_circle_outline' },
@@ -581,6 +631,7 @@ export class DriverDashboardPageComponent {
   onClearActiveRide(): void {
     this.rideStore.clearCurrentRide();
     this.rideStore.loadOpenRequests();
+    this.ratingSubmitted.set(false);
   }
 
   readonly selectedRequest = signal<RideRequest | null>(null);
@@ -769,5 +820,43 @@ export class DriverDashboardPageComponent {
       case 'RIDE_COMPLETED': return 'Buen trabajo. Ya puedes recibir nuevas solicitudes.';
       default: return '';
     }
+  }
+
+  // ── Cancel ride (US-18) ─────────────────────────────────────────────
+
+  /** Cancel ride before it starts. */
+  onCancelRide(): void {
+    this.rideStore.cancelRide();
+  }
+
+  /** Whether the current ride can be cancelled (not yet started). */
+  readonly canCancelRide = computed(() => {
+    const ride = this.rideStore.currentRide();
+    if (!ride) return false;
+    return ride.status === RideStatus.ACCEPTED ||
+           ride.status === RideStatus.DRIVER_ON_THE_WAY ||
+           ride.status === RideStatus.DRIVER_ARRIVED;
+  });
+
+  // ── Rating (US-22) ──────────────────────────────────────────────────
+
+  /** Submit a rating for the passenger after trip completes. */
+  onRatingSubmitted(event: { score: number; comment?: string }): void {
+    const ride = this.rideStore.currentRide();
+    const driver = this.driverMgmtStore.driver();
+    if (!ride || !driver?.id) return;
+    this.trustStore.submitPassengerRating(
+      ride.id, driver.id, ride.passengerId, event.score, event.comment
+    );
+    this.ratingSubmitted.set(true);
+  }
+
+  /** Skip the passenger rating. */
+  onRatingSkipped(): void {
+    const ride = this.rideStore.currentRide();
+    const driver = this.driverMgmtStore.driver();
+    if (!ride || !driver?.id) return;
+    this.trustStore.skipPassengerRating(ride.id, driver.id, ride.passengerId);
+    this.ratingSubmitted.set(true);
   }
 }

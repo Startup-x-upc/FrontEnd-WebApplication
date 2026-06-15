@@ -96,9 +96,16 @@
           <span class="step-label">{{ step.label }}</span>
         </div>
       </div>
+
+      <!-- Cancel button (US-18) — before trip starts -->
+      <button mat-stroked-button class="cancel-ride-btn" *ngIf="canCancelRide()"
+              [disabled]="rideStore.isLoading()"
+              (click)="onCancelRide()" aria-label="Cancelar viaje">
+        <mat-icon>cancel</mat-icon> Cancelar viaje
+      </button>
     </div>
 
-    <!-- ⑦ RIDE_COMPLETED — Receipt/celebration view -->
+    <!-- ⑦ RIDE_COMPLETED — Receipt/celebration view + Rating (US-21) -->
     <div class="ride-completed-card" *ngIf="uiState() === 'RIDE_COMPLETED'">
       <div class="celebration-header">
         <div class="success-icon-wrap">
@@ -123,6 +130,27 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Rating Form (US-21) -->
+      <ng-container *ngIf="!ratingSubmitted()">
+        <app-rating-form
+          [ratedParty]="'DRIVER'"
+          [ratedPartyName]="'Conductor'"
+          [tripId]="rideStore.currentRide()?.id || ''"
+          [driverId]="rideStore.currentRide()?.driverId || ''"
+          [passengerId]="rideStore.currentRide()?.passengerId || ''"
+          [submitting]="trustStore.isLoading()"
+          [errorMessage]="trustStore.error()"
+          (submitted)="onRatingSubmitted($event)"
+          (skipped)="onRatingSkipped()">
+        </app-rating-form>
+      </ng-container>
+
+      <!-- Rating confirmation -->
+      <div class="rating-done-message" *ngIf="ratingSubmitted()">
+        <mat-icon>thumb_up</mat-icon>
+        <span>¡Gracias por tu calificación!</span>
       </div>
 
       <button mat-flat-button color="primary" class="new-trip-btn" (click)="onStartNewRequest()">

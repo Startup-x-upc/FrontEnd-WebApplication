@@ -1,10 +1,11 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RideDispatchStore } from '../../../application/ride-dispatch.store';
 import { MonetizationStore } from '../../../../monetization/application/monetization.store';
 import { IamStore } from '../../../../iam/application/iam.store';
+import { TrustReputationStore } from '../../../../trust-reputation/application/trust-reputation.store';
 import { RideStatus } from '../../../domain/model/ride.status';
 import { RideCandidate } from '../../../domain/model/ride-candidate.entity';
 
@@ -13,6 +14,7 @@ import { TripMapComponent } from '../trip-map/trip-map';
 import { TripRequestStatusComponent } from '../trip-request-status/trip-request-status';
 import { FareSummaryCardComponent } from '../../../../monetization/presentation/components/fare-summary-card/fare-summary-card';
 import { RideCandidatesListComponent } from '../ride-candidates-list/ride-candidates-list';
+import { RatingFormComponent } from '../../../../trust-reputation/presentation/components/rating-form/rating-form';
 import { calculateEstimatedDistance } from '../../../../shared/utils/geo.utils';
 
 /**
@@ -57,6 +59,7 @@ export type RequestUiState =
     TripRequestStatusComponent,
     FareSummaryCardComponent,
     RideCandidatesListComponent,
+    RatingFormComponent,
   ],
   templateUrl: './passenger-request-page.html',
   styles: [`
@@ -414,12 +417,57 @@ export type RequestUiState =
       font-weight: 700;
       border-radius: 10px;
     }
+
+    /* ── Cancel Button ── */
+    .cancel-ride-btn {
+      height: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      color: #dc2626 !important;
+      border-color: #fecaca !important;
+      margin-top: 8px;
+    }
+    .cancel-ride-btn mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+
+    /* ── Rating Done Message ── */
+    .rating-done-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 20px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .rating-done-message mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #16a34a;
+    }
+    .rating-done-message span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #166534;
+    }
   `],
 })
 export class PassengerRequestPageComponent {
   protected rideStore        = inject(RideDispatchStore);
   protected monetizationStore = inject(MonetizationStore);
+  protected trustStore       = inject(TrustReputationStore);
   private iamStore           = inject(IamStore);
+
+  /** Tracks whether the user has already submitted or skipped the rating. */
+  readonly ratingSubmitted = signal(false);
 
   readonly steps = [
     { label: 'Buscando conductores', icon: 'search' },
@@ -588,10 +636,47 @@ export class PassengerRequestPageComponent {
     this.rideStore.setOrigin('');
     this.rideStore.setDestination('', 0);
     this.activeField = 'origin';
+    this.ratingSubmitted.set(false);
   }
 
   onRetry(): void {
     this.rideStore.clearError();
     this.monetizationStore.loadFarePolicy();
+  }
+
+  // ── Cancel ride (US-18) ─────────────────────────────────────────────
+
+  /** Cancel ride before it starts. */
+  onCancelRide(): void {
+    this.rideStore.cancelRide();
+  }
+
+  /** Whether the current ride can be cancelled (not yet started). */
+  readonly canCancelRide = computed(() => {
+    const ride = this.rideStore.currentRide();
+    if (!ride) return false;
+    return ride.status === RideStatus.ACCEPTED ||
+           ride.status === RideStatus.DRIVER_ON_THE_WAY ||
+           ride.status === RideStatus.DRIVER_ARRIVED;
+  });
+
+  // ── Rating (US-21) ──────────────────────────────────────────────────
+
+  /** Submit a rating for the driver after trip completes. */
+  onRatingSubmitted(event: { score: number; comment?: string }): void {
+    const ride = this.rideStore.currentRide();
+    const passengerId = this.iamStore.currentAccount()?.id;
+    if (!ride || !passengerId) return;
+    this.trustStore.submitDriverRating(ride.id, ride.driverId, passengerId, event.score);
+    this.ratingSubmitted.set(true);
+  }
+
+  /** Skip the driver rating. */
+  onRatingSkipped(): void {
+    const ride = this.rideStore.currentRide();
+    const passengerId = this.iamStore.currentAccount()?.id;
+    if (!ride || !passengerId) return;
+    this.trustStore.skipDriverRating(ride.id, ride.driverId, passengerId);
+    this.ratingSubmitted.set(true);
   }
 }

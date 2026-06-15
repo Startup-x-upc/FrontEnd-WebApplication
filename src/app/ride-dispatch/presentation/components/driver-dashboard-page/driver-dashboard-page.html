@@ -193,6 +193,13 @@
                   aria-label="Marcar que estoy en camino">
             <mat-icon>two_wheeler</mat-icon> Estoy en camino
           </button>
+
+          <!-- Cancel (US-18) -->
+          <button mat-stroked-button class="cancel-ride-btn"
+                  [disabled]="rideStore.isLoading()"
+                  (click)="onCancelRide()" aria-label="Cancelar viaje">
+            <mat-icon>cancel</mat-icon> Cancelar viaje
+          </button>
         </ng-container>
 
         <!-- DRIVER_ON_THE_WAY View -->
@@ -215,6 +222,13 @@
                   aria-label="Marcar que llegué al punto de recojo">
             <mat-icon>location_on</mat-icon> Llegué al origen
           </button>
+
+          <!-- Cancel (US-18) -->
+          <button mat-stroked-button class="cancel-ride-btn"
+                  [disabled]="rideStore.isLoading()"
+                  (click)="onCancelRide()" aria-label="Cancelar viaje">
+            <mat-icon>cancel</mat-icon> Cancelar viaje
+          </button>
         </ng-container>
 
         <!-- DRIVER_ARRIVED View -->
@@ -236,6 +250,13 @@
                   (click)="onStartRide()"
                   aria-label="Iniciar el viaje">
             <mat-icon>play_arrow</mat-icon> Iniciar viaje
+          </button>
+
+          <!-- Cancel (US-18) -->
+          <button mat-stroked-button class="cancel-ride-btn"
+                  [disabled]="rideStore.isLoading()"
+                  (click)="onCancelRide()" aria-label="Cancelar viaje">
+            <mat-icon>cancel</mat-icon> Cancelar viaje
           </button>
         </ng-container>
 
@@ -261,7 +282,7 @@
           </button>
         </ng-container>
 
-        <!-- RIDE_COMPLETED View — Premium completed view with reset button -->
+        <!-- RIDE_COMPLETED View — Premium completed view with rating + reset -->
         <div class="driver-completed-view" *ngIf="uiState() === 'RIDE_COMPLETED'">
           <div class="success-icon-wrap">
             <mat-icon>check_circle</mat-icon>
@@ -272,6 +293,27 @@
           <div class="completed-summary">
             <span class="completed-label">Ganancia estimada</span>
             <strong class="completed-value">S/ {{ rideStore.currentRide()?.estimatedFare | number:'1.2-2' }}</strong>
+          </div>
+
+          <!-- Rating Form (US-22) -->
+          <ng-container *ngIf="!ratingSubmitted()">
+            <app-rating-form
+              [ratedParty]="'PASSENGER'"
+              [ratedPartyName]="'Pasajero'"
+              [tripId]="rideStore.currentRide()?.id || ''"
+              [driverId]="rideStore.currentRide()?.driverId || ''"
+              [passengerId]="rideStore.currentRide()?.passengerId || ''"
+              [submitting]="trustStore.isLoading()"
+              [errorMessage]="trustStore.error()"
+              (submitted)="onRatingSubmitted($event)"
+              (skipped)="onRatingSkipped()">
+            </app-rating-form>
+          </ng-container>
+
+          <!-- Rating confirmation -->
+          <div class="rating-done-message" *ngIf="ratingSubmitted()">
+            <mat-icon>thumb_up</mat-icon>
+            <span>¡Gracias por tu calificación!</span>
           </div>
 
           <button mat-flat-button color="primary" class="return-home-btn" (click)="onClearActiveRide()">

@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, effect, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,6 +37,15 @@ export class RechargeForm {
 
   /** Error message for invalid amounts. */
   errorMessage: string | null = null;
+
+  constructor() {
+    effect(() => {
+      const balance = this.currentBalance();
+      this.customAmount = null;
+      this.selectedQuick = null;
+      this.errorMessage = null;
+    });
+  }
 
   /**
    * Selects a quick amount chip.

@@ -17,6 +17,12 @@
       "email": "admin@correo.com",
       "password": "admin123",
       "role": "ADMIN"
+    },
+    {
+      "email": "carlos@gmail.com",
+      "password": "holamundo",
+      "role": "DRIVER",
+      "id": "BW010fDLBH8"
     }
   ],
   "profiles": [
@@ -40,6 +46,13 @@
       "fullName": "Admin Sistema",
       "email": "admin@correo.com",
       "photoUrl": "https://i.pravatar.cc/150?img=12"
+    },
+    {
+      "accountId": "BW010fDLBH8",
+      "fullName": "Carlos Mendoza",
+      "email": "carlos@gmail.com",
+      "photoUrl": "",
+      "id": "8GpfORQ4-vE"
     }
   ],
   "drivers": [
@@ -55,6 +68,19 @@
       "photoUrl": "https://i.pravatar.cc/150?img=33",
       "licenseNumber": "Q12345678",
       "soatNumber": "S987654321"
+    },
+    {
+      "accountId": "BW010fDLBH8",
+      "fullName": "Carlos Mendoza",
+      "vehicleType": "Mototaxi",
+      "verificationStatus": "PENDING_VERIFICATION",
+      "operationalStatus": "ENABLED",
+      "ratingAverage": 0,
+      "ratingCount": 0,
+      "photoUrl": "",
+      "licenseNumber": "9129391239",
+      "soatNumber": "9129392193912",
+      "id": "ftHMmu2xvx4"
     }
   ],
   "driverAvailability": [
@@ -62,6 +88,14 @@
       "id": "da-001",
       "driverId": "d-001",
       "currentLocation": "-9.47100,-78.29900",
+      "isAvailable": true,
+      "isBusy": false,
+      "activeRideId": null
+    },
+    {
+      "id": "XbObQ2l42Ng",
+      "driverId": "ftHMmu2xvx4",
+      "currentLocation": "0,0",
       "isAvailable": true,
       "isBusy": false,
       "activeRideId": null
@@ -425,8 +459,14 @@
     {
       "id": "w-001",
       "driverId": "d-001",
-      "balance": 25.3,
+      "balance": 35.3,
       "status": "ACTIVE"
+    },
+    {
+      "driverId": "ftHMmu2xvx4",
+      "balance": 5,
+      "status": "ACTIVE",
+      "id": "YSchbOLidbI"
     }
   ],
   "fareConfig": [
@@ -491,6 +531,24 @@
       "resultingBalance": 25.3,
       "timestamp": "2026-06-11T00:35:29.907Z",
       "id": "g9dKzh4"
+    },
+    {
+      "walletId": "YSchbOLidbI",
+      "tripId": null,
+      "type": "TOP_UP",
+      "amount": 5,
+      "resultingBalance": 5,
+      "timestamp": "2026-06-15T15:09:49.145Z",
+      "id": "wjU6wT3L6ZU"
+    },
+    {
+      "walletId": "w-001",
+      "tripId": null,
+      "type": "TOP_UP",
+      "amount": 10,
+      "resultingBalance": 35.3,
+      "timestamp": "2026-06-15T15:22:17.801Z",
+      "id": "UpYctgSmRxs"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

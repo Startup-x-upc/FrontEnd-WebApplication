@@ -56,7 +56,6 @@ export class MonetizationPageComponent {
       if (driver?.id) {
         this.currentDriverId = driver.id;
         this.store.loadWallet(driver.id);
-        this.store.loadTransactionHistory();
       }
     });
   }
@@ -77,7 +76,6 @@ export class MonetizationPageComponent {
     this.store.clearError();
     if (this.currentDriverId) {
       this.store.loadWallet(this.currentDriverId);
-      this.store.loadTransactionHistory();
     }
     this.store.loadFarePolicy();
   }

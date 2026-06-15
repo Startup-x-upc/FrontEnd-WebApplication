@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { of, switchMap } from 'rxjs';
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
@@ -71,6 +71,31 @@ export class RideDispatchStore {
   readonly distanceKm     = computed(() => this.distanceKmSignal());
   readonly currentRequest = computed(() => this.currentRequestSignal());
   readonly candidates     = computed(() => this.candidatesSignal());
+
+  constructor() {
+    effect(() => {
+      const wallet = this.monetizationStore.wallet();
+      const avail = this.driverAvailabilitySignal();
+      if (wallet && wallet.balance <= 0 && avail && avail.isAvailable) {
+        this.deactivateAvailability(wallet.driverId);
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  deactivateAvailability(driverId: string): void {
+    const current = this.driverAvailabilitySignal();
+    if (!current || !current.isAvailable) return;
+    this.loadingSignal.set(true);
+    this.api.toggleDriverAvailability(driverId, false).subscribe({
+      next: a => {
+        this.driverAvailabilitySignal.set(a);
+        this.loadingSignal.set(false);
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+      }
+    });
+  }
 
   // ── Passenger map input ───────────────────────────────────────────────
 

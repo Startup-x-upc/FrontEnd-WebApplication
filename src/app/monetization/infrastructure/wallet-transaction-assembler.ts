@@ -18,9 +18,7 @@ export class WalletTransactionAssembler {
   static toEntity(response: WalletTransactionResponse): WalletTransaction {
     const entity = new WalletTransaction();
     entity.id = response.id;
-    entity.walletId = typeof response.walletId === 'number'
-      ? response.walletId
-      : parseInt(response.walletId, 10) || 0;
+    entity.walletId = response.walletId;
     entity.tripId = response.tripId ? String(response.tripId) : '';
     entity.type = response.type as TransactionType;
     entity.amount = response.amount;
@@ -37,7 +35,7 @@ export class WalletTransactionAssembler {
    */
   static toEntities(responses: WalletTransactionResponse[]): WalletTransaction[] {
     return responses
-      .map(r => this.toEntity(r))
+      .map(r => WalletTransactionAssembler.toEntity(r))
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
@@ -50,7 +48,7 @@ export class WalletTransactionAssembler {
   static toResponse(entity: WalletTransaction): WalletTransactionResponse {
     return {
       id: entity.id,
-      walletId: String(entity.walletId),
+      walletId: entity.walletId,
       tripId: entity.tripId || null,
       type: entity.type,
       amount: entity.amount,

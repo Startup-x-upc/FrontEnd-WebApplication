@@ -81,7 +81,7 @@
       <div class="grid-right">
         <app-transaction-history
           [transactions]="store.filteredTransactions()"
-          [activeFilter]="'ALL'"
+          [activeFilter]="store.activeFilter()"
           (filterChange)="onFilterChange($event)">
         </app-transaction-history>
       </div>

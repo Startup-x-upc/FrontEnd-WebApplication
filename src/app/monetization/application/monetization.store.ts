@@ -35,6 +35,7 @@ export class MonetizationStore {
   readonly isLoading = computed(() => this.loadingSignal());
   readonly error = computed(() => this.errorSignal());
   readonly message = computed(() => this.messageSignal());
+  readonly activeFilter = computed(() => this.activeFilterSignal());
 
   readonly hasPositiveBalance = computed(() => {
     const w = this.walletSignal();
@@ -91,7 +92,7 @@ export class MonetizationStore {
     this.api.getWalletByDriverId(driverId).subscribe({
       next: (w) => {
         this.walletSignal.set(w);
-        this.loadingSignal.set(false);
+        this.loadTransactionHistory();
       },
       error: () => {
         this.loadingSignal.set(false);

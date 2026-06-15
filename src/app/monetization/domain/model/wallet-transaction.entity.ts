@@ -6,7 +6,7 @@ export class WalletTransaction implements BaseEntity {
   /** Unique identifier for the transaction. */
   id: string = '';
   /** Foreign key to the wallet. */
-  walletId: number = 0;
+  walletId: string = '';
   /** Foreign key to the trip (empty string if TOP_UP). */
   tripId: string = '';
   /** Transaction type. */

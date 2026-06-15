@@ -46,6 +46,17 @@
       <div class="trip-list">
         @for (trip of trips; track trip.id) {
           <div class="trip-card">
+            <!-- Header: date + status -->
+            <div class="trip-card-header">
+              <div class="trip-date">
+                <mat-icon>calendar_today</mat-icon>
+                <span>{{ trip.completedAt || trip.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <div class="trip-status-badge">
+                {{ trip.status === 'COMPLETED' ? 'Completado' : trip.status }}
+              </div>
+            </div>
+
             <!-- Route info -->
             <div class="trip-route">
               <div class="route-point">
@@ -91,10 +102,11 @@
                   </div>
                 </div>
               }
+            </div>
 
-              <div class="trip-status-badge">
-                {{ trip.status === 'COMPLETED' ? 'Completado' : trip.status }}
-              </div>
+            <!-- Footer: trip ID -->
+            <div class="trip-footer">
+              <span class="trip-id">#{{ trip.id }}</span>
             </div>
           </div>
         }

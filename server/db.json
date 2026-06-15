@@ -257,7 +257,9 @@
       "origin": "-9.46936,-78.30007",
       "destination": "-9.47225,-78.29228",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T15:48:07.691Z",
+      "completedAt": "2026-06-15T15:56:29.243Z"
     },
     {
       "id": "active-ride-001",
@@ -267,7 +269,9 @@
       "origin": "-9.46817,-78.30676",
       "destination": "-9.46791,-78.30374",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T16:00:58.138Z",
+      "completedAt": "2026-06-15T16:07:15.671Z"
     },
     {
       "id": "6VQK35pbod4",
@@ -277,7 +281,9 @@
       "origin": "-9.47200,-78.30130",
       "destination": "-9.47118,-78.29297",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T16:30:26.743Z",
+      "completedAt": "2026-06-15T16:32:31.239Z"
     },
     {
       "id": "MJSGrNbkoCg",
@@ -287,7 +293,9 @@
       "origin": "-9.47492,-78.29930",
       "destination": "-9.47240,-78.29370",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T16:32:50.983Z",
+      "completedAt": "2026-06-15T16:40:15.409Z"
     },
     {
       "id": "1mwrqeCm0po",
@@ -297,7 +305,9 @@
       "origin": "-9.46954,-78.30050",
       "destination": "-9.47644,-78.29453",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T16:40:34.826Z",
+      "completedAt": "2026-06-15T16:43:53.268Z"
     },
     {
       "id": "liy2C09rF3A",
@@ -307,7 +317,9 @@
       "origin": "-9.46962,-78.30324",
       "destination": "-9.47226,-78.29891",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T16:44:07.490Z",
+      "completedAt": "2026-06-15T16:45:19.343Z"
     }
   ],
   "ratings": [],

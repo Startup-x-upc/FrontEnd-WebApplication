@@ -181,6 +181,8 @@ export class RideDispatchApiService {
         destination: request.destination,
         estimatedFare: request.estimatedFare,
         status: RideStatus.ACCEPTED,
+        createdAt: new Date().toISOString(),
+        completedAt: '',
       };
       return this.http.post<RideResponse>(`${this.base}/rides`, ridePayload).pipe(
         map(RideAssembler.toEntity),
@@ -235,7 +237,11 @@ export class RideDispatchApiService {
    * Also patches driverAvailability isBusy/activeRideId if provided.
    */
   updateRideStatus(rideId: string, status: RideStatus): Observable<Ride> {
-    return this.http.patch<RideResponse>(`${this.base}/rides/${rideId}`, { status })
+    const body: any = { status };
+    if (status === RideStatus.COMPLETED) {
+      body.completedAt = new Date().toISOString();
+    }
+    return this.http.patch<RideResponse>(`${this.base}/rides/${rideId}`, body)
       .pipe(map(RideAssembler.toEntity));
   }
 
@@ -303,7 +309,7 @@ export class RideDispatchApiService {
   getPassengerTrips(passengerId: string): Observable<Ride[]> {
     return this.http
       .get<RideResponse[]>(
-        `${this.base}/rides?passengerId=${passengerId}&status=COMPLETED&_sort=id&_order=desc`
+        `${this.base}/rides?passengerId=${passengerId}&status=COMPLETED&_sort=-id`
       )
       .pipe(map((responses) => responses.map(RideAssembler.toEntity)));
   }
@@ -315,7 +321,7 @@ export class RideDispatchApiService {
   getDriverTrips(driverId: string): Observable<Ride[]> {
     return this.http
       .get<RideResponse[]>(
-        `${this.base}/rides?driverId=${driverId}&status=COMPLETED&_sort=id&_order=desc`
+        `${this.base}/rides?driverId=${driverId}&status=COMPLETED&_sort=-id`
       )
       .pipe(map((responses) => responses.map(RideAssembler.toEntity)));
   }

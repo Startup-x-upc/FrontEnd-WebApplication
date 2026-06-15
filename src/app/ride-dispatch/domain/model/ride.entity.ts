@@ -9,6 +9,8 @@ export class Ride implements BaseEntity {
   destination: string = '';
   status: RideStatus = RideStatus.PENDING;
   estimatedFare: number = 0;
+  createdAt: string = '';
+  completedAt: string = '';
 
 
   start(): void    { this.status = RideStatus.STARTED; }

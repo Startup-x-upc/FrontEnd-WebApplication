@@ -152,6 +152,21 @@ export class RideDispatchStore {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
+    // US-11: Check if the request has expired (>60s since creation)
+    if (req.createdAt && !req.isExpired) {
+      const elapsed = Date.now() - new Date(req.createdAt).getTime();
+      if (elapsed > 60_000) {
+        req.expire();
+        this.currentRequestSignal.update(r =>
+          r ? Object.assign(new RideRequest(), r) : r
+        );
+        // Try to persist expiry to server (fire-and-forget)
+        this.api.patchRideRequestExpiry(req.id).subscribe();
+        this.loadingSignal.set(false);
+        return;
+      }
+    }
+
     this.api.getRideRequestById(req.id).subscribe({
       next: updatedReq => {
         this.currentRequestSignal.set(updatedReq);

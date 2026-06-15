@@ -6,6 +6,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IamStore } from '../../../application/iam.store';
 import { ProfileEditForm } from '../profile-edit-form/profile-edit-form';
 import { DriverManagementStore } from '../../../../driver-management/application/driver-management.store';
+import { TrustReputationStore } from '../../../../trust-reputation/application/trust-reputation.store';
+import { RatingSummaryComponent } from '../../../../trust-reputation/presentation/components/rating-summary/rating-summary';
 
 /**
  * @summary Profile page for both passenger and driver roles.
@@ -22,6 +24,7 @@ import { DriverManagementStore } from '../../../../driver-management/application
     MatIconModule,
     MatProgressSpinnerModule,
     ProfileEditForm,
+    RatingSummaryComponent,
   ],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
@@ -49,13 +52,22 @@ export class ProfilePage {
   protected readonly error = this.store.error;
 
   private driverMgmtStore = inject(DriverManagementStore);
+  protected trustStore = inject(TrustReputationStore);
   protected readonly driver = this.driverMgmtStore.driver;
 
   constructor() {
     effect(() => {
       const account = this.account();
-      if (account?.id && account.role === 'DRIVER') {
+      if (!account?.id) return;
+      if (account.role === 'DRIVER') {
         this.driverMgmtStore.loadDriverByAccountId(account.id);
+        // Load driver reputation once the driver entity is available
+        const driver = this.driver();
+        if (driver?.id) {
+          this.trustStore.loadDriverReputation(driver.id);
+        }
+      } else if (account.role === 'PASSENGER') {
+        this.trustStore.loadPassengerReputation(account.id);
       }
     });
   }

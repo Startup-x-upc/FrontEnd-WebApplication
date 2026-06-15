@@ -13,4 +13,5 @@ export interface RideRequestResponse {
   status: string;
   estimatedFare: number;
   isExpired: boolean;
+  createdAt?: string;
 }

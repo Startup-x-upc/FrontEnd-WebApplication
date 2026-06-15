@@ -126,6 +126,13 @@ export const routes: Routes = [
             (m) => m.DriversManagementPage,
           ),
       },
+      {
+        path: 'fare-config',
+        loadComponent: () =>
+          import('./monetization/presentation/components/admin-fare-config-page/admin-fare-config-page').then(
+            (m) => m.AdminFareConfigPageComponent,
+          ),
+      },
       { path: '', redirectTo: 'drivers', pathMatch: 'full' },
     ],
   },

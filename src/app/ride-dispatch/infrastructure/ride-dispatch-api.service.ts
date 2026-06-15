@@ -76,6 +76,13 @@ export class RideDispatchApiService {
       .pipe(map(rs => rs.map(RideRequestAssembler.toEntity)));
   }
 
+  /** Marks a ride request as expired (US-11). */
+  patchRideRequestExpiry(requestId: string): Observable<RideRequest> {
+    return this.http
+      .patch<RideRequestResponse>(`${this.base}/rideRequests/${requestId}`, { isExpired: true })
+      .pipe(map(RideRequestAssembler.toEntity));
+  }
+
   /** Creates a new ride request (status = OPEN). */
   createRideRequest(
     passengerId: string,
@@ -94,6 +101,7 @@ export class RideDispatchApiService {
       estimatedFare,
       selectedDriverId: null,
       isExpired: false,
+      createdAt: new Date().toISOString(),
     };
     return this.http.post<RideRequestResponse>(`${this.base}/rideRequests`, payload)
       .pipe(map(RideRequestAssembler.toEntity));
@@ -220,10 +228,21 @@ export class RideDispatchApiService {
 
   // ── Rides ────────────────────────────────────────────────────────────
 
-  /** Returns a single ride by ID. */
+  /** Returns a single ride by ID, enriched with driver name. */
   getRideById(rideId: string): Observable<Ride> {
-    return this.http.get<RideResponse>(`${this.base}/rides/${rideId}`)
-      .pipe(map(RideAssembler.toEntity));
+    return this.http.get<RideResponse>(`${this.base}/rides/${rideId}`).pipe(
+      switchMap(ride => {
+        const entity = RideAssembler.toEntity(ride);
+        return this.http.get<any[]>(`${this.base}/drivers?id=${ride.driverId}`).pipe(
+          map(drivers => {
+            if (drivers.length > 0) {
+              entity.driverName = drivers[0].fullName;
+            }
+            return entity;
+          })
+        );
+      })
+    );
   }
 
   /** Returns all rides for a given passenger. */

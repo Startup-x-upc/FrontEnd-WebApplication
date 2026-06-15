@@ -70,6 +70,29 @@ export class MonetizationStore {
     });
   }
 
+  /** Saves an updated fare policy and refreshes the local state. */
+  saveFarePolicy(baseFare: number, pricePerKm: number, minimumFare: number): void {
+    const current = this.farePolicySignal();
+    if (!current) {
+      this.errorSignal.set('La configuración de tarifas no ha sido cargada.');
+      return;
+    }
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    current.configure(baseFare, pricePerKm, minimumFare);
+    this.api.updateFarePolicy(current).subscribe({
+      next: (p) => {
+        this.farePolicySignal.set(p);
+        this.loadingSignal.set(false);
+        this.messageSignal.set('Tarifas actualizadas correctamente.');
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudieron guardar las tarifas.');
+      },
+    });
+  }
+
   calculateEstimatedFare(distanceKm: number): void {
     const policy = this.farePolicySignal();
     if (!policy) {

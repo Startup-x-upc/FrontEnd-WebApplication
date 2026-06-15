@@ -13,6 +13,7 @@ export class RideRequestAssembler {
     entity.status = response.status;
     entity.estimatedFare = response.estimatedFare;
     entity.isExpired = response.isExpired;
+    entity.createdAt = response.createdAt ?? '';
     return entity;
   }
 }

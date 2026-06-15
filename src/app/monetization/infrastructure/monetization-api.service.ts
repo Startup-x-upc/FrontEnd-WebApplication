@@ -45,6 +45,19 @@ export class MonetizationApiService {
       );
   }
 
+  /** Persists an updated fare policy configuration. */
+  updateFarePolicy(policy: FarePolicy): Observable<FarePolicy> {
+    const body: FareConfigResponse = {
+      id: Number(policy.id),
+      baseFare: policy.baseFare,
+      pricePerKm: policy.pricePerKm,
+      minimumFare: policy.minimumFare,
+    };
+    return this.http
+      .put<FareConfigResponse>(`${this.baseUrl}/fareConfig/${policy.id}`, body)
+      .pipe(map(FareConfigAssembler.toEntity));
+  }
+
   // ── Wallet ───────────────────────────────────────────────────────────
 
   /** Retrieves a wallet by driver ID. */

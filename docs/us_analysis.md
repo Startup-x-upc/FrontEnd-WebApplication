@@ -45,13 +45,13 @@
 |----|--------|--------|-------------|
 | US-07 | Detección automática de ubicación | ✅ | Geolocalización del navegador integrada en `trip-location-form` |
 | US-08 | Selección de destino en el mapa | ✅ | Click en `trip-map` (Leaflet) establece origen/destino |
-| US-09 | Visualización de conductores cercanos | ⚠️ | Componente `trip-availability-summary` existe pero no muestra marcadores de conductores en el mapa en tiempo real |
-| US-10 | Notificación de aceptación de viaje | ⚠️ | El flujo funciona con polling manual ("Actualizar estado"). Sin integración real-time via Ably aún |
-| US-11 | Notificación de rechazo de solicitud | ⚠️ | No hay notificación real-time. El estado `REQUEST_EXPIRED` cubre parcialmente el caso |
-| US-12 | Ubicación del pasajero para el conductor | ⚠️ | El conductor ve el mapa con origen/destino, pero no la ubicación en tiempo real del pasajero |
+| US-09 | Visualización de conductores cercanos | ⚠️ | Excluido del frontend web — requiere GPS nativo y rastreo real-time que no es práctico en navegador |
+| US-10 | Notificación de aceptación de viaje | ✅ | Nombre real del conductor en tarjeta de seguimiento (enriquecido desde `getRideById`). El botón "Actualizar estado" sigue presente para refresco manual |
+| US-11 | Notificación de rechazo de solicitud | ✅ | Chequeo de expiración en cada refresh manual: si pasaron >60s desde `createdAt`, se marca `isExpired=true` y se muestra la tarjeta "Solicitud vencida" |
+| US-12 | Ubicación del pasajero para el conductor | ⚠️ | Excluido del frontend web — requiere GPS nativo y rastreo real-time que no es práctico en navegador |
 
 > [!NOTE]
-> Las US-10, US-11 y US-12 dependen de la integración con **Ably** para tiempo real. Actualmente funcionan con polling manual (botón "Actualizar estado"). La integración real-time está pendiente.
+> Las US-10 y US-11 están implementadas con refresh manual. US-09 y US-12 se excluyen del alcance frontend web porque requieren geolocalización en tiempo real no viable sin GPS nativo. La integración con **Ably** para tiempo real está pendiente.
 
 ---
 
@@ -60,10 +60,10 @@
 | US | Título | Estado | Observación |
 |----|--------|--------|-------------|
 | US-19 | Cálculo de tarifa por distancia | ✅ | `fare-summary-card` muestra precio estimado y distancia |
-| US-20 | Configuración de tarifas (admin) | ⚠️ | El link `/admin/fare-config` existe en el sidebar del admin, pero **no hay ruta registrada** ni componente de configuración de tarifas en `app.routes.ts` |
+| US-20 | Configuración de tarifas (admin) | ✅ | `admin-fare-config-page` con formulario para editar tarifa base, precio/km y tarifa mínima. Ruta `/admin/fare-config` registrada. Write path completo (API PUT + store) |
 | US-21 | Calificación post-viaje al conductor | ✅ | `app-rating-form` integrado en `passenger-request-page.html` (RIDE_COMPLETED). El pasajero califica al conductor tras finalizar el viaje |
 | US-22 | Calificación post-viaje al pasajero | ✅ | `app-rating-form` integrado en `driver-dashboard-page.html` (RIDE_COMPLETED). El conductor califica al pasajero tras finalizar el viaje |
-| US-23 | Visualización del puntaje de reputación | ⚠️ | El perfil del **conductor** muestra rating promedio y cantidad. El perfil del **pasajero** no muestra reputación |
+| US-23 | Visualización del puntaje de reputación | ✅ | `app-rating-summary` en perfil de ambos roles, `app-reputation-badge` en sidebars de pasajero y conductor. Driver dashboard usa reputación real del pasajero (ya no mock) |
 
 > [!NOTE]
 > **US-21 y US-22** están integradas en las pantallas de viaje completado de pasajero y conductor respectivamente. El bounded context `trust-reputation` (store, API service, `rating-form`) está completamente cableado en ambas vistas.
@@ -115,12 +115,12 @@
 |-----------|-------|----|----|----|----|
 | EP-01 Identidad y Acceso | 6 | 6 | 0 | 0 | 0 |
 | EP-02 Gestión de Viajes | 6 | 6 | 0 | 0 | 0 |
-| EP-03 Geolocalización | 6 | 2 | 4 | 0 | 0 |
-| EP-04 Tarifas y Calificaciones | 5 | 3 | 2 | 0 | 0 |
+| EP-03 Geolocalización | 6 | 4 | 2 | 0 | 0 |
+| EP-04 Tarifas y Calificaciones | 5 | 5 | 0 | 0 | 0 |
 | EP-05 Historial y Admin | 3 | 3 | 0 | 0 | 0 |
 | EP-06 Landing Page | 8 | 0 | 0 | 0 | 8 |
 | EP-07 Wallet y Pagos | 4 | 4 | 0 | 0 | 0 |
-| **Total (sin Landing)** | **30** | **24** | **6** | **0** | **0** |
+| **Total (sin Landing)** | **30** | **28** | **2** | **0** | **0** |
 
 ---
 
@@ -132,6 +132,6 @@
 
 ### ⚠️ Parciales (funcionalidad limitada)
 
-1. **US-20 — Config tarifas admin**: Falta registrar la ruta y crear el componente de configuración
-2. **US-23 — Puntaje de reputación**: Solo visible en perfil de conductor, falta en perfil de pasajero
-3. **US-09/10/11/12 — Real-time con Ably**: Funcional con polling manual, pendiente la integración de tiempo real
+1. **US-09 — Conductores cercanos en mapa**: Excluido del frontend web — requiere GPS nativo
+2. **US-12 — Ubicación del pasajero para el conductor**: Excluido del frontend web — requiere GPS nativo
+3. **Real-time con Ably**: US-10 y US-11 funcionan con refresh manual. La integración WebSocket/Ably para tiempo real está pendiente

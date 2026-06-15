@@ -5,11 +5,19 @@
     </div>
     
     <div class="user-block" *ngIf="profile()">
-      <img [src]="profile()?.photoUrl" alt="Avatar" class="avatar">
-      <div class="user-info">
-        <span class="user-name">{{ profile()?.fullName }}</span>
-        <span class="user-role">Pasajero</span>
+      <div class="user-row">
+        <img [src]="profile()?.photoUrl" alt="Avatar" class="avatar">
+        <div class="user-info">
+          <span class="user-name">{{ profile()?.fullName }}</span>
+          <span class="user-role">Pasajero</span>
+        </div>
       </div>
+      <app-reputation-badge
+        [averageScore]="trustStore.passengerReputation()?.averageScore ?? null"
+        [totalRatings]="trustStore.passengerReputation()?.totalRatings ?? 0"
+        size="small"
+        [showCount]="false">
+      </app-reputation-badge>
     </div>
 
     <mat-nav-list>

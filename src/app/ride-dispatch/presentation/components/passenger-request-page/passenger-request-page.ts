@@ -546,6 +546,12 @@ export class PassengerRequestPageComponent {
     }
   });
 
+  /** Real driver name from the enriched ride entity (US-10). */
+  readonly currentDriverName = computed(() => {
+    const ride = this.rideStore.currentRide();
+    return ride?.driverName || 'Conductor asignado';
+  });
+
   constructor() {
     this.monetizationStore.loadFarePolicy();
   }

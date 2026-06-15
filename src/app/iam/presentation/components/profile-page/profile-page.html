@@ -138,19 +138,11 @@
           <div class="detail-divider"></div>
 
           <!-- Reputación (US-23) -->
-          <div class="detail-row">
-            <mat-icon class="detail-icon">star</mat-icon>
-            <div class="detail-text">
-              <span class="detail-label">Reputación y Calificaciones</span>
-              <span class="detail-value">
-                @if (driver()?.ratingCount && driver()!.ratingCount > 0) {
-                  {{ driver()?.ratingAverage | number:'1.1-1' }} ★ ({{ driver()?.ratingCount }} calificaciones)
-                } @else {
-                  Sin calificaciones aún
-                }
-              </span>
-            </div>
-          </div>
+          <app-rating-summary
+            [reputation]="trustStore.driverReputation()"
+            role="DRIVER"
+            [loading]="trustStore.isLoading()">
+          </app-rating-summary>
 
           <div class="detail-divider"></div>
 
@@ -183,6 +175,15 @@
               <span class="detail-value">{{ driver()?.soatNumber || '—' }}</span>
             </div>
           </div>
+        }
+
+        @if (account()?.role === 'PASSENGER') {
+          <div class="detail-divider"></div>
+          <app-rating-summary
+            [reputation]="trustStore.passengerReputation()"
+            role="PASSENGER"
+            [loading]="trustStore.isLoading()">
+          </app-rating-summary>
         }
       </div>
     </div>

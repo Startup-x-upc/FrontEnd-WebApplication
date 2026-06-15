@@ -638,13 +638,6 @@ export class DriverDashboardPageComponent {
   readonly isRawCoord = isRawCoord;
   readonly humanizeCoord = humanizeCoord;
 
-  getMockPassengerRating(id: string | undefined): string {
-    if (!id) return '4.9';
-    const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const val = 4.5 + (sum % 6) / 10;
-    return val.toFixed(1);
-  }
-
   constructor() {
     const account = this.iamStore.currentAccount();
     if (account) {
@@ -657,6 +650,16 @@ export class DriverDashboardPageComponent {
       if (driver?.id) {
         this.monetizationStore.loadWallet(driver.id);
         this.rideStore.loadDriverAvailability(driver.id);
+      }
+    });
+
+    // Load real passenger reputation when viewing request detail or active ride
+    effect(() => {
+      const req = this.selectedRequest();
+      const ride = this.rideStore.currentRide();
+      const passengerId = req?.passengerId || ride?.passengerId;
+      if (passengerId) {
+        this.trustStore.loadPassengerReputation(passengerId);
       }
     });
   }

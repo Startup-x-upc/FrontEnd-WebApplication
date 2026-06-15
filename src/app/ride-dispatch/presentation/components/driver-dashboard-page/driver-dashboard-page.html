@@ -358,7 +358,14 @@
               <span class="detail-passenger-name">{{ selectedRequest()!.passengerName || 'Pasajero Registrado' }}</span>
               <div class="detail-passenger-rating">
                 <mat-icon>star</mat-icon>
-                <span>{{ getMockPassengerRating(selectedRequest()!.passengerId) }} (Pasajero)</span>
+                <span>
+                  @if (trustStore.passengerReputation()?.averageScore) {
+                    {{ trustStore.passengerReputation()!.averageScore | number:'1.1-1' }}
+                  } @else {
+                    —
+                  }
+                  (Pasajero)
+                </span>
               </div>
             </div>
           </div>

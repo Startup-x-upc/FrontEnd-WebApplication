@@ -18,6 +18,8 @@ export class RideRequest implements BaseEntity {
   status: string = RideStatus.OPEN;
   estimatedFare: number = 0;
   isExpired: boolean = false;
+  /** ISO timestamp set when the request is created. Used for expiry checks. */
+  createdAt: string = '';
 
   // CQRS Read Projections
   passengerName?: string;

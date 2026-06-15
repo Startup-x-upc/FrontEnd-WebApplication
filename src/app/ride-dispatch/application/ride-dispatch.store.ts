@@ -1,5 +1,5 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { of, switchMap } from 'rxjs';
+import { map, of, switchMap } from 'rxjs';
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
 import { RideCandidate } from '../domain/model/ride-candidate.entity';
@@ -364,7 +364,7 @@ export class RideDispatchStore {
 
   // ── Driver availability ───────────────────────────────────────────────
 
-  /** Loads the driver's availability record. */
+  /** Loads the driver's availability record. Auto-cleans CANCELLED rides. */
   loadDriverAvailability(driverId: string): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
@@ -373,10 +373,22 @@ export class RideDispatchStore {
         this.driverAvailabilitySignal.set(a);
         // Use direct activeRideId or fallback to a deep lookup in DB
         if (a.activeRideId) {
-          return this.api.getRideById(a.activeRideId);
-        } else {
-          return this.api.getActiveRideForDriver(driverId);
+          return this.api.getRideById(a.activeRideId).pipe(
+            switchMap(ride => {
+              // Auto-clean: if the ride was cancelled externally, free the driver
+              if (ride.status === RideStatus.CANCELLED) {
+                return this.api.markDriverFree(a.id).pipe(
+                  map(updatedAvail => {
+                    this.driverAvailabilitySignal.set(updatedAvail);
+                    return null; // don't set currentRideSignal
+                  })
+                );
+              }
+              return of(ride);
+            })
+          );
         }
+        return this.api.getActiveRideForDriver(driverId);
       })
     ).subscribe({
       next: ride => {
@@ -459,29 +471,29 @@ export class RideDispatchStore {
    * Marks ride as CANCELLED and frees the driver's availability.
    */
   cancelRide(): void {
-    const ride  = this.currentRideSignal();
-    const avail = this.driverAvailabilitySignal();
+    const ride = this.currentRideSignal();
     if (!ride?.id) return;
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
+    // 1) Mark ride as CANCELLED
     this.api.updateRideStatus(ride.id, RideStatus.CANCELLED).pipe(
-      switchMap(updated => {
-        this.currentRideSignal.set(updated);
-        if (avail?.id) {
-          return this.api.markDriverFree(avail.id);
-        }
-        return of(null);
-      })
+      // 2) Look up driver availability via the ride's driverId (works for both passenger & driver)
+      switchMap(() => this.api.getDriverAvailability(ride.driverId)),
+      // 3) Free the driver if availability record exists
+      switchMap(avail => (avail?.id ? this.api.markDriverFree(avail.id) : of(null)))
     ).subscribe({
       next: updatedAvail => {
         if (updatedAvail) {
           this.driverAvailabilitySignal.set(updatedAvail);
         }
-        // Clear ride context so user returns to initial state
+        // Clear ride context + map inputs so both passenger & driver return to initial state
         this.currentRideSignal.set(null);
         this.currentRequestSignal.set(null);
         this.candidatesSignal.set([]);
         this.activeCandidateSignal.set(null);
+        this.originSignal.set('');
+        this.destinationSignal.set('');
+        this.distanceKmSignal.set(0);
         this.loadingSignal.set(false);
       },
       error: () => {

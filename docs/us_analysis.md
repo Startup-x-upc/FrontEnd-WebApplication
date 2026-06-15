@@ -35,10 +35,7 @@
 | US-15 | Solicitud de viaje (pasajero) | ✅ | `passenger-request-page` con mapa, formulario ubicación y confirmación |
 | US-16 | Aceptación de solicitud (conductor) | ✅ | Flujo de postulación del conductor con candidatura y selección por pasajero |
 | US-17 | Inicio y finalización del viaje | ✅ | Stepper vertical completo: en camino → llegué → iniciar → finalizar |
-| US-18 | Cancelación de viaje | ❌ | **No existe botón de cancelar viaje ni en pasajero ni en conductor.** El backend tiene la entidad `CANCELLED`, pero no hay UI para invocarlo |
-
-> [!WARNING]
-> **US-18 (Cancelación de viaje)** es la única US de gestión de viajes completamente ausente en la UI. El modelo de dominio sí contempla `cancel()` y el estado `CANCELLED`, pero no hay botón ni flujo en ninguna de las dos vistas.
+| US-18 | Cancelación de viaje | ✅ | Botón "Cancelar viaje" en ambas vistas (pasajero y conductor). El store libera al conductor automáticamente vía `getDriverAvailability` + `markDriverFree`, limpia coordenadas del pasajero, y `loadDriverAvailability` auto-detecta rides CANCELLED para limpiarlos |
 
 ---
 
@@ -64,12 +61,12 @@
 |----|--------|--------|-------------|
 | US-19 | Cálculo de tarifa por distancia | ✅ | `fare-summary-card` muestra precio estimado y distancia |
 | US-20 | Configuración de tarifas (admin) | ⚠️ | El link `/admin/fare-config` existe en el sidebar del admin, pero **no hay ruta registrada** ni componente de configuración de tarifas en `app.routes.ts` |
-| US-21 | Calificación post-viaje al conductor | ❌ | **Componentes existen** (`rating-form`, `rating-summary`, `reputation-badge`) y el store tiene toda la lógica, pero **NO están integrados en la pantalla de viaje completado** del pasajero |
-| US-22 | Calificación post-viaje al pasajero | ❌ | Misma situación: la lógica está en `TrustReputationStore.submitPassengerRating()` pero no se invoca desde la UI del conductor al completar viaje |
+| US-21 | Calificación post-viaje al conductor | ✅ | `app-rating-form` integrado en `passenger-request-page.html` (RIDE_COMPLETED). El pasajero califica al conductor tras finalizar el viaje |
+| US-22 | Calificación post-viaje al pasajero | ✅ | `app-rating-form` integrado en `driver-dashboard-page.html` (RIDE_COMPLETED). El conductor califica al pasajero tras finalizar el viaje |
 | US-23 | Visualización del puntaje de reputación | ⚠️ | El perfil del **conductor** muestra rating promedio y cantidad. El perfil del **pasajero** no muestra reputación |
 
-> [!IMPORTANT]
-> **US-21 y US-22 (Calificaciones post-viaje)** son las US más importantes que faltan integrar. Todo el backend del bounded context `trust-reputation` está construido (store, API service, componentes de presentación), pero **ningún componente se usa** en las pantallas de viaje completado. Esto afecta directamente al flujo de Trust & Reputation.
+> [!NOTE]
+> **US-21 y US-22** están integradas en las pantallas de viaje completado de pasajero y conductor respectivamente. El bounded context `trust-reputation` (store, API service, `rating-form`) está completamente cableado en ambas vistas.
 
 ---
 
@@ -77,8 +74,8 @@
 
 | US | Título | Estado | Observación |
 |----|--------|--------|-------------|
-| US-24 | Historial de viajes del pasajero | ✅ | `trip-history-page` accesible en `/passenger/trips` |
-| US-25 | Historial de viajes del conductor | ✅ | `trip-history-page` reutilizado en `/driver/trips` |
+| US-24 | Historial de viajes del pasajero | ✅ | `trip-history-page` en `/passenger/trips`. Muestra fecha, nombre del conductor, tarifa, botón "Revisar ruta" (Google Maps con origen→destino) |
+| US-25 | Historial de viajes del conductor | ✅ | `trip-history-page` en `/driver/trips`. Muestra fecha, nombre del pasajero, tarifa, comisión (5%), ganancia neta, botón "Revisar ruta" |
 | US-26 | Panel de administración de conductores | ✅ | `drivers-management-page` con tabla y acciones |
 
 ---
@@ -117,13 +114,13 @@
 | Categoría | Total | ✅ | ⚠️ | ❌ | 🔲 |
 |-----------|-------|----|----|----|----|
 | EP-01 Identidad y Acceso | 6 | 6 | 0 | 0 | 0 |
-| EP-02 Gestión de Viajes | 6 | 5 | 0 | **1** | 0 |
+| EP-02 Gestión de Viajes | 6 | 6 | 0 | 0 | 0 |
 | EP-03 Geolocalización | 6 | 2 | 4 | 0 | 0 |
-| EP-04 Tarifas y Calificaciones | 5 | 1 | 2 | **2** | 0 |
+| EP-04 Tarifas y Calificaciones | 5 | 3 | 2 | 0 | 0 |
 | EP-05 Historial y Admin | 3 | 3 | 0 | 0 | 0 |
 | EP-06 Landing Page | 8 | 0 | 0 | 0 | 8 |
 | EP-07 Wallet y Pagos | 4 | 4 | 0 | 0 | 0 |
-| **Total (sin Landing)** | **30** | **21** | **6** | **3** | **0** |
+| **Total (sin Landing)** | **30** | **24** | **6** | **0** | **0** |
 
 ---
 
@@ -131,12 +128,10 @@
 
 ### ❌ Faltantes (requieren desarrollo UI)
 
-1. **US-18 — Cancelación de viaje**: Agregar botón de cancelar en ambas vistas (pasajero y conductor) antes del inicio del viaje
-2. **US-21 — Calificación post-viaje al conductor**: Integrar `app-rating-form` en la pantalla `RIDE_COMPLETED` del pasajero
-3. **US-22 — Calificación post-viaje al pasajero**: Integrar `app-rating-form` en la pantalla `RIDE_COMPLETED` del conductor
+*No hay US en estado ❌ actualmente.*
 
 ### ⚠️ Parciales (funcionalidad limitada)
 
-4. **US-20 — Config tarifas admin**: Falta registrar la ruta y crear el componente de configuración
-5. **US-23 — Puntaje de reputación**: Solo visible en perfil de conductor, falta en perfil de pasajero
-6. **US-09/10/11/12 — Real-time con Ably**: Funcional con polling manual, pendiente la integración de tiempo real
+1. **US-20 — Config tarifas admin**: Falta registrar la ruta y crear el componente de configuración
+2. **US-23 — Puntaje de reputación**: Solo visible en perfil de conductor, falta en perfil de pasajero
+3. **US-09/10/11/12 — Real-time con Ably**: Funcional con polling manual, pendiente la integración de tiempo real

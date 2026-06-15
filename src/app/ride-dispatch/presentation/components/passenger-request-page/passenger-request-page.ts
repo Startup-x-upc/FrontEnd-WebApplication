@@ -506,7 +506,8 @@ export class PassengerRequestPageComponent {
     if (this.rideStore.error() || this.monetizationStore.error()) return 'ERROR';
 
     const ride = this.rideStore.currentRide();
-    if (ride) {
+    // CANCELLED rides are not active — skip to request/map checks
+    if (ride && ride.status !== RideStatus.CANCELLED) {
       if (ride.status === RideStatus.COMPLETED)       return 'RIDE_COMPLETED';
       if (
         ride.status === RideStatus.DRIVER_ON_THE_WAY ||

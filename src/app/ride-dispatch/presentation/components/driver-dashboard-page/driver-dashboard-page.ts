@@ -668,9 +668,9 @@ export class DriverDashboardPageComponent {
     const wallet = this.monetizationStore.wallet();
     if (wallet === null) return 'LOADING';
 
-    // Active ride takes highest priority
+    // Active ride takes highest priority — CANCELLED rides are not active
     const ride = this.rideStore.currentRide();
-    if (ride) {
+    if (ride && ride.status !== RideStatus.CANCELLED) {
       if (ride.status === RideStatus.COMPLETED)         return 'RIDE_COMPLETED';
       if (ride.status === RideStatus.STARTED)           return 'RIDE_STARTED';
       if (ride.status === RideStatus.DRIVER_ARRIVED)    return 'DRIVER_ARRIVED';

@@ -503,6 +503,55 @@ export type DriverUiState =
       font-weight: 700;
       border-radius: 10px;
     }
+
+    /* ── Animated Radar/Hourglass Visual ── */
+    .stepper-searching-animation {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 24px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .radar-pulse {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(37, 99, 235, 0.15);
+      border-radius: 50%;
+      animation: radarPulseScale 2s infinite ease-out;
+    }
+    .radar-pulse.double {
+      animation-delay: 1s;
+    }
+    .radar-icon-center {
+      position: relative;
+      z-index: 5;
+      width: 48px;
+      height: 48px;
+      background: #eff6ff;
+      border: 2px solid #3b82f6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2563eb;
+    }
+    .pulse-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      animation: rotateHourglass 2s infinite ease-in-out;
+    }
+    @keyframes radarPulseScale {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    @keyframes rotateHourglass {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+    }
   `],
 })
 export class DriverDashboardPageComponent {
@@ -631,6 +680,7 @@ export class DriverDashboardPageComponent {
     const driver = this.driverMgmtStore.driver();
     if (!driver?.id) return;
     this.rideStore.loadDriverActiveCandidate(driver.id);
+    this.rideStore.loadDriverAvailability(driver.id);
   }
 
   onViewDetails(request: RideRequest): void {

@@ -3,17 +3,24 @@
  */
 
 /**
- * Calculates a rough Euclidean distance between two coordinate tuples.
- * This is an approximation for demo purposes and assumes a flat earth locally.
- * Multiplies by 111 to convert degrees to kilometers roughly.
+ * Calculates the great-circle distance between two coordinate tuples
+ * using the Haversine formula. Returns distance in kilometers.
  *
  * @param origin - Tuple of [latitude, longitude].
  * @param destination - Tuple of [latitude, longitude].
- * @returns Estimated distance in kilometers (rounded, minimum 1).
+ * @returns Distance in kilometers (rounded, minimum 1).
  */
 export function calculateEstimatedDistance(origin: [number, number], destination: [number, number]): number {
-  const dist = Math.sqrt(Math.pow(origin[0] - destination[0], 2) + Math.pow(origin[1] - destination[1], 2)) * 111;
-  return Math.max(1, Math.round(dist));
+  const R = 6371; // Earth's radius in km
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(destination[0] - origin[0]);
+  const dLng = toRad(destination[1] - origin[1]);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(origin[0])) * Math.cos(toRad(destination[0])) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.max(1, Math.round(R * c));
 }
 
 /**

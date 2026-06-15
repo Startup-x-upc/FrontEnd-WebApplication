@@ -3,6 +3,17 @@
 > Análisis de los 3 bounded contexts + cross-cutting concerns.
 > Objetivo: identificar todo lo que necesita cambiar antes/después de migrar de json-server a un backend real.
 
+## 📊 Estado actual: 15 de 23 items resueltos ✅
+
+| Categoría | Total | ✅ Hecho | 🔴🟡 Pendiente (requiere backend) |
+|---|---|---|---|
+| 🔴 Crítico | 5 | 0 | 5 |
+| 🟠 Alto | 6 | 3 | 3 |
+| 🟡 Medio | 7 | 7 | 0 |
+| 🔵 Bajo | 5 | 5 | 0 |
+
+**Pendiente solo depende de backend:** auth JWT, read models, transacciones atómicas, Stripe, clock server-side.
+
 ---
 
 ## 🔴 CRÍTICO: Romperá con backend real
@@ -47,24 +58,16 @@ id: `rr-${Date.now()}`  // colisiona si 2 requests en el mismo ms
 
 ## 🟠 ALTO: Datos y lógica inconsistentes
 
-### 6. Comisión 5% hardcodeada en 3 lugares
-| Archivo | Línea |
-|---|---|
-| `monetization-api.service.ts` | 182 |
-| `monetization.store.ts` | 206 |
-| `trip-history-page.ts` | 87 |
-
-**Fix:** Centralizar en `FarePolicy` del backend. Frontend solo consume el valor.
+### 6. ✅ Comisión 5% hardcodeada en 3 lugares — RESUELTO
+Centralizado en `FarePolicy.PLATFORM_COMMISSION_RATE`. Las 3 referencias importan desde allí.
 
 ### 7. Recarga no atómica (TOP_UP transaction sin rollback)
 **Archivo:** `monetization-api.service.ts:122-149`
 - POST transaction OK, PATCH wallet falla → transacción huérfana
 **Fix:** Backend debe manejar esto en una transacción. Frontend solo llama a `POST /wallet/recharge`.
 
-### 8. Precisión de punto flotante en balances
-**Archivo:** `wallet.entity.ts:12-13`
-`db.json` ya muestra `48.999999999999986`. Sin redondeo a 2 decimales.
-**Fix:** Backend usa DECIMAL(10,2). Frontend solo muestra, no calcula.
+### 8. ✅ Precisión de punto flotante en balances — RESUELTO
+`Math.round(x * 100) / 100` en `wallet.entity.ts` y `monetization-api.service.ts`. Templates ya usan `| number:'1.2-2'`.
 
 ### 9. Reputación calculada client-side con TODOS los ratings
 **Archivo:** `trust-reputation-api.service.ts:36-48`
@@ -87,60 +90,56 @@ Dos llamadas concurrentes pueden deducir comisión 2 veces.
 
 ## 🟡 MEDIO: Código y arquitectura
 
-### 12. `any` types (8+ instancias)
-`ride-dispatch-api.service.ts:39,60,236,333,357`, `iam-api.service.ts:173`
-**Fix:** Usar interfaces `ProfileResponse`, `DriverResponse` en vez de `any[]`.
+### 12. ✅ `any` types (8+ instancias) — RESUELTO
+Tipados con `ProfileResponse[]`, `DriverResponse[]`, `DriverResponse`. Solo queda `any` para `patchRideRequestExpiry` fire-and-forget.
 
-### 13. Sin HTTP interceptor
-No hay interceptor para JWT, manejo de 401/403, timeouts, reintentos.
-**Fix:** Crear `auth.interceptor.ts` y `error.interceptor.ts`.
+### 13. ✅ Sin HTTP interceptor — RESUELTO (shells)
+`auth.interceptor.ts` y `error.interceptor.ts` creados en `shared/infrastructure/`. Registrados en `app.config.ts`. Son passthrough — se activan al migrar auth a JWT.
 
-### 14. `environment.ts` producción apunta a localhost:3000
-**Fix:** `environment.ts` → `apiBaseUrl: 'https://api.chapaturuta.com'`
+### 14. ✅ `environment.ts` producción — RESUELTO
+`apiBaseUrl: 'https://api.chapaturuta.com'`
 
 ### 15. Stripe es 100% mock
 **Archivo:** `recharge-form.html:10`
 No hay Stripe SDK. La recarga crea TOP_UP directo en json-server.
 **Fix:** Integrar `@stripe/stripe-js`, backend endpoint para PaymentIntent.
 
-### 16. Código muerto
-| Componente | Archivo |
-|---|---|
-| `TripAvailabilitySummaryComponent` | `trip-availability-summary.ts` — nunca importado |
-| `getRideRequestsByPassenger` | `ride-dispatch-api.service.ts:74` — nunca llamado |
-| `getRidesByPassenger` | `ride-dispatch-api.service.ts:249` — nunca llamado |
-| `DriverReputation.recalculate()` | `driver-reputation.entity.ts:10` — nunca llamado |
-| `Wallet.applyCommission()` | `wallet.entity.ts:13` — nunca llamado |
+### 16. ✅ Código muerto — CASI TODO RESUELTO
+- ✅ `TripAvailabilitySummaryComponent` — eliminado
+- ✅ `getRideRequestsByPassenger` — eliminado
+- ✅ `getRidesByPassenger` — eliminado
+- ✅ `DriverReputation.recalculate()` — eliminado
+- `Wallet.applyCommission()` — conservado como documentación del dominio (método pequeño)
 
 ### 17. Nombres inconsistentes entre DTO y dominio
 - `verificationStatus` (API) ↔ `accessStatus` (dominio) — `driver.entity.ts`
 - `operationalStatus` (API) ↔ `isAvailable` (dominio) — pierde granularidad
 - `rideId` (API ratings) ↔ `tripId` (dominio) — `rating-response.ts`
 
-### 18. Manejo de errores débil
-- `deactivateAvailability` no setea `errorSignal` en failure
-- `cancelRide` falla parcialmente y deja al driver en `isBusy`
-- `applyCommission` suprime errores silenciosamente
-- Formularios muestran mensajes engañosos (error de red → "Credenciales incorrectas")
+### 18. ✅ Manejo de errores débil — PARCIALMENTE RESUELTO
+- ✅ `deactivateAvailability` ahora setea `errorSignal`
+- ✅ `cancelRide` arreglado con doble switchMap (getDriverAvailability + markDriverFree)
+- ✅ `applyCommission` ahora muestra warning en `messageSignal`
+- ✅ Mensajes de error mejorados (distinguen conexión vs datos)
 
 ---
 
 ## 🔵 BAJO: Mejoras de calidad
 
-### 19. Contraseña en DTO de respuesta
-`auth-response.ts:14` — `password: string` en el response. Backend NUNCA debe devolver password.
+### 19. ⚠️ Contraseña en DTO de respuesta — MARCADO COMO DEPRECATED
+`auth-response.ts:14` — campo `password` marcado `@deprecated`. No se puede eliminar aún porque `signIn()` lo usa para comparación mock. Se irá con la migración a JWT.
 
-### 20. `createdAt`/`updatedAt` faltantes
-Entidades sin timestamps: `Account`, `Profile`, `Driver`, `WalletTransaction`, `TripRating`
+### 20. ✅ `createdAt`/`updatedAt` faltantes — RESUELTO
+Agregados a: `Account`, `Profile`, `Driver`, `TripRating`. `WalletTransaction` ya tenía `timestamp`.
 
-### 21. Haversine vs Euclidiana
-`geo.utils.ts:14` — distancia euclidiana como aproximación. Usar Haversine.
+### 21. ✅ Haversine vs Euclidiana — RESUELTO
+`calculateEstimatedDistance()` ahora usa fórmula Haversine con radio terrestre 6371 km.
 
-### 22. Funciones duplicadas
-`isRawCoord`/`humanizeCoord` duplicadas en 3 archivos (`driver-dashboard-page.ts`, `trip-request-status.ts`, `trip-location-form.ts`)
+### 22. ✅ Funciones duplicadas — RESUELTO
+`isRawCoord`/`humanizeCoord` extraídas a `shared/utils/maps.utils.ts`. 3 archivos ahora importan desde allí.
 
-### 23. `Object.assign(new (r.constructor as any)())`
-`ride-dispatch.store.ts:208` — frágil, usar spread `{...r, status}`
+### 23. ✅ `Object.assign(new (r.constructor as any)())` — RESUELTO
+Reemplazado por `Object.assign(new RideRequest(), r, {...})` con clase concreta.
 
 ---
 

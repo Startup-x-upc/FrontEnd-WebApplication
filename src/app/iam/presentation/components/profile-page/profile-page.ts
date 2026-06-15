@@ -56,18 +56,23 @@ export class ProfilePage {
   protected readonly driver = this.driverMgmtStore.driver;
 
   constructor() {
+    // Load driver profile on init (runs once, not reactive to avoid loops)
+    const account = this.account();
+    if (account?.role === 'DRIVER') {
+      this.driverMgmtStore.loadDriverByAccountId(account.id);
+    }
+
+    // Reactively load reputation when driver or passenger identity is ready
     effect(() => {
-      const account = this.account();
-      if (!account?.id) return;
-      if (account.role === 'DRIVER') {
-        this.driverMgmtStore.loadDriverByAccountId(account.id);
-        // Load driver reputation once the driver entity is available
-        const driver = this.driver();
-        if (driver?.id) {
-          this.trustStore.loadDriverReputation(driver.id);
+      const acc = this.account();
+      if (!acc?.id) return;
+      if (acc.role === 'DRIVER') {
+        const d = this.driver();
+        if (d?.id) {
+          this.trustStore.loadDriverReputation(d.id);
         }
-      } else if (account.role === 'PASSENGER') {
-        this.trustStore.loadPassengerReputation(account.id);
+      } else if (acc.role === 'PASSENGER') {
+        this.trustStore.loadPassengerReputation(acc.id);
       }
     });
   }

@@ -93,6 +93,7 @@ export class RideDispatchStore {
       },
       error: () => {
         this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo actualizar la disponibilidad.');
       }
     });
   }

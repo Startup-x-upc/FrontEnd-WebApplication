@@ -124,19 +124,17 @@ export class DriverLayoutComponent {
   profile = this.iamStore.currentProfile;
 
   constructor() {
+    // Load driver profile once on init (not reactive)
+    const account = this.iamStore.currentAccount();
+    if (account?.role === 'DRIVER') {
+      this.driverMgmtStore.loadDriverByAccountId(account.id);
+    }
+
+    // Reactively load reputation once driver entity is available
     effect(() => {
-      const account = this.iamStore.currentAccount();
-      if (account?.id && account.role === 'DRIVER') {
-        this.driverMgmtStore.loadDriverByAccountId(account.id);
-        // Once driver entity is loaded, load its reputation
-        const check = setInterval(() => {
-          const driver = this.driverMgmtStore.driver();
-          if (driver?.id) {
-            this.trustStore.loadDriverReputation(driver.id);
-            clearInterval(check);
-          }
-        }, 300);
-        setTimeout(() => clearInterval(check), 5000);
+      const driver = this.driverMgmtStore.driver();
+      if (driver?.id) {
+        this.trustStore.loadDriverReputation(driver.id);
       }
     });
   }

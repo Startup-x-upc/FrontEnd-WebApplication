@@ -213,7 +213,7 @@ export class MonetizationStore {
       },
       error: () => {
         this.loadingSignal.set(false);
-        // Commission failure is non-blocking for trip completion
+        this.messageSignal.set('Viaje completado, pero no se pudo procesar la comisión. Contacta al administrador.');
       },
     });
   }

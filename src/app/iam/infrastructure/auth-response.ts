@@ -10,7 +10,7 @@ export interface AuthResponse {
   /** Email used for authentication.*/
   email: string;
 
-  /** Hashed or plain password (mock only). */
+  /** @deprecated Solo para json-server mock. Eliminar al migrar a backend real con JWT. */
   password: string;
 
   /** Role assigned to this account. */

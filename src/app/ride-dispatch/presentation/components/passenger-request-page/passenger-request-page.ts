@@ -10,7 +10,6 @@ import { RideCandidate } from '../../../domain/model/ride-candidate.entity';
 
 import { TripLocationFormComponent } from '../trip-location-form/trip-location-form';
 import { TripMapComponent } from '../trip-map/trip-map';
-import { TripAvailabilitySummaryComponent } from '../trip-availability-summary/trip-availability-summary';
 import { TripRequestStatusComponent } from '../trip-request-status/trip-request-status';
 import { FareSummaryCardComponent } from '../../../../monetization/presentation/components/fare-summary-card/fare-summary-card';
 import { RideCandidatesListComponent } from '../ride-candidates-list/ride-candidates-list';
@@ -55,7 +54,6 @@ export type RequestUiState =
     MatButtonModule,
     TripLocationFormComponent,
     TripMapComponent,
-    TripAvailabilitySummaryComponent,
     TripRequestStatusComponent,
     FareSummaryCardComponent,
     RideCandidatesListComponent,

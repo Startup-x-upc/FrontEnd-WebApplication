@@ -62,7 +62,7 @@
       "fullName": "Carlos Mendoza",
       "vehicleType": "Mototaxi",
       "verificationStatus": "APPROVED",
-      "operationalStatus": "DISABLED",
+      "operationalStatus": "ENABLED",
       "ratingAverage": 4.8,
       "ratingCount": 120,
       "photoUrl": "https://i.pravatar.cc/150?img=33",
@@ -88,7 +88,7 @@
       "id": "da-001",
       "driverId": "d-001",
       "currentLocation": "-9.47100,-78.29900",
-      "isAvailable": false,
+      "isAvailable": true,
       "isBusy": false,
       "activeRideId": null
     },
@@ -97,8 +97,8 @@
       "driverId": "ftHMmu2xvx4",
       "currentLocation": "0,0",
       "isAvailable": true,
-      "isBusy": true,
-      "activeRideId": "we0ic8xv2BI"
+      "isBusy": false,
+      "activeRideId": null
     }
   ],
   "rideRequests": [
@@ -111,6 +111,17 @@
       "status": "CONFIRMED",
       "estimatedFare": 4,
       "selectedDriverId": "ftHMmu2xvx4",
+      "isExpired": false
+    },
+    {
+      "id": "-E3YX18BOmQ",
+      "passengerId": "u-001",
+      "origin": "-9.46817,-78.30676",
+      "destination": "-9.46791,-78.30374",
+      "distanceKm": 1,
+      "status": "OPEN",
+      "estimatedFare": 4,
+      "selectedDriverId": null,
       "isExpired": false
     }
   ],
@@ -125,6 +136,17 @@
       "photoUrl": "",
       "status": "ACCEPTED",
       "appliedAt": "2026-06-15T15:48:07.691Z"
+    },
+    {
+      "id": "PacqQAGwb8U",
+      "requestId": "-E3YX18BOmQ",
+      "driverId": "d-001",
+      "driverName": "Carlos Mendoza",
+      "vehicleType": "Mototaxi",
+      "ratingAverage": 4.8,
+      "photoUrl": "https://i.pravatar.cc/150?img=33",
+      "status": "PROPOSED",
+      "appliedAt": "2026-06-15T16:00:58.138Z"
     }
   ],
   "rides": [
@@ -136,7 +158,7 @@
       "origin": "-9.46936,-78.30007",
       "destination": "-9.47225,-78.29228",
       "estimatedFare": 4,
-      "status": "ACCEPTED"
+      "status": "COMPLETED"
     }
   ],
   "ratings": [],
@@ -144,12 +166,12 @@
     {
       "id": "w-001",
       "driverId": "d-001",
-      "balance": 0,
+      "balance": 50,
       "status": "ACTIVE"
     },
     {
       "driverId": "ftHMmu2xvx4",
-      "balance": 10,
+      "balance": 9.8,
       "status": "ACTIVE",
       "id": "YSchbOLidbI"
     }
@@ -171,6 +193,24 @@
       "resultingBalance": 10,
       "timestamp": "2026-06-15T15:41:05.688Z",
       "id": "4peZi3tebXI"
+    },
+    {
+      "walletId": "w-001",
+      "tripId": null,
+      "type": "TOP_UP",
+      "amount": 50,
+      "resultingBalance": 50,
+      "timestamp": "2026-06-15T15:56:20.565Z",
+      "id": "8U3Hbx5t7-k"
+    },
+    {
+      "walletId": "YSchbOLidbI",
+      "tripId": "we0ic8xv2BI",
+      "type": "COMMISSION",
+      "amount": -0.2,
+      "resultingBalance": 9.8,
+      "timestamp": "2026-06-15T15:56:29.243Z",
+      "id": "JgZWKCJXuLY"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

@@ -303,26 +303,50 @@ export class RideDispatchApiService {
   // ── Trip History (US-24, US-25) ──────────────────────────────────────
 
   /**
-   * Retrieves completed trips for a passenger, sorted by ID descending.
+   * Retrieves completed trips for a passenger, enriched with driver names.
    * @param passengerId - The passenger's account ID.
    */
   getPassengerTrips(passengerId: string): Observable<Ride[]> {
-    return this.http
-      .get<RideResponse[]>(
+    return forkJoin({
+      rides: this.http.get<RideResponse[]>(
         `${this.base}/rides?passengerId=${passengerId}&status=COMPLETED&_sort=-id`
-      )
-      .pipe(map((responses) => responses.map(RideAssembler.toEntity)));
+      ),
+      drivers: this.http.get<any[]>(`${this.base}/drivers`),
+    }).pipe(
+      map(({ rides, drivers }) => {
+        return rides.map(r => {
+          const entity = RideAssembler.toEntity(r);
+          const driver = drivers.find(d => d.id === r.driverId);
+          if (driver) {
+            entity.driverName = driver.fullName;
+          }
+          return entity;
+        });
+      })
+    );
   }
 
   /**
-   * Retrieves completed trips for a driver, sorted by ID descending.
+   * Retrieves completed trips for a driver, enriched with passenger names.
    * @param driverId - The driver's ID.
    */
   getDriverTrips(driverId: string): Observable<Ride[]> {
-    return this.http
-      .get<RideResponse[]>(
+    return forkJoin({
+      rides: this.http.get<RideResponse[]>(
         `${this.base}/rides?driverId=${driverId}&status=COMPLETED&_sort=-id`
-      )
-      .pipe(map((responses) => responses.map(RideAssembler.toEntity)));
+      ),
+      profiles: this.http.get<any[]>(`${this.base}/profiles`),
+    }).pipe(
+      map(({ rides, profiles }) => {
+        return rides.map(r => {
+          const entity = RideAssembler.toEntity(r);
+          const profile = profiles.find(p => p.accountId === r.passengerId);
+          if (profile) {
+            entity.passengerName = profile.fullName;
+          }
+          return entity;
+        });
+      })
+    );
   }
 }

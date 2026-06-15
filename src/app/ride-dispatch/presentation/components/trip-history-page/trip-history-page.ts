@@ -7,11 +7,13 @@ import { RideDispatchStore } from '../../../application/ride-dispatch.store';
 import { IamStore } from '../../../../iam/application/iam.store';
 import { DriverManagementStore } from '../../../../driver-management/application/driver-management.store';
 import { Ride } from '../../../domain/model/ride.entity';
+import { buildGoogleMapsRouteUrl } from '../../../../shared/utils/maps.utils';
 
 /**
  * @summary Trip history page shared between passenger (US-24)
- * and driver (US-25) roles. Shows completed trips with origin,
- * destination, fare, and (for drivers) commission earned.
+ * and driver (US-25) roles. Shows completed trips with the
+ * person involved, fare, commission, and a shortcut to view
+ * the full route in Google Maps.
  * @author Sprint 3 — Ride Dispatch Bounded Context
  */
 @Component({
@@ -53,7 +55,6 @@ export class TripHistoryPage implements OnInit {
         this.rideStore.loadDriverTrips(driver.id);
       } else {
         this.driverMgmtStore.loadDriverByAccountId(account.id);
-        // Wait briefly for driver to load, then load trips
         const check = setInterval(() => {
           const d = this.driverMgmtStore.driver();
           if (d?.id) {
@@ -85,8 +86,10 @@ export class TripHistoryPage implements OnInit {
   /** Returns the 5% commission for a ride. */
   commission(fare: number): number { return fare * 0.05; }
 
-  /** Formats a raw coordinate string for display. */
-  formatCoord(coord: string): string {
-    return coord.length > 20 ? coord.substring(0, 18) + '...' : coord;
+  /** Opens Google Maps with the full route (origin → destination) in a new tab. */
+  openRouteInMaps(trip: Ride): void {
+    if (trip.origin && trip.destination) {
+      window.open(buildGoogleMapsRouteUrl(trip.origin, trip.destination), '_blank');
+    }
   }
 }

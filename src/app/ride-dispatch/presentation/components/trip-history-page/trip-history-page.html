@@ -46,33 +46,25 @@
       <div class="trip-list">
         @for (trip of trips; track trip.id) {
           <div class="trip-card">
-            <!-- Header: date + status -->
+            <!-- Header: person involved + date -->
             <div class="trip-card-header">
-              <div class="trip-date">
+              <div class="trip-person">
+                <div class="person-avatar">
+                  <mat-icon>person</mat-icon>
+                </div>
+                <div class="person-info">
+                  @if (role === 'DRIVER') {
+                    <span class="person-label">Pasajero</span>
+                    <span class="person-name">{{ trip.passengerName || 'Pasajero' }}</span>
+                  } @else {
+                    <span class="person-label">Conductor</span>
+                    <span class="person-name">{{ trip.driverName || 'Conductor' }}</span>
+                  }
+                </div>
+              </div>
+              <div class="trip-date-badge">
                 <mat-icon>calendar_today</mat-icon>
                 <span>{{ trip.completedAt || trip.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
-              </div>
-              <div class="trip-status-badge">
-                {{ trip.status === 'COMPLETED' ? 'Completado' : trip.status }}
-              </div>
-            </div>
-
-            <!-- Route info -->
-            <div class="trip-route">
-              <div class="route-point">
-                <span class="route-dot route-dot--origin"></span>
-                <div class="route-text">
-                  <span class="route-label">Origen</span>
-                  <span class="route-value">{{ formatCoord(trip.origin) }}</span>
-                </div>
-              </div>
-              <div class="route-line"></div>
-              <div class="route-point">
-                <span class="route-dot route-dot--dest"></span>
-                <div class="route-text">
-                  <span class="route-label">Destino</span>
-                  <span class="route-value">{{ formatCoord(trip.destination) }}</span>
-                </div>
               </div>
             </div>
 
@@ -104,9 +96,18 @@
               }
             </div>
 
-            <!-- Footer: trip ID -->
-            <div class="trip-footer">
-              <span class="trip-id">#{{ trip.id }}</span>
+            <!-- Actions -->
+            <div class="trip-actions">
+              <button mat-stroked-button
+                      class="maps-route-btn"
+                      (click)="openRouteInMaps(trip)"
+                      aria-label="Ver ruta en Google Maps">
+                <mat-icon>map</mat-icon>
+                Revisar ruta
+              </button>
+              <div class="trip-status-badge">
+                {{ trip.status === 'COMPLETED' ? 'Completado' : trip.status }}
+              </div>
             </div>
           </div>
         }

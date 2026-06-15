@@ -17,6 +17,8 @@ export class RideAssembler {
     entity.estimatedFare = response.estimatedFare;
     entity.createdAt = response.createdAt ?? '';
     entity.completedAt = response.completedAt ?? '';
+    entity.driverName = response.driverName ?? '';
+    entity.passengerName = response.passengerName ?? '';
     return entity;
   }
 }

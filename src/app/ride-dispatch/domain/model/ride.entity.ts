@@ -11,6 +11,10 @@ export class Ride implements BaseEntity {
   estimatedFare: number = 0;
   createdAt: string = '';
   completedAt: string = '';
+  /** Enriched at query time — the driver's full name (for passenger history). */
+  driverName: string = '';
+  /** Enriched at query time — the passenger's full name (for driver history). */
+  passengerName: string = '';
 
 
   start(): void    { this.status = RideStatus.STARTED; }

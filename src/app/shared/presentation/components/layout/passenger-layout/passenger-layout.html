@@ -6,7 +6,14 @@
     
     <div class="user-block" *ngIf="profile()">
       <div class="user-row">
-        <img [src]="profile()?.photoUrl" alt="Avatar" class="avatar">
+        <ng-container *ngIf="profile()?.photoUrl && !avatarError; else fallbackAvatar">
+          <img [src]="profile()?.photoUrl" alt="Avatar" class="avatar" (error)="avatarError = true">
+        </ng-container>
+        <ng-template #fallbackAvatar>
+          <div class="avatar-fallback">
+            <mat-icon>person</mat-icon>
+          </div>
+        </ng-template>
         <div class="user-info">
           <span class="user-name">{{ profile()?.fullName }}</span>
           <span class="user-role">Pasajero</span>

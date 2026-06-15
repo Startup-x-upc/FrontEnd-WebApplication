@@ -67,6 +67,22 @@ import { ReputationBadgeComponent } from '../../../../../trust-reputation/presen
       object-fit: cover;
       border: 2px solid #e8f0fe;
     }
+    .avatar-fallback {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #e8f0fe;
+      color: #1a73e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #e8f0fe;
+    }
+    .avatar-fallback mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
     .user-info {
       display: flex;
       flex-direction: column;
@@ -115,6 +131,7 @@ export class PassengerLayoutComponent {
   protected trustStore = inject(TrustReputationStore);
 
   profile = this.iamStore.currentProfile;
+  avatarError = false;
 
   constructor() {
     effect(() => {
@@ -122,6 +139,12 @@ export class PassengerLayoutComponent {
       if (account?.id && account.role === 'PASSENGER') {
         this.trustStore.loadPassengerReputation(account.id);
       }
+    });
+
+    effect(() => {
+      // Reset error when profile signal changes
+      this.profile();
+      this.avatarError = false;
     });
   }
 

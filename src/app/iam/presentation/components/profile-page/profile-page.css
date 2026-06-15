@@ -238,3 +238,28 @@
   background: #e0f2fe;
   color: #0369a1;
 }
+
+/* Role-specific Themes */
+.theme--driver .profile-avatar {
+  border-color: #fef3c7;
+}
+.theme--driver .profile-avatar--fallback {
+  background: #fef3c7;
+  color: #d97706;
+}
+.theme--driver .profile-role-badge {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.theme--passenger .profile-avatar {
+  border-color: #e8f0fe;
+}
+.theme--passenger .profile-avatar--fallback {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+.theme--passenger .profile-role-badge {
+  background: #e8f0fe;
+  color: #1a73e8;
+}

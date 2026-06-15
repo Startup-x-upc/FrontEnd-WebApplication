@@ -1,4 +1,4 @@
-<div class="profile-page">
+<div class="profile-page" [class.theme--driver]="account()?.role === 'DRIVER'" [class.theme--passenger]="account()?.role === 'PASSENGER'">
   <!-- Page header -->
   <div class="page-header">
     <h1>Mi perfil</h1>
@@ -47,9 +47,9 @@
       <!-- Left column: avatar + basic info -->
       <div class="profile-card">
         <div class="avatar-section">
-          @if (profile()?.photoUrl) {
+          @if (profile()?.photoUrl && !avatarError) {
             <img [src]="profile()?.photoUrl" [alt]="'Foto de ' + profile()?.fullName"
-                 class="profile-avatar" />
+                 class="profile-avatar" (error)="avatarError = true" />
           } @else {
             <div class="profile-avatar profile-avatar--fallback">
               <mat-icon>person</mat-icon>

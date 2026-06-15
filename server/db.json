@@ -205,6 +205,18 @@
       "selectedDriverId": "BJZSS9Oxt_U",
       "isExpired": false,
       "createdAt": "2026-06-15T21:24:35.851Z"
+    },
+    {
+      "id": "16q2UAA6pvY",
+      "passengerId": "2v1oWV0QoFA",
+      "origin": "-9.47496,-78.30213",
+      "destination": "-9.47350,-78.29509",
+      "distanceKm": 1,
+      "status": "CONFIRMED",
+      "estimatedFare": 4,
+      "selectedDriverId": "BJZSS9Oxt_U",
+      "isExpired": false,
+      "createdAt": "2026-06-15T21:29:59.897Z"
     }
   ],
   "rideCandidates": [
@@ -262,6 +274,17 @@
       "photoUrl": "",
       "status": "ACCEPTED",
       "appliedAt": "2026-06-15T21:24:40.448Z"
+    },
+    {
+      "id": "xBNCA1KbtvQ",
+      "requestId": "16q2UAA6pvY",
+      "driverId": "BJZSS9Oxt_U",
+      "driverName": "Carlos",
+      "vehicleType": "Mototaxi",
+      "ratingAverage": 0,
+      "photoUrl": "",
+      "status": "ACCEPTED",
+      "appliedAt": "2026-06-15T21:30:07.299Z"
     }
   ],
   "rides": [
@@ -324,6 +347,18 @@
       "status": "COMPLETED",
       "createdAt": "2026-06-15T21:24:43.007Z",
       "completedAt": "2026-06-15T21:24:58.118Z"
+    },
+    {
+      "id": "NuGWxmGWXZo",
+      "requestId": "16q2UAA6pvY",
+      "passengerId": "2v1oWV0QoFA",
+      "driverId": "BJZSS9Oxt_U",
+      "origin": "-9.47496,-78.30213",
+      "destination": "-9.47350,-78.29509",
+      "estimatedFare": 4,
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T21:30:10.069Z",
+      "completedAt": "2026-06-15T21:30:26.406Z"
     }
   ],
   "ratings": [
@@ -350,6 +385,18 @@
       "passengerScore": 5,
       "passengerComment": "",
       "rateableUntil": "2026-06-16T21:25:01.716Z"
+    },
+    {
+      "id": "-0ZqDJZ4HUk",
+      "rideId": "NuGWxmGWXZo",
+      "driverId": "BJZSS9Oxt_U",
+      "passengerId": "2v1oWV0QoFA",
+      "driverRatingStatus": "RATED",
+      "passengerRatingStatus": "RATED",
+      "driverScore": 4,
+      "passengerScore": 2,
+      "passengerComment": "bien",
+      "rateableUntil": "2026-06-16T21:30:34.888Z"
     }
   ],
   "wallets": [
@@ -367,7 +414,7 @@
     },
     {
       "driverId": "BJZSS9Oxt_U",
-      "balance": 9.8,
+      "balance": 9.6,
       "status": "ACTIVE",
       "id": "kWuHwxp46M8"
     }
@@ -425,6 +472,15 @@
       "resultingBalance": 9.8,
       "timestamp": "2026-06-15T21:24:58.183Z",
       "id": "HK_CkPoSc-s"
+    },
+    {
+      "walletId": "kWuHwxp46M8",
+      "tripId": "NuGWxmGWXZo",
+      "type": "COMMISSION",
+      "amount": -0.2,
+      "resultingBalance": 9.6,
+      "timestamp": "2026-06-15T21:30:26.468Z",
+      "id": "e_G20YzD42c"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

@@ -54,6 +54,7 @@ export class ProfilePage {
   private driverMgmtStore = inject(DriverManagementStore);
   protected trustStore = inject(TrustReputationStore);
   protected readonly driver = this.driverMgmtStore.driver;
+  avatarError = false;
 
   constructor() {
     // Load driver profile on init (runs once, not reactive to avoid loops)
@@ -74,6 +75,12 @@ export class ProfilePage {
       } else if (acc.role === 'PASSENGER') {
         this.trustStore.loadPassengerReputation(acc.id);
       }
+    });
+
+    effect(() => {
+      // Reset error when profile signal changes
+      this.profile();
+      this.avatarError = false;
     });
   }
 
@@ -104,6 +111,7 @@ export class ProfilePage {
    * Exits edit mode.
    */
   onProfileSaved(): void {
+    this.avatarError = false;
     this.editMode.set(false);
   }
 

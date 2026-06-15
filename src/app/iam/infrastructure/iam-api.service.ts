@@ -161,7 +161,7 @@ export class IamApiService {
                     accountId: user.id,
                     fullName,
                     vehicleType,
-                    verificationStatus: 'PENDING_VERIFICATION',
+                    verificationStatus: 'ACTIVE',
                     operationalStatus: 'ENABLED',
                     ratingAverage: 0,
                     ratingCount: 0,

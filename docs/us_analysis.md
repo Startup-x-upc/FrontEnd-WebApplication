@@ -22,7 +22,7 @@
 | US-03 | Inicio de sesión | ✅ | `login-form` con redirección según rol |
 | US-04 | Gestión de perfil | ✅ | `profile-page` con vista + edición. Conductor muestra brevete, SOAT, estado verificación, estado operativo, vehículo |
 | US-05 | Cierre de sesión | ✅ | Presente en layouts de pasajero y conductor |
-| US-06 | Verificación de documentos del conductor | ✅ | Panel admin con `driver-verification-card` y tabla de conductores |
+| US-06 | Verificación de documentos del conductor | ✅ | Simplificado: conductores son ACTIVE por defecto. Admin puede ver todos y restringir si hay problemas. La verificación es informativa, no un gate de aprobación |
 
 ---
 

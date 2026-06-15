@@ -1,7 +1,7 @@
 <div class="drivers-admin-page">
   <div class="page-header">
     <h1>Gestión de conductores</h1>
-    <p>Verifica documentos y administra el estado operativo de los conductores</p>
+    <p>Administra el estado operativo de los conductores registrados</p>
   </div>
 
   <!-- Summary bar -->
@@ -11,13 +11,6 @@
       <div>
         <span class="summary-number">{{ store.allDrivers().length }}</span>
         <span class="summary-label">Total conductores</span>
-      </div>
-    </div>
-    <div class="summary-card summary-card--warn">
-      <mat-icon>pending_actions</mat-icon>
-      <div>
-        <span class="summary-number">{{ store.pendingVerificationCount() }}</span>
-        <span class="summary-label">Pendientes de verificación</span>
       </div>
     </div>
     <div class="summary-card summary-card--ok">
@@ -57,46 +50,10 @@
     </div>
   }
 
-  <!-- Tabs -->
-  <mat-tab-group animationDuration="200ms">
-    <!-- Tab 1: Pending verifications -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>pending_actions</mat-icon>
-        <span>Pendientes ({{ store.pendingVerificationCount() }})</span>
-      </ng-template>
-
-      @if (store.pendingDrivers().length === 0) {
-        <div class="empty-state">
-          <mat-icon>task_alt</mat-icon>
-          <h3>Sin pendientes</h3>
-          <p>Todos los conductores han sido verificados.</p>
-        </div>
-      } @else {
-        <div class="verification-list">
-          @for (driver of store.pendingDrivers(); track driver.id) {
-            <app-driver-verification-card
-              [driver]="driver"
-              (approve)="onApprove($event)"
-              (reject)="onReject($event)">
-            </app-driver-verification-card>
-          }
-        </div>
-      }
-    </mat-tab>
-
-    <!-- Tab 2: All drivers -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>list</mat-icon>
-        <span>Todos ({{ store.allDrivers().length }})</span>
-      </ng-template>
-
-      <app-drivers-table
-        [drivers]="store.allDrivers()"
-        [loading]="store.isLoading()"
-        (toggleStatus)="onToggleStatus($event)">
-      </app-drivers-table>
-    </mat-tab>
-  </mat-tab-group>
+  <!-- Drivers table -->
+  <app-drivers-table
+    [drivers]="store.allDrivers()"
+    [loading]="store.isLoading()"
+    (toggleStatus)="onToggleStatus($event)">
+  </app-drivers-table>
 </div>

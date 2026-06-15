@@ -11,7 +11,7 @@ export class Driver implements BaseEntity {
   ratingCount: number = 0;
   photoUrl: string = '';
   isAvailable: boolean = false;
-  accessStatus: DriverAccessStatus = 'PENDING_VERIFICATION';
+  accessStatus: DriverAccessStatus = 'ACTIVE';
   licenseNumber: string = '';
   soatNumber: string = '';
 

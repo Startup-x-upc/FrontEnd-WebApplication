@@ -110,11 +110,9 @@
             <div class="detail-text">
               <span class="detail-label">Estado de verificación</span>
               @if (driver()?.accessStatus === 'ACTIVE' || driver()?.accessStatus === 'APPROVED') {
-                <span class="badge badge--success">Aprobado / Verificado</span>
-              } @else if (driver()?.accessStatus === 'PENDING_VERIFICATION') {
-                <span class="badge badge--warning">Pendiente de verificación</span>
+                <span class="badge badge--success">Activo</span>
               } @else if (driver()?.accessStatus === 'RESTRICTED' || driver()?.accessStatus === 'REJECTED') {
-                <span class="badge badge--danger">Restringido / Rechazado</span>
+                <span class="badge badge--danger">Restringido</span>
               } @else {
                 <span class="detail-value">{{ driver()?.accessStatus || '—' }}</span>
               }

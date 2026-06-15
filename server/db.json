@@ -73,7 +73,7 @@
       "accountId": "BW010fDLBH8",
       "fullName": "Carlos Mendoza",
       "vehicleType": "Mototaxi",
-      "verificationStatus": "PENDING_VERIFICATION",
+      "verificationStatus": "ACTIVE",
       "operationalStatus": "ENABLED",
       "ratingAverage": 0,
       "ratingCount": 0,

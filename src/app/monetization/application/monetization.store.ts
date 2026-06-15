@@ -65,7 +65,7 @@ export class MonetizationStore {
       },
       error: () => {
         this.loadingSignal.set(false);
-        this.errorSignal.set('No se pudo cargar la configuración de tarifas.');
+        this.errorSignal.set('No se pudo cargar la configuración de tarifas. Verifica tu conexión a internet.');
       },
     });
   }
@@ -203,7 +203,7 @@ export class MonetizationStore {
     this.errorSignal.set(null);
     this.api.applyCommission(driverId, tripId, rideFare).subscribe({
       next: (wallet) => {
-        const commission = rideFare * 0.05;
+        const commission = rideFare * FarePolicy.PLATFORM_COMMISSION_RATE;
         this.walletSignal.set(wallet);
         this.messageSignal.set(
           `Viaje completado. Comisión de S/ ${commission.toFixed(2)} descontada.`

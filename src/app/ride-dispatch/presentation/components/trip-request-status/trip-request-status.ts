@@ -4,17 +4,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RideRequest } from '../../../domain/model/ride-request.entity';
-
-function isRawCoord(v: string): boolean {
-  const p = v.split(',');
-  return p.length === 2 && !isNaN(parseFloat(p[0])) && !isNaN(parseFloat(p[1]));
-}
-
-function humanizeCoord(v: string, type: 'origin' | 'destination'): string {
-  if (!v) return '—';
-  if (isRawCoord(v)) return type === 'origin' ? 'Punto de partida seleccionado' : 'Destino seleccionado';
-  return v;
-}
+import { humanizeCoord } from '../../../../shared/utils/maps.utils';
 
 /**
  * @summary Renders the post-confirmation ride request status for the passenger.

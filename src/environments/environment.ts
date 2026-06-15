@@ -4,7 +4,7 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://localhost:3000',
+  apiBaseUrl: 'https://api.chapaturuta.com',
   logoProviderApiBaseUrl: 'https://img.logo.dev/',
   logoProviderPublishableKey: 'pk_WGGAjW7qTXKkKp9SS-SlUg'
 };

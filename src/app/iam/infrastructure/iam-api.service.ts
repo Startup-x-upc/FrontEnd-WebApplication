@@ -9,6 +9,7 @@ import { Account } from '../domain/model/account.entity';
 import { Profile } from '../domain/model/profile.entity';
 import { AccountAssembler } from './account-assembler';
 import { ProfileAssembler } from './profile-assembler';
+import { DriverResponse } from '../../driver-management/infrastructure/driver-response';
 
 @Injectable({ providedIn: 'root' })
 /**
@@ -157,7 +158,7 @@ export class IamApiService {
             .pipe(
               switchMap(() => {
                 return this.http
-                  .post(`${this.baseUrl}/drivers`, {
+                  .post<DriverResponse>(`${this.baseUrl}/drivers`, {
                     accountId: user.id,
                     fullName,
                     vehicleType,
@@ -170,7 +171,7 @@ export class IamApiService {
                     soatNumber,
                   })
                   .pipe(
-                    switchMap((driver: any) => {
+                    switchMap((driver: DriverResponse) => {
                       // Automatically initialize wallet for the new driver
                       return this.http
                         .post(`${this.baseUrl}/wallets`, {

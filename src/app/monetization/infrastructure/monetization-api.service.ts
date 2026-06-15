@@ -123,7 +123,7 @@ export class MonetizationApiService {
     // Step 1: Get current wallet
     return this.getWalletByDriverId(driverId).pipe(
       switchMap((wallet: Wallet) => {
-        const newBalance = wallet.balance + amount;
+        const newBalance = Math.round((wallet.balance + amount) * 100) / 100;
         // Step 2: Create TOP_UP transaction
         return this.http
           .post<WalletTransactionResponse>(`${this.baseUrl}/walletTransactions`, {
@@ -179,8 +179,8 @@ export class MonetizationApiService {
 
           return this.getWalletByDriverId(driverId).pipe(
             switchMap((wallet: Wallet) => {
-              const commission = rideFare * 0.05;
-              const newBalance = Math.max(0, wallet.balance - commission);
+              const commission = Math.round(rideFare * FarePolicy.PLATFORM_COMMISSION_RATE * 100) / 100;
+              const newBalance = Math.round(Math.max(0, wallet.balance - commission) * 100) / 100;
 
               return this.http
                 .post<WalletTransactionResponse>(

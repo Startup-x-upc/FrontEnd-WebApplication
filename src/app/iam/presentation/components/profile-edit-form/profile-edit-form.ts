@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, effect, inject, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -74,18 +74,14 @@ export class ProfileEditForm {
       photoUrl: this.form.value.photoUrl ?? '',
     });
 
-    // The store's isLoading will flip to false after the API call.
-    // We watch for the message signal to confirm success.
-    // Since the store is signal-based, we use a simple setTimeout
-    // to check if the operation completed without error.
-    const checkInterval = setInterval(() => {
-      if (!this.store.isLoading()) {
-        clearInterval(checkInterval);
-        if (this.store.message() && !this.store.error()) {
-          this.saved.emit();
-        }
+    // Use effect to react when the store finishes loading (success or error)
+    const cleanup = effect(() => {
+      if (!this.store.isLoading() && this.store.message() && !this.store.error()) {
+        this.saved.emit();
+        // Clean up the effect after it fires once
+        queueMicrotask(() => cleanup.destroy());
       }
-    }, 200);
+    });
   }
 
   /** Emits cancelled to return to view mode. */

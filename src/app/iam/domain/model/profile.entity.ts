@@ -19,6 +19,11 @@ export class Profile {
   /** URL to the user's avatar photo. */
   photoUrl: string;
 
+  /** ISO timestamp when the profile was created. */
+  createdAt: string = '';
+  /** ISO timestamp of the last update. */
+  updatedAt: string = '';
+
   constructor() {
     this.id = '';
     this.accountId = '';

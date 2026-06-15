@@ -16,18 +16,7 @@ import { TripMapComponent } from '../trip-map/trip-map';
 import { RatingFormComponent } from '../../../../trust-reputation/presentation/components/rating-form/rating-form';
 import { RideRequest } from '../../../domain/model/ride-request.entity';
 import { RideStatus } from '../../../domain/model/ride.status';
-import { buildGoogleMapsDirectionsUrl } from '../../../../shared/utils/maps.utils';
-
-function isRawCoord(v: string): boolean {
-  const p = v.split(',');
-  return p.length === 2 && !isNaN(parseFloat(p[0])) && !isNaN(parseFloat(p[1]));
-}
-
-export function humanizeCoord(v: string | undefined, type: 'origin' | 'destination'): string {
-  if (!v) return '—';
-  if (isRawCoord(v)) return type === 'origin' ? 'Origen detectado' : 'Destino seleccionado';
-  return v;
-}
+import { buildGoogleMapsDirectionsUrl, humanizeCoord, isRawCoord } from '../../../../shared/utils/maps.utils';
 
 /**
  * @summary Possible UI states for the driver dashboard.

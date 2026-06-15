@@ -8,6 +8,7 @@ import { IamStore } from '../../../../iam/application/iam.store';
 import { DriverManagementStore } from '../../../../driver-management/application/driver-management.store';
 import { Ride } from '../../../domain/model/ride.entity';
 import { buildGoogleMapsRouteUrl } from '../../../../shared/utils/maps.utils';
+import { FarePolicy } from '../../../../monetization/domain/model/fare-policy.entity';
 
 /**
  * @summary Trip history page shared between passenger (US-24)
@@ -83,8 +84,8 @@ export class TripHistoryPage implements OnInit {
     }
   }
 
-  /** Returns the 5% commission for a ride. */
-  commission(fare: number): number { return fare * 0.05; }
+  /** Returns the platform commission for a ride. */
+  commission(fare: number): number { return fare * FarePolicy.PLATFORM_COMMISSION_RATE; }
 
   /** Opens Google Maps with the full route (origin → destination) in a new tab. */
   openRouteInMaps(trip: Ride): void {

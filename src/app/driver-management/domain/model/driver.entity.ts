@@ -14,6 +14,8 @@ export class Driver implements BaseEntity {
   accessStatus: DriverAccessStatus = 'ACTIVE';
   licenseNumber: string = '';
   soatNumber: string = '';
+  createdAt: string = '';
+  updatedAt: string = '';
 
 
   approve(): void  { this.accessStatus = 'ACTIVE'; }

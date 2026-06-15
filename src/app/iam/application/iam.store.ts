@@ -88,7 +88,7 @@ export class IamStore {
       },
       error: () => {
         this.loadingSignal.set(false);
-        this.errorSignal.set('Credenciales incorrectas. Verifica tu correo y contraseña.');
+        this.errorSignal.set('Error de autenticación. Verifica tu correo, contraseña y conexión a internet.');
       }
     });
   }
@@ -162,7 +162,7 @@ export class IamStore {
       },
       error: () => {
         this.loadingSignal.set(false);
-        this.errorSignal.set('El correo ya está registrado. Intenta con otro.');
+        this.errorSignal.set('No se pudo completar el registro. Verifica tu conexión o intenta con otro correo.');
       },
     });
   }
@@ -203,7 +203,7 @@ export class IamStore {
       },
       error: () => {
         this.loadingSignal.set(false);
-        this.errorSignal.set('El correo ya está registrado. Intenta con otro.');
+        this.errorSignal.set('No se pudo completar el registro. Verifica tu conexión o intenta con otro correo.');
       },
     });
   }

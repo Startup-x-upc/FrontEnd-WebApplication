@@ -206,7 +206,7 @@ export class RideDispatchStore {
       next: ride => {
         this.currentRideSignal.set(ride);
         this.currentRequestSignal.update(r =>
-          r ? Object.assign(new (r.constructor as any)(), r, {
+          r ? Object.assign(new RideRequest(), r, {
             status: RideStatus.CONFIRMED,
             selectedDriverId: candidate.driverId,
           }) : r

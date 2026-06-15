@@ -8,6 +8,8 @@ import { RideRequest } from '../domain/model/ride-request.entity';
 import { RideCandidate } from '../domain/model/ride-candidate.entity';
 import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideStatus } from '../domain/model/ride.status';
+import { ProfileResponse } from '../../iam/infrastructure/profile-response';
+import { DriverResponse } from '../../driver-management/infrastructure/driver-response';
 
 import { RideRequestResponse } from './ride-request-response';
 import { RideCandidateResponse } from './ride-candidate-response';
@@ -36,7 +38,7 @@ export class RideDispatchApiService {
   getOpenRideRequests(): Observable<RideRequest[]> {
     return forkJoin({
       requests: this.http.get<RideRequestResponse[]>(`${this.base}/rideRequests?status=OPEN`),
-      profiles: this.http.get<any[]>(`${this.base}/profiles`),
+      profiles: this.http.get<ProfileResponse[]>(`${this.base}/profiles`),
     }).pipe(
       map(({ requests, profiles }) => {
         return requests.map(req => {
@@ -68,12 +70,6 @@ export class RideDispatchApiService {
         );
       })
     );
-  }
-
-  /** Returns all requests submitted by a given passenger. */
-  getRideRequestsByPassenger(passengerId: string): Observable<RideRequest[]> {
-    return this.http.get<RideRequestResponse[]>(`${this.base}/rideRequests?passengerId=${passengerId}`)
-      .pipe(map(rs => rs.map(RideRequestAssembler.toEntity)));
   }
 
   /** Marks a ride request as expired (US-11). */
@@ -245,18 +241,12 @@ export class RideDispatchApiService {
     );
   }
 
-  /** Returns all rides for a given passenger. */
-  getRidesByPassenger(passengerId: string): Observable<Ride[]> {
-    return this.http.get<RideResponse[]>(`${this.base}/rides?passengerId=${passengerId}`)
-      .pipe(map(rs => rs.map(RideAssembler.toEntity)));
-  }
-
   /**
    * Updates the status of an active ride.
    * Also patches driverAvailability isBusy/activeRideId if provided.
    */
   updateRideStatus(rideId: string, status: RideStatus): Observable<Ride> {
-    const body: any = { status };
+    const body: { status: string; completedAt?: string } = { status };
     if (status === RideStatus.COMPLETED) {
       body.completedAt = new Date().toISOString();
     }
@@ -330,7 +320,7 @@ export class RideDispatchApiService {
       rides: this.http.get<RideResponse[]>(
         `${this.base}/rides?passengerId=${passengerId}&status=COMPLETED&_sort=-id`
       ),
-      drivers: this.http.get<any[]>(`${this.base}/drivers`),
+      drivers: this.http.get<DriverResponse[]>(`${this.base}/drivers`),
     }).pipe(
       map(({ rides, drivers }) => {
         return rides.map(r => {
@@ -354,7 +344,7 @@ export class RideDispatchApiService {
       rides: this.http.get<RideResponse[]>(
         `${this.base}/rides?driverId=${driverId}&status=COMPLETED&_sort=-id`
       ),
-      profiles: this.http.get<any[]>(`${this.base}/profiles`),
+      profiles: this.http.get<ProfileResponse[]>(`${this.base}/profiles`),
     }).pipe(
       map(({ rides, profiles }) => {
         return rides.map(r => {

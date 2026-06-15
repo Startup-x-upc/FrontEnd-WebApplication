@@ -29,3 +29,16 @@ export function buildGoogleMapsRouteUrl(origin: string, destination: string): st
   const [dLat, dLng] = destination.split(',').map(s => s.trim());
   return `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=driving`;
 }
+
+/** Checks whether a string looks like raw "lat,lng" coordinates. */
+export function isRawCoord(v: string): boolean {
+  const p = v.split(',');
+  return p.length === 2 && !isNaN(parseFloat(p[0])) && !isNaN(parseFloat(p[1]));
+}
+
+/** Returns a human-friendly label for a location string. Raw coords get a descriptive fallback. */
+export function humanizeCoord(v: string | undefined, type: 'origin' | 'destination'): string {
+  if (!v) return '—';
+  if (isRawCoord(v)) return type === 'origin' ? 'Origen detectado' : 'Destino seleccionado';
+  return v;
+}

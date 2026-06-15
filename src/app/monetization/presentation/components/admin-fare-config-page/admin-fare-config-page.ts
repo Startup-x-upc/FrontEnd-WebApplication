@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, effect, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,19 +37,20 @@ export class AdminFareConfigPageComponent implements OnInit {
   pricePerKm = 0;
   minimumFare = 0;
 
-  ngOnInit(): void {
-    this.store.loadFarePolicy();
-    // When the fare policy loads from the API, seed the form
-    const check = setInterval(() => {
+  constructor() {
+    // Seed form when fare policy loads from the API
+    effect(() => {
       const policy = this.store.farePolicy();
       if (policy) {
         this.baseFare = policy.baseFare;
         this.pricePerKm = policy.pricePerKm;
         this.minimumFare = policy.minimumFare;
-        clearInterval(check);
       }
-    }, 200);
-    setTimeout(() => clearInterval(check), 5000);
+    });
+  }
+
+  ngOnInit(): void {
+    this.store.loadFarePolicy();
   }
 
   onSave(): void {

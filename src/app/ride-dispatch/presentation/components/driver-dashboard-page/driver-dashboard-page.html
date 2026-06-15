@@ -86,11 +86,20 @@
         <mat-icon>hourglass_empty</mat-icon>
         <span>Postulación enviada — esperando decisión del pasajero</span>
       </div>
-      <div class="ride-body">
-        <p class="detail-section-label">Tu postulación</p>
-        <p style="font-size:13px; color:#6b7280; margin:0 0 16px;">
-          El pasajero revisará tu perfil junto a otros conductores disponibles.
-          Actualiza para saber si fuiste seleccionado.
+      <div class="ride-body" style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+        
+        <!-- Animated Radar/Hourglass Visual -->
+        <div class="stepper-searching-animation">
+          <div class="radar-pulse"></div>
+          <div class="radar-pulse double"></div>
+          <div class="radar-icon-center">
+            <mat-icon class="pulse-icon">hourglass_empty</mat-icon>
+          </div>
+        </div>
+
+        <p class="detail-section-label" style="margin-top: 12px;">Tu postulación</p>
+        <p style="font-size:13px; color:#6b7280; margin:0 0 20px; text-align: center; max-width: 290px;">
+          El pasajero está revisando tu perfil. Actualiza para verificar si has sido seleccionado.
         </p>
         <button mat-stroked-button
                 color="primary"
@@ -125,6 +134,19 @@
       </div>
 
       <div class="ride-body">
+
+        <!-- Vertical Timeline Stepper (active ride progression) -->
+        <div class="vertical-stepper" *ngIf="uiState() !== 'RIDE_COMPLETED'">
+          <div class="step-item" 
+               *ngFor="let step of activeRideSteps; let idx = index"
+               [class.step--completed]="idx < currentStepIndex()"
+               [class.step--active]="idx === currentStepIndex()">
+            <div class="step-icon-wrap">
+              <mat-icon>{{ step.icon }}</mat-icon>
+            </div>
+            <span class="step-label">{{ step.label }}</span>
+          </div>
+        </div>
 
         <!-- RIDE_ASSIGNED View -->
         <ng-container *ngIf="uiState() === 'RIDE_ASSIGNED'">
@@ -239,12 +261,23 @@
           </button>
         </ng-container>
 
-        <!-- RIDE_COMPLETED View -->
-        <ng-container *ngIf="uiState() === 'RIDE_COMPLETED'">
-          <p style="font-size:13px; color:#6b7280; margin:0;">
-            El viaje ha finalizado exitosamente. Tu disponibilidad ha sido restaurada.
-          </p>
-        </ng-container>
+        <!-- RIDE_COMPLETED View — Premium completed view with reset button -->
+        <div class="driver-completed-view" *ngIf="uiState() === 'RIDE_COMPLETED'">
+          <div class="success-icon-wrap">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <h3>¡Viaje completado!</h3>
+          <p>Has finalizado el recorrido con éxito. Tu disponibilidad ha sido restablecida.</p>
+
+          <div class="completed-summary">
+            <span class="completed-label">Ganancia estimada</span>
+            <strong class="completed-value">S/ {{ rideStore.currentRide()?.estimatedFare | number:'1.2-2' }}</strong>
+          </div>
+
+          <button mat-flat-button color="primary" class="return-home-btn" (click)="onClearActiveRide()">
+            Ir al inicio
+          </button>
+        </div>
 
       </div>
     </div>

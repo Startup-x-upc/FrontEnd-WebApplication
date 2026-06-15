@@ -351,6 +351,158 @@ export type DriverUiState =
       font-size: 11px;
       color: #6b7280;
     }
+
+    /* ── Vertical Stepper Timeline ── */
+    .vertical-stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding: 8px 4px;
+      margin-bottom: 20px;
+    }
+    .step-item {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      position: relative;
+      padding-bottom: 24px;
+    }
+    .step-item:last-child {
+      padding-bottom: 0;
+    }
+    .step-item::after {
+      content: '';
+      position: absolute;
+      left: 17px;
+      top: 36px;
+      bottom: 0;
+      width: 2px;
+      background: #e5e7eb;
+      z-index: 1;
+    }
+    .step-item:last-child::after {
+      display: none;
+    }
+    .step-item.step--completed::after {
+      background: #10b981;
+    }
+    .step-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 0 0 4px #fff;
+      transition: background 0.3s, color 0.3s;
+    }
+    .step-icon-wrap mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    .step--completed .step-icon-wrap {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .step--active .step-icon-wrap {
+      background: #dbeafe;
+      color: #1a73e8;
+      box-shadow: 0 0 0 4px #fff, 0 0 0 6px rgba(26, 115, 232, 0.15);
+      animation: stepperPulse 2s infinite;
+    }
+    @keyframes stepperPulse {
+      0% { box-shadow: 0 0 0 4px #fff, 0 0 0 0px rgba(26, 115, 232, 0.3); }
+      70% { box-shadow: 0 0 0 4px #fff, 0 0 0 8px rgba(26, 115, 232, 0); }
+      100% { box-shadow: 0 0 0 4px #fff, 0 0 0 0px rgba(26, 115, 232, 0); }
+    }
+    .step-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #6b7280;
+      transition: color 0.3s, font-weight 0.3s;
+    }
+    .step--completed .step-label {
+      color: #374151;
+      font-weight: 600;
+    }
+    .step--active .step-label {
+      color: #1a73e8;
+      font-weight: 700;
+    }
+
+    /* ── Driver Completed Screen ── */
+    .driver-completed-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      padding: 24px 0;
+    }
+    .driver-completed-view .success-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #d1fae5;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.1);
+      margin-bottom: 8px;
+    }
+    .driver-completed-view .success-icon-wrap mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+    .driver-completed-view h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .driver-completed-view p {
+      margin: 0;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.5;
+      max-width: 280px;
+    }
+    .completed-summary {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin: 8px 0;
+    }
+    .completed-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .completed-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #10b981;
+    }
+    .return-home-btn {
+      width: 100%;
+      height: 48px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 10px;
+    }
   `],
 })
 export class DriverDashboardPageComponent {
@@ -358,6 +510,29 @@ export class DriverDashboardPageComponent {
   protected driverMgmtStore  = inject(DriverManagementStore);
   protected rideStore        = inject(RideDispatchStore);
   protected monetizationStore = inject(MonetizationStore);
+
+  readonly activeRideSteps = [
+    { label: 'Viaje aceptado', icon: 'check_circle_outline' },
+    { label: 'En camino al recojo', icon: 'two_wheeler' },
+    { label: 'Llegada al origen', icon: 'location_on' },
+    { label: 'Viaje en curso', icon: 'navigation' },
+    { label: 'Completado', icon: 'flag' }
+  ];
+
+  readonly currentStepIndex = computed(() => {
+    const state = this.uiState();
+    if (state === 'RIDE_ASSIGNED') return 0;
+    if (state === 'DRIVER_ON_THE_WAY') return 1;
+    if (state === 'DRIVER_ARRIVED') return 2;
+    if (state === 'RIDE_STARTED') return 3;
+    if (state === 'RIDE_COMPLETED') return 4;
+    return -1;
+  });
+
+  onClearActiveRide(): void {
+    this.rideStore.clearCurrentRide();
+    this.rideStore.loadOpenRequests();
+  }
 
   readonly selectedRequest = signal<RideRequest | null>(null);
   readonly isRawCoord = isRawCoord;

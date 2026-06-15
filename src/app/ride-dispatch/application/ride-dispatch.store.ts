@@ -233,6 +233,11 @@ export class RideDispatchStore {
     this.currentRideSignal.set(null);
   }
 
+  /** Clears the driver's active ride context. */
+  clearCurrentRide(): void {
+    this.currentRideSignal.set(null);
+  }
+
   // ── Driver flow actions ───────────────────────────────────────────────
 
   /**

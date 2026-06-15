@@ -38,11 +38,7 @@
   <!-- ════════════════════════════════════════════════════════════ -->
   <div class="right-panel">
 
-    <!-- ① PREPARING / FARE_READY — referential availability -->
-    <app-trip-availability-summary
-      *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY'"
-      [nearbyDrivers]="[]">
-    </app-trip-availability-summary>
+
 
     <!-- ② FARE_READY — confirm button -->
     <app-fare-summary-card

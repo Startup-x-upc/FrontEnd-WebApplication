@@ -103,11 +103,84 @@
 
         @if (account()?.role === 'DRIVER') {
           <div class="detail-divider"></div>
+
+          <!-- Estado de Verificación -->
           <div class="detail-row">
             <mat-icon class="detail-icon">verified</mat-icon>
             <div class="detail-text">
               <span class="detail-label">Estado de verificación</span>
-              <span class="detail-value">Pendiente de verificación</span>
+              @if (driver()?.accessStatus === 'ACTIVE' || driver()?.accessStatus === 'APPROVED') {
+                <span class="badge badge--success">Aprobado / Verificado</span>
+              } @else if (driver()?.accessStatus === 'PENDING_VERIFICATION') {
+                <span class="badge badge--warning">Pendiente de verificación</span>
+              } @else if (driver()?.accessStatus === 'RESTRICTED' || driver()?.accessStatus === 'REJECTED') {
+                <span class="badge badge--danger">Restringido / Rechazado</span>
+              } @else {
+                <span class="detail-value">{{ driver()?.accessStatus || '—' }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Estado Operativo -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">settings_applications</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Estado operativo</span>
+              <span class="badge" [class.badge--success]="driver()?.isAvailable"
+                                  [class.badge--danger]="!driver()?.isAvailable">
+                {{ driver()?.isAvailable ? 'Disponible (Online)' : 'Inactivo (Offline)' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Reputación (US-23) -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">star</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Reputación y Calificaciones</span>
+              <span class="detail-value">
+                @if (driver()?.ratingCount && driver()!.ratingCount > 0) {
+                  {{ driver()?.ratingAverage | number:'1.1-1' }} ★ ({{ driver()?.ratingCount }} calificaciones)
+                } @else {
+                  Sin calificaciones aún
+                }
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Tipo de Vehículo -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">two_wheeler</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Tipo de vehículo</span>
+              <span class="detail-value">{{ driver()?.vehicleType || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Documentos Registrados (US-04) -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">description</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Número de Brevete</span>
+              <span class="detail-value">{{ driver()?.licenseNumber || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <div class="detail-row">
+            <mat-icon class="detail-icon">policy</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Número de SOAT</span>
+              <span class="detail-value">{{ driver()?.soatNumber || '—' }}</span>
             </div>
           </div>
         }

@@ -1,10 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IamStore } from '../../../application/iam.store';
 import { ProfileEditForm } from '../profile-edit-form/profile-edit-form';
+import { DriverManagementStore } from '../../../../driver-management/application/driver-management.store';
 
 /**
  * @summary Profile page for both passenger and driver roles.
@@ -46,6 +47,18 @@ export class ProfilePage {
 
   /** Error message from the store. */
   protected readonly error = this.store.error;
+
+  private driverMgmtStore = inject(DriverManagementStore);
+  protected readonly driver = this.driverMgmtStore.driver;
+
+  constructor() {
+    effect(() => {
+      const account = this.account();
+      if (account?.id && account.role === 'DRIVER') {
+        this.driverMgmtStore.loadDriverByAccountId(account.id);
+      }
+    });
+  }
 
   /** Returns the role label in Spanish. */
   get roleLabel(): string {

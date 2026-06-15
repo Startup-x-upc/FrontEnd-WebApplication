@@ -23,7 +23,7 @@ function isRawCoord(v: string): boolean {
 
 export function humanizeCoord(v: string | undefined, type: 'origin' | 'destination'): string {
   if (!v) return '—';
-  if (isRawCoord(v)) return type === 'origin' ? 'Punto de recojo' : 'Destino';
+  if (isRawCoord(v)) return type === 'origin' ? 'Origen detectado' : 'Destino seleccionado';
   return v;
 }
 
@@ -251,6 +251,106 @@ export type DriverUiState =
     .completed-banner mat-icon,
     .completed-banner .ride-banner-title { color: #065f46; }
     .completed-banner .ride-banner-sub   { color: #059669; }
+
+    /* ── Route details and section labels in active ride ── */
+    .detail-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      margin-top: 12px;
+      display: block;
+    }
+    .detail-route {
+      position: relative;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .detail-route-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .detail-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .detail-dot--origin {
+      background: #10b981;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+    .detail-dot--dest {
+      background: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+    }
+    .detail-route-line {
+      position: absolute;
+      left: 20px;
+      top: 28px;
+      bottom: 28px;
+      width: 2px;
+      background: #e5e7eb;
+      z-index: 0;
+    }
+    .detail-route-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .detail-route-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .detail-route-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .detail-chips {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .detail-chip {
+      background: #f3f4f6;
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    .detail-chip mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #10b981;
+    }
+    .chip-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .chip-label {
+      font-size: 11px;
+      color: #6b7280;
+    }
   `],
 })
 export class DriverDashboardPageComponent {

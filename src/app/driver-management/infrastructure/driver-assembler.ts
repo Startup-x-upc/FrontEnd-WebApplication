@@ -9,6 +9,7 @@ export class DriverAssembler {
     entity.fullName = response.fullName;
     entity.vehicleType = response.vehicleType;
     entity.ratingAverage = response.ratingAverage ?? 0;
+    entity.ratingCount = response.ratingCount ?? 0;
     entity.photoUrl = response.photoUrl ?? '';
     entity.isAvailable = response.operationalStatus === 'ENABLED';
     entity.accessStatus = response.verificationStatus as DriverAccessStatus;

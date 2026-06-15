@@ -135,7 +135,6 @@
               <div class="detail-route-info">
                 <span class="detail-route-label">Punto de recojo</span>
                 <span class="detail-route-value">{{ humanizeCoord(rideStore.currentRide()?.origin, 'origin') }}</span>
-                <span class="detail-route-coord" *ngIf="isRawCoord(rideStore.currentRide()?.origin || '')">{{ rideStore.currentRide()?.origin }}</span>
               </div>
             </div>
             <div class="detail-route-line"></div>
@@ -144,7 +143,6 @@
               <div class="detail-route-info">
                 <span class="detail-route-label">Destino</span>
                 <span class="detail-route-value">{{ humanizeCoord(rideStore.currentRide()?.destination, 'destination') }}</span>
-                <span class="detail-route-coord" *ngIf="isRawCoord(rideStore.currentRide()?.destination || '')">{{ rideStore.currentRide()?.destination }}</span>
               </div>
             </div>
           </div>
@@ -178,11 +176,8 @@
         <!-- DRIVER_ON_THE_WAY View -->
         <ng-container *ngIf="uiState() === 'DRIVER_ON_THE_WAY'">
           <p class="detail-section-label">Punto de recojo</p>
-          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 4px;">
+          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
             {{ humanizeCoord(rideStore.currentRide()?.origin, 'origin') }}
-          </p>
-          <p class="detail-route-coord" style="margin-bottom: 16px;" *ngIf="isRawCoord(rideStore.currentRide()?.origin || '')">
-            {{ rideStore.currentRide()?.origin }}
           </p>
 
           <div class="maps-actions">
@@ -203,11 +198,8 @@
         <!-- DRIVER_ARRIVED View -->
         <ng-container *ngIf="uiState() === 'DRIVER_ARRIVED'">
           <p class="detail-section-label">Destino del viaje</p>
-          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 4px;">
+          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
             {{ humanizeCoord(rideStore.currentRide()?.destination, 'destination') }}
-          </p>
-          <p class="detail-route-coord" style="margin-bottom: 16px;" *ngIf="isRawCoord(rideStore.currentRide()?.destination || '')">
-            {{ rideStore.currentRide()?.destination }}
           </p>
 
           <div class="maps-actions">
@@ -228,11 +220,8 @@
         <!-- RIDE_STARTED View -->
         <ng-container *ngIf="uiState() === 'RIDE_STARTED'">
           <p class="detail-section-label">Destino en curso</p>
-          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 4px;">
+          <p style="font-size:14px; font-weight:600; color:#1f2937; margin:0 0 16px;">
             {{ humanizeCoord(rideStore.currentRide()?.destination, 'destination') }}
-          </p>
-          <p class="detail-route-coord" style="margin-bottom: 16px;" *ngIf="isRawCoord(rideStore.currentRide()?.destination || '')">
-            {{ rideStore.currentRide()?.destination }}
           </p>
 
           <div class="maps-actions">
@@ -322,9 +311,6 @@
                   <mat-icon>my_location</mat-icon> Origen / Recojo
                 </span>
                 <span class="block-value">{{ humanizeCoord(selectedRequest()!.origin, 'origin') }}</span>
-                <span class="block-sub" *ngIf="isRawCoord(selectedRequest()!.origin)">
-                  {{ selectedRequest()!.origin }}
-                </span>
               </div>
 
               <!-- Block 2: Destino -->
@@ -333,9 +319,6 @@
                   <mat-icon>location_on</mat-icon> Destino Final
                 </span>
                 <span class="block-value">{{ humanizeCoord(selectedRequest()!.destination, 'destination') }}</span>
-                <span class="block-sub" *ngIf="isRawCoord(selectedRequest()!.destination)">
-                  {{ selectedRequest()!.destination }}
-                </span>
               </div>
 
               <!-- Block 3: Económicos -->

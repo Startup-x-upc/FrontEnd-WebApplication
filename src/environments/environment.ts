@@ -4,7 +4,7 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://api.chapaturuta.com',
+  apiBaseUrl: 'https://fake-api-419p.onrender.com',
   logoProviderApiBaseUrl: 'https://img.logo.dev/',
-  logoProviderPublishableKey: 'pk_WGGAjW7qTXKkKp9SS-SlUg'
+  logoProviderPublishableKey: 'pk_WGGAjW7qTXKkKp9SS-SlUg',
 };

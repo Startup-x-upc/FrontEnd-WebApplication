@@ -1,0 +1,76 @@
+<div class="fare-config-page">
+  <div class="page-header">
+    <h1>Configuración de tarifas</h1>
+    <p>Define la tarifa base, el precio por kilómetro y la tarifa mínima para los viajes</p>
+  </div>
+
+  <!-- Loading -->
+  @if (store.isLoading() && !store.farePolicy()) {
+    <div class="loading-state">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Cargando configuración...</span>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (store.error()) {
+    <div class="error-card">
+      <mat-icon>error_outline</mat-icon>
+      <div>
+        <h4>Error</h4>
+        <p>{{ store.error() }}</p>
+        <button mat-stroked-button color="warn" (click)="store.clearError(); store.loadFarePolicy()">
+          <mat-icon>refresh</mat-icon> Reintentar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Success message -->
+  @if (store.message()) {
+    <div class="success-card">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ store.message() }}</span>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (store.farePolicy()) {
+    <div class="form-card">
+      <div class="form-header">
+        <mat-icon>payments</mat-icon>
+        <span>Parámetros de tarifa</span>
+      </div>
+
+      <div class="form-fields">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Tarifa base (S/)</mat-label>
+          <input matInput type="number" [(ngModel)]="baseFare" min="0" step="0.1" />
+          <mat-hint>Precio fijo al iniciar cualquier viaje</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Precio por kilómetro (S/)</mat-label>
+          <input matInput type="number" [(ngModel)]="pricePerKm" min="0" step="0.1" />
+          <mat-hint>Costo adicional por cada km recorrido</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Tarifa mínima (S/)</mat-label>
+          <input matInput type="number" [(ngModel)]="minimumFare" min="0" step="0.1" />
+          <mat-hint>El pasajero nunca pagará menos que este monto</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-flat-button color="primary"
+                class="save-btn"
+                [disabled]="!hasChanges() || store.isLoading()"
+                (click)="onSave()">
+          <mat-icon>save</mat-icon>
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+  }
+</div>

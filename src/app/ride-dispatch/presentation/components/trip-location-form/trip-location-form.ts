@@ -5,15 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-
-/**
- * @summary Checks whether a string looks like raw lat,lng coordinates.
- */
-function isRawCoord(value: string): boolean {
-  const parts = value.split(',');
-  if (parts.length !== 2) return false;
-  return !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]));
-}
+import { isRawCoord } from '../../../../shared/utils/maps.utils';
 
 /**
  * @summary Returns a human-friendly label for a location string.

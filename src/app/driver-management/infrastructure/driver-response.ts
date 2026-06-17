@@ -8,4 +8,6 @@ export interface DriverResponse {
   ratingAverage?: number;
   ratingCount?: number;
   photoUrl?: string;
+  licenseNumber?: string;
+  soatNumber?: string;
 }

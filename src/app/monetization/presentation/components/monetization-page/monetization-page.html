@@ -1,0 +1,90 @@
+<div class="monetization-page">
+  <div class="page-header">
+    <h1>Mi Wallet</h1>
+    <p>Gestiona tu saldo, recarga y revisa el historial de transacciones</p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Cargando información del wallet...</span>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="error-card" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <div class="error-info">
+        <h4>Error al cargar el wallet</h4>
+        <p>{{ error() }}</p>
+        <button mat-stroked-button color="warn" (click)="onRetry()">
+          <mat-icon>refresh</mat-icon> Reintentar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Success message -->
+  @if (message()) {
+    <div class="success-banner" role="status">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ message() }}</span>
+      <button mat-icon-button class="dismiss-btn" (click)="store.clearMessage()"
+              aria-label="Cerrar mensaje">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
+  @if (!isLoading() && !error()) {
+    <div class="monetization-grid">
+      <!-- Left column: Wallet + Recharge -->
+      <div class="grid-left">
+        <app-wallet-balance-card [wallet]="store.wallet()">
+        </app-wallet-balance-card>
+
+        <!-- Recharge form -->
+        <app-recharge-form
+          [currentBalance]="store.wallet()?.balance ?? null"
+          [loading]="store.isLoading()"
+          (recharged)="onRecharge($event)">
+        </app-recharge-form>
+
+        <!-- Wallet status summary -->
+        <div class="wallet-summary-card">
+          <div class="summary-row">
+            <mat-icon class="summary-icon">info</mat-icon>
+            <div class="summary-text">
+              <span class="summary-label">Estado del wallet</span>
+              <span class="summary-value" [class.text-green]="store.hasPositiveBalance()"
+                                        [class.text-red]="!store.hasPositiveBalance()">
+                {{ store.hasPositiveBalance() ? 'Activo — puedes operar' : 'Sin saldo suficiente' }}
+              </span>
+            </div>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row">
+            <mat-icon class="summary-icon">payments</mat-icon>
+            <div class="summary-text">
+              <span class="summary-label">Tarifa actual</span>
+              <span class="summary-value">
+                S/ {{ store.farePolicy()?.baseFare || '—' }} base + S/ {{ store.farePolicy()?.pricePerKm || '—' }}/km
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: Transaction History -->
+      <div class="grid-right">
+        <app-transaction-history
+          [transactions]="store.filteredTransactions()"
+          [activeFilter]="store.activeFilter()"
+          (filterChange)="onFilterChange($event)">
+        </app-transaction-history>
+      </div>
+    </div>
+  }
+</div>

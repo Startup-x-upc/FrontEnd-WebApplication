@@ -1,0 +1,66 @@
+.history-card {
+  background: white; border-radius: 12px; border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden;
+}
+.history-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+  font-size: 13px; font-weight: 600; color: #374151;
+}
+.history-header mat-icon { font-size: 18px; height: 18px; width: 18px; color: #9ca3af; }
+
+/* Filter tabs */
+.filter-tabs { display: flex; gap: 0; border-bottom: 1px solid #f0f0f0; }
+.filter-btn {
+  flex: 1; padding: 10px 0; border: none; background: none;
+  font-size: 12px; font-weight: 600; color: #9ca3af; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.filter-btn mat-icon { font-size: 14px; height: 14px; width: 14px; }
+.filter-btn:hover { color: #374151; }
+.filter-btn--active { color: #1a73e8; border-bottom-color: #1a73e8; }
+
+/* Transaction list */
+.txn-list { display: flex; flex-direction: column; }
+
+/* Row */
+.txn-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; border-bottom: 1px solid #f9fafb;
+}
+.txn-row:last-child { border-bottom: none; }
+
+/* Icon */
+.txn-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.txn-icon mat-icon { font-size: 20px; height: 20px; width: 20px; }
+.txn--topup .txn-icon { background: #d1fae5; color: #059669; }
+.txn--commission .txn-icon { background: #fef3c7; color: #d97706; }
+.txn--failed .txn-icon { background: #fee2e2; color: #dc2626; }
+
+/* Info */
+.txn-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.txn-type { font-size: 13px; font-weight: 600; color: #1f2937; }
+.txn-date { font-size: 11px; color: #9ca3af; }
+
+/* Amount */
+.txn-amount { font-size: 14px; font-weight: 700; white-space: nowrap; }
+.txn-amount--positive { color: #059669; }
+.txn-amount--negative { color: #dc2626; }
+
+/* Balance */
+.txn-balance { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+.balance-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; font-weight: 600; }
+.balance-value { font-size: 12px; font-weight: 700; color: #374151; }
+
+/* Empty */
+.txn-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 40px 24px; text-align: center;
+}
+.txn-empty mat-icon { font-size: 40px; height: 40px; width: 40px; color: #d1d5db; }
+.txn-empty h3 { margin: 0; font-size: 15px; font-weight: 600; color: #1f2937; }
+.txn-empty p { margin: 0; font-size: 13px; color: #9ca3af; }

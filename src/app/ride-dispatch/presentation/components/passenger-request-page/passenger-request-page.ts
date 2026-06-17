@@ -1,19 +1,20 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RideDispatchStore } from '../../../application/ride-dispatch.store';
 import { MonetizationStore } from '../../../../monetization/application/monetization.store';
 import { IamStore } from '../../../../iam/application/iam.store';
+import { TrustReputationStore } from '../../../../trust-reputation/application/trust-reputation.store';
 import { RideStatus } from '../../../domain/model/ride.status';
 import { RideCandidate } from '../../../domain/model/ride-candidate.entity';
 
 import { TripLocationFormComponent } from '../trip-location-form/trip-location-form';
 import { TripMapComponent } from '../trip-map/trip-map';
-import { TripAvailabilitySummaryComponent } from '../trip-availability-summary/trip-availability-summary';
 import { TripRequestStatusComponent } from '../trip-request-status/trip-request-status';
 import { FareSummaryCardComponent } from '../../../../monetization/presentation/components/fare-summary-card/fare-summary-card';
 import { RideCandidatesListComponent } from '../ride-candidates-list/ride-candidates-list';
+import { RatingFormComponent } from '../../../../trust-reputation/presentation/components/rating-form/rating-form';
 import { calculateEstimatedDistance } from '../../../../shared/utils/geo.utils';
 
 /**
@@ -55,10 +56,10 @@ export type RequestUiState =
     MatButtonModule,
     TripLocationFormComponent,
     TripMapComponent,
-    TripAvailabilitySummaryComponent,
     TripRequestStatusComponent,
     FareSummaryCardComponent,
     RideCandidatesListComponent,
+    RatingFormComponent,
   ],
   templateUrl: './passenger-request-page.html',
   styles: [`
@@ -185,12 +186,312 @@ export type RequestUiState =
       background: #dbeafe;
       color: #1a73e8;
     }
-  `]
+
+    /* ── Subtle refresh icon ── */
+    .tracking-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #f3f4f6;
+      padding-bottom: 10px;
+    }
+    .tracking-card-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .subtle-refresh-btn {
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+      line-height: 32px !important;
+      padding: 0 !important;
+      border-radius: 50%;
+      color: #9ca3af;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .subtle-refresh-btn:hover {
+      color: #1a73e8;
+      background: #f3f4f6;
+    }
+    .subtle-refresh-btn mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Vertical Stepper Timeline ── */
+    .vertical-stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding: 8px 4px;
+      margin-bottom: 20px;
+    }
+    .step-item {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      position: relative;
+      padding-bottom: 24px;
+    }
+    .step-item:last-child {
+      padding-bottom: 0;
+    }
+    .step-item::after {
+      content: '';
+      position: absolute;
+      left: 17px;
+      top: 36px;
+      bottom: 0;
+      width: 2px;
+      background: #e5e7eb;
+      z-index: 1;
+    }
+    .step-item:last-child::after {
+      display: none;
+    }
+    .step-item.step--completed::after {
+      background: #10b981;
+    }
+    .step-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 0 0 4px #fff;
+      transition: background 0.3s, color 0.3s;
+    }
+    .step-icon-wrap mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    .step--completed .step-icon-wrap {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .step--active .step-icon-wrap {
+      background: #dbeafe;
+      color: #1a73e8;
+      box-shadow: 0 0 0 4px #fff, 0 0 0 6px rgba(26, 115, 232, 0.15);
+      animation: stepperPulse 2s infinite;
+    }
+    @keyframes stepperPulse {
+      0% { box-shadow: 0 0 0 4px #fff, 0 0 0 0px rgba(26, 115, 232, 0.3); }
+      70% { box-shadow: 0 0 0 4px #fff, 0 0 0 8px rgba(26, 115, 232, 0); }
+      100% { box-shadow: 0 0 0 4px #fff, 0 0 0 0px rgba(26, 115, 232, 0); }
+    }
+    .step-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #6b7280;
+      transition: color 0.3s, font-weight 0.3s;
+    }
+    .step--completed .step-label {
+      color: #374151;
+      font-weight: 600;
+    }
+    .step--active .step-label {
+      color: #1a73e8;
+      font-weight: 700;
+    }
+
+    /* ── Premium Completed Receipt Layout ── */
+    .ride-completed-card {
+      background: white;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .celebration-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+    .success-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #d1fae5;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.1);
+      animation: checkPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes checkPop {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .success-icon-wrap mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+    .celebration-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.5px;
+    }
+    .celebration-header p {
+      margin: 0;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .receipt-details {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    .receipt-fare {
+      font-size: 18px;
+      color: #10b981;
+      font-weight: 800;
+    }
+    .receipt-divider {
+      height: 1px;
+      background: #e5e7eb;
+    }
+    .receipt-driver-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mini-driver-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mini-driver-profile mat-icon {
+      color: #4b5563;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    .mini-driver-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: block;
+    }
+    .mini-driver-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .new-trip-btn {
+      height: 48px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 10px;
+    }
+
+    /* ── Cancel Button ── */
+    .cancel-ride-btn {
+      height: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      color: #dc2626 !important;
+      border-color: #fecaca !important;
+      margin-top: 8px;
+    }
+    .cancel-ride-btn mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+
+    /* ── Rating Done Message ── */
+    .rating-done-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 20px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .rating-done-message mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #16a34a;
+    }
+    .rating-done-message span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #166534;
+    }
+  `],
 })
 export class PassengerRequestPageComponent {
   protected rideStore        = inject(RideDispatchStore);
   protected monetizationStore = inject(MonetizationStore);
+  protected trustStore       = inject(TrustReputationStore);
   private iamStore           = inject(IamStore);
+
+  /** Tracks whether the user has already submitted or skipped the rating. */
+  readonly ratingSubmitted = signal(false);
+
+  readonly steps = [
+    { label: 'Buscando conductores', icon: 'search' },
+    { label: 'Conductor confirmado', icon: 'person_outline' },
+    { label: 'En camino al recojo', icon: 'two_wheeler' },
+    { label: 'Llegada al origen', icon: 'location_on' },
+    { label: 'Viaje en curso', icon: 'navigation' },
+    { label: 'Completado', icon: 'flag' }
+  ];
+
+  readonly currentStepIndex = computed(() => {
+    const state = this.uiState();
+    if (state === 'WAITING_CANDIDATES' || state === 'CANDIDATES_AVAILABLE') return 0;
+    if (state === 'DRIVER_SELECTED') return 1;
+    if (state === 'RIDE_IN_PROGRESS') {
+      const ride = this.rideStore.currentRide();
+      if (!ride) return 1;
+      if (ride.status === RideStatus.DRIVER_ON_THE_WAY) return 2;
+      if (ride.status === RideStatus.DRIVER_ARRIVED) return 3;
+      if (ride.status === RideStatus.STARTED) return 4;
+    }
+    if (state === 'RIDE_COMPLETED') return 5;
+    return -1;
+  });
 
   /** Controls which map field (origin / destination) receives the next tap. */
   activeField: 'origin' | 'destination' = 'origin';
@@ -205,7 +506,8 @@ export class PassengerRequestPageComponent {
     if (this.rideStore.error() || this.monetizationStore.error()) return 'ERROR';
 
     const ride = this.rideStore.currentRide();
-    if (ride) {
+    // CANCELLED rides are not active — skip to request/map checks
+    if (ride && ride.status !== RideStatus.CANCELLED) {
       if (ride.status === RideStatus.COMPLETED)       return 'RIDE_COMPLETED';
       if (
         ride.status === RideStatus.DRIVER_ON_THE_WAY ||
@@ -242,6 +544,12 @@ export class PassengerRequestPageComponent {
       case RideStatus.COMPLETED:         return 'Viaje completado';
       default: return ride.status;
     }
+  });
+
+  /** Real driver name from the enriched ride entity (US-10). */
+  readonly currentDriverName = computed(() => {
+    const ride = this.rideStore.currentRide();
+    return ride?.driverName || 'Conductor asignado';
   });
 
   constructor() {
@@ -335,10 +643,47 @@ export class PassengerRequestPageComponent {
     this.rideStore.setOrigin('');
     this.rideStore.setDestination('', 0);
     this.activeField = 'origin';
+    this.ratingSubmitted.set(false);
   }
 
   onRetry(): void {
     this.rideStore.clearError();
     this.monetizationStore.loadFarePolicy();
+  }
+
+  // ── Cancel ride (US-18) ─────────────────────────────────────────────
+
+  /** Cancel ride before it starts. */
+  onCancelRide(): void {
+    this.rideStore.cancelRide();
+  }
+
+  /** Whether the current ride can be cancelled (not yet started). */
+  readonly canCancelRide = computed(() => {
+    const ride = this.rideStore.currentRide();
+    if (!ride) return false;
+    return ride.status === RideStatus.ACCEPTED ||
+           ride.status === RideStatus.DRIVER_ON_THE_WAY ||
+           ride.status === RideStatus.DRIVER_ARRIVED;
+  });
+
+  // ── Rating (US-21) ──────────────────────────────────────────────────
+
+  /** Submit a rating for the driver after trip completes. */
+  onRatingSubmitted(event: { score: number; comment?: string }): void {
+    const ride = this.rideStore.currentRide();
+    const passengerId = this.iamStore.currentAccount()?.id;
+    if (!ride || !passengerId) return;
+    this.trustStore.submitDriverRating(ride.id, ride.driverId, passengerId, event.score);
+    this.ratingSubmitted.set(true);
+  }
+
+  /** Skip the driver rating. */
+  onRatingSkipped(): void {
+    const ride = this.rideStore.currentRide();
+    const passengerId = this.iamStore.currentAccount()?.id;
+    if (!ride || !passengerId) return;
+    this.trustStore.skipDriverRating(ride.id, ride.driverId, passengerId);
+    this.ratingSubmitted.set(true);
   }
 }

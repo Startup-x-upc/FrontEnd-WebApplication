@@ -1,0 +1,52 @@
+<div class="verification-card">
+  <div class="card-body">
+    <!-- Photo -->
+    <div class="driver-photo">
+      @if (driver().photoUrl) {
+        <img [src]="driver().photoUrl" [alt]="'Foto de ' + driver().fullName"
+             class="photo-img" />
+      } @else {
+        <div class="photo-img photo-img--fallback">
+          <mat-icon>person</mat-icon>
+        </div>
+      }
+    </div>
+
+    <!-- Info -->
+    <div class="driver-details">
+      <h3 class="driver-name">{{ driver().fullName }}</h3>
+      <div class="detail-row">
+        <mat-icon>directions_car</mat-icon>
+        <span>{{ driver().vehicleType }}</span>
+      </div>
+      <div class="detail-row">
+        <mat-icon>badge</mat-icon>
+        <span>ID: {{ driver().id }}</span>
+      </div>
+      <div class="detail-row">
+        <mat-icon>star</mat-icon>
+        <span>Rating: {{ driver().ratingAverage | number:'1.1-1' }}</span>
+      </div>
+      <div class="detail-row">
+        <mat-icon>hourglass_empty</mat-icon>
+        <span class="pending-text">Pendiente de verificación</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card-actions">
+    <button mat-flat-button color="primary" class="approve-btn"
+            (click)="approve.emit(driver().id)"
+            aria-label="Aprobar conductor">
+      <mat-icon>check</mat-icon>
+      Aprobar
+    </button>
+    <button mat-stroked-button color="warn" class="reject-btn"
+            (click)="reject.emit(driver().id)"
+            aria-label="Rechazar conductor">
+      <mat-icon>close</mat-icon>
+      Rechazar
+    </button>
+  </div>
+</div>

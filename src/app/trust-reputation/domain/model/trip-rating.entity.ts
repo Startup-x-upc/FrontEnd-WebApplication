@@ -14,6 +14,7 @@ export class TripRating implements BaseEntity {
   passengerScore: number = 0;
   passengerComment: string = '';
   rateableUntil: string = '';
+  createdAt: string = '';
 
 
   openForRating(): void      { this.driverRatingStatus = 'PENDING'; this.passengerRatingStatus = 'PENDING'; }

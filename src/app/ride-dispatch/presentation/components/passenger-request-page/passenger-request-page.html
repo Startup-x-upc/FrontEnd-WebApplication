@@ -38,11 +38,7 @@
   <!-- ════════════════════════════════════════════════════════════ -->
   <div class="right-panel">
 
-    <!-- ① PREPARING / FARE_READY — referential availability -->
-    <app-trip-availability-summary
-      *ngIf="uiState() === 'PREPARING' || uiState() === 'FARE_READY'"
-      [nearbyDrivers]="[]">
-    </app-trip-availability-summary>
+
 
     <!-- ② FARE_READY — confirm button -->
     <app-fare-summary-card
@@ -70,50 +66,96 @@
       (refreshRequested)="onRefreshCandidates()">
     </app-ride-candidates-list>
 
-    <!-- ⑤ DRIVER_SELECTED — ride created, waiting for driver to move -->
-    <div class="ride-status-card" *ngIf="uiState() === 'DRIVER_SELECTED'">
-      <div class="ride-status-icon">
-        <mat-icon>check_circle</mat-icon>
-      </div>
-      <div class="ride-status-info">
-        <h3>¡Conductor confirmado!</h3>
-        <p>El conductor se dirigirá hacia tu punto de recojo en breve.</p>
-        <span class="ride-status-badge">{{ rideStatusLabel() }}</span>
-        <br>
-        <button mat-stroked-button color="primary" class="refresh-mini" (click)="onRefreshRide()">
-          <mat-icon>refresh</mat-icon> Actualizar estado
+    <!-- ⑤ & ⑥ Unified Tracking Card for DRIVER_SELECTED / RIDE_IN_PROGRESS -->
+    <div class="ride-completed-card" *ngIf="uiState() === 'DRIVER_SELECTED' || uiState() === 'RIDE_IN_PROGRESS'">
+      <div class="tracking-card-header">
+        <h3>Seguimiento del viaje</h3>
+        <button mat-icon-button class="subtle-refresh-btn" (click)="onRefreshRide()" aria-label="Actualizar estado">
+          <mat-icon>refresh</mat-icon>
         </button>
       </div>
+
+      <!-- Driver details -->
+      <div class="mini-driver-profile" style="margin-bottom: 8px;">
+        <mat-icon style="font-size: 28px; width: 28px; height: 28px; color: #1a73e8;">two_wheeler</mat-icon>
+        <div>
+          <span class="mini-driver-title">Tu conductor asignado</span>
+          <span class="mini-driver-name" style="font-size: 16px;">{{ currentDriverName() }}</span>
+        </div>
+      </div>
+
+      <!-- Vertical Timeline Stepper -->
+      <div class="vertical-stepper">
+        <div class="step-item" 
+             *ngFor="let step of steps; let idx = index"
+             [class.step--completed]="idx < currentStepIndex()"
+             [class.step--active]="idx === currentStepIndex()">
+          <div class="step-icon-wrap">
+            <mat-icon>{{ step.icon }}</mat-icon>
+          </div>
+          <span class="step-label">{{ step.label }}</span>
+        </div>
+      </div>
+
+      <!-- Cancel button (US-18) — before trip starts -->
+      <button mat-stroked-button class="cancel-ride-btn" *ngIf="canCancelRide()"
+              [disabled]="rideStore.isLoading()"
+              (click)="onCancelRide()" aria-label="Cancelar viaje">
+        <mat-icon>cancel</mat-icon> Cancelar viaje
+      </button>
     </div>
 
-    <!-- ⑥ RIDE_IN_PROGRESS — driver in transit / arrived / started -->
-    <div class="ride-status-card" *ngIf="uiState() === 'RIDE_IN_PROGRESS'">
-      <div class="ride-status-icon">
-        <mat-icon>two_wheeler</mat-icon>
+    <!-- ⑦ RIDE_COMPLETED — Receipt/celebration view + Rating (US-21) -->
+    <div class="ride-completed-card" *ngIf="uiState() === 'RIDE_COMPLETED'">
+      <div class="celebration-header">
+        <div class="success-icon-wrap">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <h2>¡Llegaste a tu destino!</h2>
+        <p>Tu viaje ha finalizado con éxito.</p>
       </div>
-      <div class="ride-status-info">
-        <h3>Viaje en progreso</h3>
-        <p>Tu conductor está en camino. Actualiza para ver el estado más reciente.</p>
-        <span class="ride-status-badge">{{ rideStatusLabel() }}</span>
-        <br>
-        <button mat-stroked-button color="primary" class="refresh-mini" (click)="onRefreshRide()">
-          <mat-icon>refresh</mat-icon> Actualizar estado
-        </button>
-      </div>
-    </div>
 
-    <!-- ⑦ RIDE_COMPLETED -->
-    <div class="ride-status-card completed-card" *ngIf="uiState() === 'RIDE_COMPLETED'">
-      <div class="ride-status-icon">
-        <mat-icon>flag</mat-icon>
+      <div class="receipt-details">
+        <div class="receipt-row">
+          <span>Monto total pagado</span>
+          <strong class="receipt-fare">S/ {{ monetizationStore.estimatedFare() | number:'1.2-2' }}</strong>
+        </div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-driver-info">
+          <div class="mini-driver-profile">
+            <mat-icon>two_wheeler</mat-icon>
+            <div>
+              <span class="mini-driver-title">Tu conductor</span>
+              <span class="mini-driver-name">{{ currentDriverName() }}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="ride-status-info">
-        <h3>¡Viaje completado!</h3>
-        <p>Gracias por usar nuestra plataforma. ¿Deseas solicitar otro viaje?</p>
-        <button mat-flat-button color="primary" style="margin-top:10px" (click)="onStartNewRequest()">
-          Nuevo viaje
-        </button>
+
+      <!-- Rating Form (US-21) -->
+      <ng-container *ngIf="!ratingSubmitted()">
+        <app-rating-form
+          [ratedParty]="'DRIVER'"
+          [ratedPartyName]="'Conductor'"
+          [tripId]="rideStore.currentRide()?.id || ''"
+          [driverId]="rideStore.currentRide()?.driverId || ''"
+          [passengerId]="rideStore.currentRide()?.passengerId || ''"
+          [submitting]="trustStore.isLoading()"
+          [errorMessage]="trustStore.error()"
+          (submitted)="onRatingSubmitted($event)"
+          (skipped)="onRatingSkipped()">
+        </app-rating-form>
+      </ng-container>
+
+      <!-- Rating confirmation -->
+      <div class="rating-done-message" *ngIf="ratingSubmitted()">
+        <mat-icon>thumb_up</mat-icon>
+        <span>¡Gracias por tu calificación!</span>
       </div>
+
+      <button mat-flat-button color="primary" class="new-trip-btn" (click)="onStartNewRequest()">
+        Solicitar nuevo viaje
+      </button>
     </div>
 
     <!-- ⑧ REQUEST_EXPIRED -->

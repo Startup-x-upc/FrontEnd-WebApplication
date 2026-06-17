@@ -9,8 +9,8 @@ export class Wallet implements BaseEntity {
   status: WalletStatus = 'ACTIVE';
 
 
-  topUp(amount: number): void         { this.balance += amount; }
-  applyCommission(amount: number): void { this.balance -= amount; }
+  topUp(amount: number): void         { this.balance = Math.round((this.balance + amount) * 100) / 100; }
+  applyCommission(amount: number): void { this.balance = Math.round((this.balance - amount) * 100) / 100; }
   block(): void                       { this.status = 'BLOCKED'; }
   unblock(): void                     { this.status = 'ACTIVE'; }
   hasPositiveBalance(): boolean       { return this.balance > 0; }

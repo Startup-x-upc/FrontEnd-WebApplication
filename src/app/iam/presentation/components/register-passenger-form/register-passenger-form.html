@@ -1,0 +1,118 @@
+<div class="register-page">
+  <div class="register-card">
+    <!-- Header -->
+    <div class="register-header">
+      <mat-icon class="header-icon">person_add</mat-icon>
+      <h1 class="header-title">Crear cuenta — Pasajero</h1>
+      <p class="header-sub">Regístrate para empezar a solicitar viajes en ChapaTuRuta.</p>
+    </div>
+
+    <!-- Loading spinner -->
+    @if (store.isLoading()) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+        <span>Creando tu cuenta...</span>
+      </div>
+    }
+
+    <!-- Error message -->
+    @if (store.error()) {
+      <div class="error-banner" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ store.error() }}</span>
+      </div>
+    }
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Full Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre completo</mat-label>
+        <input matInput type="text" formControlName="fullName"
+               placeholder="María Quispe" autocomplete="name"
+               aria-label="Nombre completo" />
+        <mat-icon matPrefix>badge</mat-icon>
+        @if (fullName.invalid && fullName.touched) {
+          <mat-error>
+            @if (fullName.errors?.['required']) { El nombre es obligatorio. }
+            @if (fullName.errors?.['minlength']) { Mínimo 3 caracteres. }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Email -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Correo electrónico</mat-label>
+        <input matInput type="email" formControlName="email"
+               placeholder="tu@correo.com" autocomplete="email"
+               aria-label="Correo electrónico" />
+        <mat-icon matPrefix>email</mat-icon>
+        @if (email.invalid && email.touched) {
+          <mat-error>
+            @if (email.errors?.['required']) { El correo es obligatorio. }
+            @if (email.errors?.['email']) { Ingresa un correo válido. }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Password -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contraseña</mat-label>
+        <input matInput [type]="passwordVisible ? 'text' : 'password'"
+               formControlName="password" autocomplete="new-password"
+               aria-label="Contraseña" />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button mat-icon-button matSuffix type="button"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+          <mat-icon>{{ passwordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (password.invalid && password.touched) {
+          <mat-error>
+            @if (password.errors?.['required']) { La contraseña es obligatoria. }
+            @if (password.errors?.['minlength']) { Mínimo 4 caracteres. }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Confirm Password -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirmar contraseña</mat-label>
+        <input matInput [type]="confirmPasswordVisible ? 'text' : 'password'"
+               formControlName="confirmPassword" autocomplete="new-password"
+               aria-label="Confirmar contraseña" />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button mat-icon-button matSuffix type="button"
+                (click)="toggleConfirmPasswordVisibility()"
+                [attr.aria-label]="confirmPasswordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+          <mat-icon>{{ confirmPasswordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (confirmPassword.invalid && confirmPassword.touched) {
+          <mat-error>Debes confirmar tu contraseña.</mat-error>
+        }
+        @if (passwordsMismatch) {
+          <mat-error>Las contraseñas no coinciden.</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Submit -->
+      <button mat-flat-button color="primary" type="submit"
+              class="submit-btn" [disabled]="store.isLoading()"
+              aria-label="Crear cuenta de pasajero">
+        <mat-icon>how_to_reg</mat-icon>
+        Crear cuenta
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="register-footer">
+      <span>¿Ya tienes cuenta?</span>
+      <a routerLink="/login" aria-label="Iniciar sesión">Iniciar sesión</a>
+    </div>
+
+    <div class="register-footer">
+      <span>¿Eres conductor?</span>
+      <a routerLink="/register/driver" aria-label="Registrarse como conductor">Registrarme como conductor</a>
+    </div>
+  </div>
+</div>

@@ -5,17 +5,44 @@
     </div>
 
     <div class="user-block" *ngIf="profile()">
-      <img [src]="profile()?.photoUrl" alt="Avatar" class="avatar">
-      <div class="user-info">
-        <span class="user-name">{{ profile()?.fullName }}</span>
-        <span class="user-role">Conductor</span>
+      <div class="user-row">
+        <ng-container *ngIf="profile()?.photoUrl && !avatarError; else fallbackAvatar">
+          <img [src]="profile()?.photoUrl" alt="Avatar" class="avatar" (error)="avatarError = true">
+        </ng-container>
+        <ng-template #fallbackAvatar>
+          <div class="avatar-fallback">
+            <mat-icon>person</mat-icon>
+          </div>
+        </ng-template>
+        <div class="user-info">
+          <span class="user-name">{{ profile()?.fullName }}</span>
+          <span class="user-role">Conductor</span>
+        </div>
       </div>
+      <app-reputation-badge
+        [averageScore]="trustStore.driverReputation()?.averageScore ?? null"
+        [totalRatings]="trustStore.driverReputation()?.totalRatings ?? 0"
+        size="small"
+        [showCount]="false">
+      </app-reputation-badge>
     </div>
 
     <mat-nav-list>
       <a mat-list-item routerLink="/driver/home" routerLinkActive="active-link">
         <mat-icon matListItemIcon>dashboard</mat-icon>
         <span matListItemTitle>Panel principal</span>
+      </a>
+      <a mat-list-item routerLink="/driver/wallet" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
+        <span matListItemTitle>Mi Wallet</span>
+      </a>
+      <a mat-list-item routerLink="/driver/trips" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>history</mat-icon>
+        <span matListItemTitle>Historial</span>
+      </a>
+      <a mat-list-item routerLink="/driver/profile" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>person</mat-icon>
+        <span matListItemTitle>Mi perfil</span>
       </a>
     </mat-nav-list>
 

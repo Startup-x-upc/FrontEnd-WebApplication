@@ -8,6 +8,8 @@ import { RideRequest } from '../domain/model/ride-request.entity';
 import { RideCandidate } from '../domain/model/ride-candidate.entity';
 import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideStatus } from '../domain/model/ride.status';
+import { ProfileResponse } from '../../iam/infrastructure/profile-response';
+import { DriverResponse } from '../../driver-management/infrastructure/driver-response';
 
 import { RideRequestResponse } from './ride-request-response';
 import { RideCandidateResponse } from './ride-candidate-response';
@@ -36,7 +38,7 @@ export class RideDispatchApiService {
   getOpenRideRequests(): Observable<RideRequest[]> {
     return forkJoin({
       requests: this.http.get<RideRequestResponse[]>(`${this.base}/rideRequests?status=OPEN`),
-      profiles: this.http.get<any[]>(`${this.base}/profiles`),
+      profiles: this.http.get<ProfileResponse[]>(`${this.base}/profiles`),
     }).pipe(
       map(({ requests, profiles }) => {
         return requests.map(req => {
@@ -70,10 +72,11 @@ export class RideDispatchApiService {
     );
   }
 
-  /** Returns all requests submitted by a given passenger. */
-  getRideRequestsByPassenger(passengerId: string): Observable<RideRequest[]> {
-    return this.http.get<RideRequestResponse[]>(`${this.base}/rideRequests?passengerId=${passengerId}`)
-      .pipe(map(rs => rs.map(RideRequestAssembler.toEntity)));
+  /** Marks a ride request as expired (US-11). */
+  patchRideRequestExpiry(requestId: string): Observable<RideRequest> {
+    return this.http
+      .patch<RideRequestResponse>(`${this.base}/rideRequests/${requestId}`, { isExpired: true })
+      .pipe(map(RideRequestAssembler.toEntity));
   }
 
   /** Creates a new ride request (status = OPEN). */
@@ -94,6 +97,7 @@ export class RideDispatchApiService {
       estimatedFare,
       selectedDriverId: null,
       isExpired: false,
+      createdAt: new Date().toISOString(),
     };
     return this.http.post<RideRequestResponse>(`${this.base}/rideRequests`, payload)
       .pipe(map(RideRequestAssembler.toEntity));
@@ -181,6 +185,8 @@ export class RideDispatchApiService {
         destination: request.destination,
         estimatedFare: request.estimatedFare,
         status: RideStatus.ACCEPTED,
+        createdAt: new Date().toISOString(),
+        completedAt: '',
       };
       return this.http.post<RideResponse>(`${this.base}/rides`, ridePayload).pipe(
         map(RideAssembler.toEntity),
@@ -218,16 +224,21 @@ export class RideDispatchApiService {
 
   // ── Rides ────────────────────────────────────────────────────────────
 
-  /** Returns a single ride by ID. */
+  /** Returns a single ride by ID, enriched with driver name. */
   getRideById(rideId: string): Observable<Ride> {
-    return this.http.get<RideResponse>(`${this.base}/rides/${rideId}`)
-      .pipe(map(RideAssembler.toEntity));
-  }
-
-  /** Returns all rides for a given passenger. */
-  getRidesByPassenger(passengerId: string): Observable<Ride[]> {
-    return this.http.get<RideResponse[]>(`${this.base}/rides?passengerId=${passengerId}`)
-      .pipe(map(rs => rs.map(RideAssembler.toEntity)));
+    return this.http.get<RideResponse>(`${this.base}/rides/${rideId}`).pipe(
+      switchMap(ride => {
+        const entity = RideAssembler.toEntity(ride);
+        return this.http.get<any[]>(`${this.base}/drivers?id=${ride.driverId}`).pipe(
+          map(drivers => {
+            if (drivers.length > 0) {
+              entity.driverName = drivers[0].fullName;
+            }
+            return entity;
+          })
+        );
+      })
+    );
   }
 
   /**
@@ -235,7 +246,11 @@ export class RideDispatchApiService {
    * Also patches driverAvailability isBusy/activeRideId if provided.
    */
   updateRideStatus(rideId: string, status: RideStatus): Observable<Ride> {
-    return this.http.patch<RideResponse>(`${this.base}/rides/${rideId}`, { status })
+    const body: { status: string; completedAt?: string } = { status };
+    if (status === RideStatus.COMPLETED) {
+      body.completedAt = new Date().toISOString();
+    }
+    return this.http.patch<RideResponse>(`${this.base}/rides/${rideId}`, body)
       .pipe(map(RideAssembler.toEntity));
   }
 
@@ -292,5 +307,55 @@ export class RideDispatchApiService {
       `${this.base}/driverAvailability/${availabilityId}`,
       { isBusy: false, activeRideId: null },
     ).pipe(map(DriverAvailabilityAssembler.toEntity));
+  }
+
+  // ── Trip History (US-24, US-25) ──────────────────────────────────────
+
+  /**
+   * Retrieves completed trips for a passenger, enriched with driver names.
+   * @param passengerId - The passenger's account ID.
+   */
+  getPassengerTrips(passengerId: string): Observable<Ride[]> {
+    return forkJoin({
+      rides: this.http.get<RideResponse[]>(
+        `${this.base}/rides?passengerId=${passengerId}&status=COMPLETED&_sort=-id`
+      ),
+      drivers: this.http.get<DriverResponse[]>(`${this.base}/drivers`),
+    }).pipe(
+      map(({ rides, drivers }) => {
+        return rides.map(r => {
+          const entity = RideAssembler.toEntity(r);
+          const driver = drivers.find(d => d.id === r.driverId);
+          if (driver) {
+            entity.driverName = driver.fullName;
+          }
+          return entity;
+        });
+      })
+    );
+  }
+
+  /**
+   * Retrieves completed trips for a driver, enriched with passenger names.
+   * @param driverId - The driver's ID.
+   */
+  getDriverTrips(driverId: string): Observable<Ride[]> {
+    return forkJoin({
+      rides: this.http.get<RideResponse[]>(
+        `${this.base}/rides?driverId=${driverId}&status=COMPLETED&_sort=-id`
+      ),
+      profiles: this.http.get<ProfileResponse[]>(`${this.base}/profiles`),
+    }).pipe(
+      map(({ rides, profiles }) => {
+        return rides.map(r => {
+          const entity = RideAssembler.toEntity(r);
+          const profile = profiles.find(p => p.accountId === r.passengerId);
+          if (profile) {
+            entity.passengerName = profile.fullName;
+          }
+          return entity;
+        });
+      })
+    );
   }
 }

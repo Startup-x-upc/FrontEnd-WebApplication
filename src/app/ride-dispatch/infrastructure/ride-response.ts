@@ -6,4 +6,8 @@ export interface RideResponse {
   destination: string;
   status: string;
   estimatedFare: number;
+  createdAt: string;
+  completedAt: string;
+  driverName?: string;
+  passengerName?: string;
 }

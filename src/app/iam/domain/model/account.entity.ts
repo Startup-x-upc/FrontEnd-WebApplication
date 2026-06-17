@@ -19,6 +19,11 @@ export class Account {
   /** Role that determines the user's access level and dashboard. */
   role: UserRole;
 
+  /** ISO timestamp when the account was created. */
+  createdAt: string = '';
+  /** ISO timestamp of the last update. */
+  updatedAt: string = '';
+
   constructor() {
     this.id = '';
     this.email = '';

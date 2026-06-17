@@ -1,0 +1,84 @@
+<div class="table-container">
+  <table class="drivers-table" role="table">
+    <thead>
+      <tr>
+        <th scope="col">Conductor</th>
+        <th scope="col">Vehículo</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Rating</th>
+        <th scope="col">Operativo</th>
+        <th scope="col">Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (driver of drivers(); track driver.id) {
+        <tr>
+          <!-- Name + photo -->
+          <td>
+            <div class="driver-cell">
+              @if (driver.photoUrl) {
+                <img [src]="driver.photoUrl" [alt]="'Foto de ' + driver.fullName"
+                     class="driver-photo" />
+              } @else {
+                <div class="driver-photo driver-photo--fallback">
+                  <mat-icon>person</mat-icon>
+                </div>
+              }
+              <div class="driver-info">
+                <span class="driver-name">{{ driver.fullName }}</span>
+                <span class="driver-id">ID: {{ driver.id }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Vehicle -->
+          <td>
+            <span class="vehicle-badge">{{ driver.vehicleType }}</span>
+          </td>
+
+          <!-- Verification status -->
+          <td>
+            <span class="status-badge" [class]="statusClass(driver)">
+              {{ statusLabel(driver) }}
+            </span>
+          </td>
+
+          <!-- Rating -->
+          <td>
+            <div class="rating-cell">
+              <mat-icon class="star-icon">star</mat-icon>
+              <span>{{ driver.ratingAverage | number:'1.1-1' }}</span>
+            </div>
+          </td>
+
+          <!-- Operational -->
+          <td>
+            <span class="op-badge" [class.op-badge--on]="driver.isAvailable"
+                                   [class.op-badge--off]="!driver.isAvailable">
+              {{ driver.isAvailable ? 'Disponible' : 'Inactivo' }}
+            </span>
+          </td>
+
+          <!-- Action toggle -->
+          <td>
+            <button mat-stroked-button
+                    [color]="driver.isAvailable ? 'warn' : 'primary'"
+                    [disabled]="loading()"
+                    (click)="onToggle(driver)"
+                    [attr.aria-label]="driver.isAvailable ? 'Deshabilitar conductor' : 'Habilitar conductor'">
+              <mat-icon>{{ driver.isAvailable ? 'block' : 'check_circle' }}</mat-icon>
+              {{ driver.isAvailable ? 'Deshabilitar' : 'Habilitar' }}
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="empty-row">
+            <mat-icon>inbox</mat-icon>
+            <span>No hay conductores registrados.</span>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

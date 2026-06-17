@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -6,6 +6,9 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { IamStore } from '../../../../../iam/application/iam.store';
+import { DriverManagementStore } from '../../../../../driver-management/application/driver-management.store';
+import { TrustReputationStore } from '../../../../../trust-reputation/application/trust-reputation.store';
+import { ReputationBadgeComponent } from '../../../../../trust-reputation/presentation/components/reputation-badge/reputation-badge';
 
 /**
  * @summary Shell layout for the DRIVER role. Provides sidebar navigation,
@@ -24,6 +27,7 @@ import { IamStore } from '../../../../../iam/application/iam.store';
     MatListModule,
     MatIconModule,
     MatButtonModule,
+    ReputationBadgeComponent,
   ],
   templateUrl: './driver-layout.html',
   styles: [`
@@ -53,9 +57,14 @@ import { IamStore } from '../../../../../iam/application/iam.store';
     .user-block {
       padding: 16px 20px;
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .user-row {
+      display: flex;
       align-items: center;
       gap: 12px;
-      border-bottom: 1px solid #f5f5f5;
     }
     .avatar {
       width: 40px;
@@ -63,6 +72,22 @@ import { IamStore } from '../../../../../iam/application/iam.store';
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid #fef3c7;
+    }
+    .avatar-fallback {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #fef3c7;
+      color: #d97706;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #fef3c7;
+    }
+    .avatar-fallback mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
     .user-info {
       display: flex;
@@ -109,8 +134,33 @@ import { IamStore } from '../../../../../iam/application/iam.store';
 })
 export class DriverLayoutComponent {
   private iamStore: IamStore = inject(IamStore);
+  private driverMgmtStore = inject(DriverManagementStore);
+  protected trustStore = inject(TrustReputationStore);
 
   profile = this.iamStore.currentProfile;
+  avatarError = false;
+
+  constructor() {
+    // Load driver profile once on init (not reactive)
+    const account = this.iamStore.currentAccount();
+    if (account?.role === 'DRIVER') {
+      this.driverMgmtStore.loadDriverByAccountId(account.id);
+    }
+
+    // Reactively load reputation once driver entity is available
+    effect(() => {
+      const driver = this.driverMgmtStore.driver();
+      if (driver?.id) {
+        this.trustStore.loadDriverReputation(driver.id);
+      }
+    });
+
+    effect(() => {
+      // Reset error when profile signal changes
+      this.profile();
+      this.avatarError = false;
+    });
+  }
 
   logout(): void {
     this.iamStore.signOut();

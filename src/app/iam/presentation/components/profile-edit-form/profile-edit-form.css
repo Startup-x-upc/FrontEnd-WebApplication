@@ -1,0 +1,82 @@
+.edit-form-card {
+  background: white;
+  border-radius: 14px;
+  padding: 22px 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.edit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+.edit-header mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: #1a73e8;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Photo preview */
+.photo-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px dashed #d1d5db;
+}
+.preview-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.preview-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+/* Actions */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.cancel-btn {
+  flex: 1;
+  height: 44px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+.save-btn {
+  flex: 2;
+  height: 44px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+}
+.save-btn mat-icon {
+  margin-right: 5px;
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+}

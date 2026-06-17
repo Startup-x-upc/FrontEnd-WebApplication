@@ -1,0 +1,27 @@
+.reputation-badge { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.badge--small .star-icon { font-size: 14px; height: 14px; width: 14px; }
+.badge--small .score-value { font-size: 12px; }
+.badge--small .score-count { font-size: 10px; }
+.badge--medium .star-icon { font-size: 18px; height: 18px; width: 18px; }
+.badge--medium .score-value { font-size: 14px; }
+.badge--medium .score-count { font-size: 11px; }
+.badge--large .star-icon { font-size: 24px; height: 24px; width: 24px; }
+.badge--large .score-value { font-size: 18px; }
+.badge--large .score-count { font-size: 13px; }
+
+.stars-container { display: flex; position: relative; gap: 1px; }
+.stars-container--muted { opacity: 0.4; }
+.stars-filled { position: absolute; top: 0; left: 0; display: flex; gap: 1px; overflow: hidden; z-index: 1; height: 100%; }
+.stars-empty { display: flex; gap: 1px; }
+.star-icon { flex-shrink: 0; }
+.star-icon--filled { color: #f59e0b; }
+.star-icon--empty { color: #d1d5db; }
+.star-icon--muted { color: #d1d5db; }
+
+.score-info { display: flex; align-items: baseline; gap: 3px; }
+.score-value { font-weight: 700; color: #1f2937; }
+.score-value--muted { color: #9ca3af; }
+.score-count { color: #9ca3af; font-weight: 500; }
+
+.badge--empty { opacity: 0.7; }
+.empty-label { font-size: 11px; color: #9ca3af; font-style: italic; }

@@ -11,10 +11,14 @@ export class RideAssembler {
     entity.origin = response.origin;
     entity.destination = response.destination;
     // Map string status to enum safely
-    entity.status = Object.values(RideStatus).includes(response.status as RideStatus) 
-      ? response.status as RideStatus 
+    entity.status = Object.values(RideStatus).includes(response.status as RideStatus)
+      ? response.status as RideStatus
       : RideStatus.PENDING;
     entity.estimatedFare = response.estimatedFare;
+    entity.createdAt = response.createdAt ?? '';
+    entity.completedAt = response.completedAt ?? '';
+    entity.driverName = response.driverName ?? '';
+    entity.passengerName = response.passengerName ?? '';
     return entity;
   }
 }

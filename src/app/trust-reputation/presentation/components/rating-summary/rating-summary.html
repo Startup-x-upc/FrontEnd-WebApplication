@@ -1,0 +1,31 @@
+<div class="summary-card">
+  <div class="summary-header">
+    <mat-icon class="summary-header-icon">military_tech</mat-icon>
+    <span class="summary-header-label">
+      {{ role() === 'DRIVER' ? 'Reputación como conductor' : 'Reputación como pasajero' }}
+    </span>
+  </div>
+
+  @if (loading()) {
+    <div class="summary-loading">
+      <mat-spinner diameter="20"></mat-spinner>
+      <span>Cargando reputación...</span>
+    </div>
+  } @else {
+    <app-reputation-badge
+      [averageScore]="averageScore"
+      [totalRatings]="totalRatings"
+      size="large"
+      [showCount]="true"
+      [showLabel]="true">
+    </app-reputation-badge>
+  }
+
+  @if (hasRatings && !loading()) {
+    <div class="summary-footer">
+      <span class="footer-note">
+        Basado en {{ totalRatings }} calificación{{ totalRatings !== 1 ? 'es' : '' }}.
+      </span>
+    </div>
+  }
+</div>

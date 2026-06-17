@@ -134,7 +134,7 @@ src/
 ```typescript
 /**
  * @summary Represents a [DomainEntity] in the [BoundedContext] bounded context.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export class DomainEntity {
   propertyOne: string;
@@ -154,7 +154,7 @@ export class DomainEntity {
 ```typescript
 /**
  * @summary Raw response contract for the [endpoint-name] endpoint.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export interface EndpointResponse {
   status: string;
@@ -163,7 +163,7 @@ export interface EndpointResponse {
 
 /**
  * @summary Raw resource returned by the provider API.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export interface ResourceItem {
   id: string;
@@ -182,7 +182,7 @@ import {DomainEntity} from '../domain/model/domain-entity.entity';
 
 /**
  * @summary Maps [resource] resources from the API into [Entity] domain entities.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export class DomainEntityAssembler {
 
@@ -215,7 +215,7 @@ import {DomainEntityAssembler} from './domain-entity-assembler';
 @Injectable({providedIn: 'root'})
 /**
  * @summary Infrastructure gateway to the external [context] provider API.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export class DomainApi {
   private http = inject(HttpClient);
@@ -241,7 +241,7 @@ import {DomainApi} from '../infrastructure/domain-api';
 @Injectable({providedIn: 'root'})
 /**
  * @summary Application service that coordinates state for the [Context] bounded context.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export class DomainStore {
   private domainApi = inject(DomainApi);
@@ -270,7 +270,7 @@ import {environment} from '../../../environments/environment';
 @Injectable({providedIn: 'root'})
 /**
  * @summary Infrastructure gateway for generating source logo URLs using logo.dev.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export class LogoDevApi {
   /** Base URL for the logo provider API. */
@@ -339,7 +339,7 @@ import {TranslatePipe} from '@ngx-translate/core';
 })
 /**
  * @summary Presentation component that renders a single [Entity] card.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export class DomainItem {
   item = input.required<DomainEntity>();
@@ -376,7 +376,7 @@ export class DomainItem {
 })
 /**
  * @summary Presentation component that renders a list of [Entity] cards.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export class DomainList {
   items = input.required<Array<DomainEntity>>();
@@ -562,7 +562,7 @@ Los environments siempre deben incluir las claves de `logo.dev` y las del API de
 // src/environments/environment.ts (producción)
 /**
  * @summary Production environment configuration.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export const environment = {
   production: true,
@@ -579,7 +579,7 @@ export const environment = {
 // src/environments/environment.development.ts
 /**
  * @summary Development environment configuration.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 export const environment = {
   production: false,
@@ -670,7 +670,7 @@ Cada archivo de código fuente creado debe incluir:
 ```typescript
 /**
  * @summary Breve descripción del propósito del archivo, clase o componente.
- * @author Jesús Iván Castillo Vidal
+ * @author Eduardo Manuel Aguirre Ramos
  */
 ```
 
@@ -702,7 +702,7 @@ private itemsSignal = signal<Item[]>([]);
 [Descripción breve de la aplicación y su propósito.]
 
 ## Autor
-- **Nombre:** Jesús Iván Castillo Vidal
+- **Nombre:** Eduardo Manuel Aguirre Ramos
 - **Código:** [Tu código de estudiante]
 
 ## Tecnologías

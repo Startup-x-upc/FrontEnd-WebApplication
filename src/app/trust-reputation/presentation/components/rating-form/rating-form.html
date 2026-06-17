@@ -1,0 +1,60 @@
+<div class="rating-card">
+  <div class="rating-header">
+    <mat-icon class="header-icon">star_half</mat-icon>
+    <div class="header-text">
+      <span class="header-title">Califica tu experiencia</span>
+      <span class="header-sub">
+        {{ ratedParty() === 'DRIVER' ? '¿Cómo fue tu conductor?' : '¿Cómo fue tu pasajero?' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="stars-row">
+    @for (star of stars; track star) {
+      <button class="star-btn"
+              [class.star--active]="star <= hoveredStar"
+              [class.star--selected]="star <= selectedScore"
+              (click)="selectScore(star)"
+              (mouseenter)="hoveredStar = star"
+              (mouseleave)="hoveredStar = 0"
+              [attr.aria-label]="'Calificar con ' + star + ' estrellas'">
+        <mat-icon>{{ star <= selectedScore ? 'star' : (star <= hoveredStar ? 'star' : 'star_border') }}</mat-icon>
+      </button>
+    }
+    @if (selectedScore > 0) {
+      <span class="score-label">{{ scoreLabel }}</span>
+    }
+  </div>
+
+  @if (ratedParty() === 'PASSENGER' && selectedScore > 0 && selectedScore <= 2) {
+    <div class="comment-area">
+      <label class="comment-label" for="rating-comment">
+        <mat-icon>feedback</mat-icon>
+        Comentario opcional — ¿qué ocurrió?
+      </label>
+      <textarea id="rating-comment" class="comment-input" [(ngModel)]="comment"
+                rows="2" maxlength="250"
+                placeholder="Describe brevemente el motivo de tu calificación..."></textarea>
+      <span class="comment-count">{{ comment.length }}/250</span>
+    </div>
+  }
+
+  <div class="rating-actions">
+    <button mat-stroked-button class="skip-btn"
+            [disabled]="submitting()" (click)="onSkip()"
+            aria-label="Omitir calificación">Omitir</button>
+    <button mat-flat-button color="primary" class="submit-btn"
+            [disabled]="selectedScore === 0 || submitting()"
+            (click)="onSubmit()" aria-label="Enviar calificación">
+      <mat-icon>send</mat-icon>
+      {{ submitting() ? 'Enviando...' : 'Enviar calificación' }}
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="rating-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,42 @@
+<div class="reputation-badge"
+     [class.badge--small]="size() === 'small'"
+     [class.badge--medium]="size() === 'medium'"
+     [class.badge--large]="size() === 'large'"
+     [class.badge--empty]="!hasRatings()">
+
+  @if (hasRatings()) {
+    <div class="stars-container">
+      <div class="stars-filled" [style.width.%]="fillPercentage()">
+        @for (_ of fullStars; track $index) {
+          <mat-icon class="star-icon star-icon--filled">star</mat-icon>
+        }
+      </div>
+      <div class="stars-empty">
+        @for (_ of fullStars; track $index) {
+          <mat-icon class="star-icon star-icon--empty">star_border</mat-icon>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="stars-container stars-container--muted">
+      @for (_ of fullStars; track $index) {
+        <mat-icon class="star-icon star-icon--muted">star_border</mat-icon>
+      }
+    </div>
+  }
+
+  <div class="score-info">
+    @if (hasRatings()) {
+      <span class="score-value">{{ averageScore() | number:'1.1-1' }}</span>
+    } @else {
+      <span class="score-value score-value--muted">—</span>
+    }
+    @if (showCount()) {
+      <span class="score-count">({{ totalRatings() }})</span>
+    }
+  </div>
+
+  @if (!hasRatings() && showLabel()) {
+    <span class="empty-label">Sin calificaciones</span>
+  }
+</div>

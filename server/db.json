@@ -17,6 +17,24 @@
       "email": "admin@correo.com",
       "password": "admin123",
       "role": "ADMIN"
+    },
+    {
+      "email": "carlos@gmail.com",
+      "password": "holamundo",
+      "role": "DRIVER",
+      "id": "BW010fDLBH8"
+    },
+    {
+      "email": "jesus@gmail.com",
+      "password": "pass123",
+      "role": "PASSENGER",
+      "id": "2v1oWV0QoFA"
+    },
+    {
+      "email": "carlos@gmail.com",
+      "password": "pass123",
+      "role": "DRIVER",
+      "id": "zYqXPN5GYYc"
     }
   ],
   "profiles": [
@@ -40,6 +58,27 @@
       "fullName": "Admin Sistema",
       "email": "admin@correo.com",
       "photoUrl": "https://i.pravatar.cc/150?img=12"
+    },
+    {
+      "accountId": "BW010fDLBH8",
+      "fullName": "Carlos Mendoza",
+      "email": "carlos@gmail.com",
+      "photoUrl": "",
+      "id": "8GpfORQ4-vE"
+    },
+    {
+      "accountId": "2v1oWV0QoFA",
+      "fullName": "Jesús Castillo",
+      "email": "jesus@gmail.com",
+      "photoUrl": "",
+      "id": "ryBHRusFv2k"
+    },
+    {
+      "accountId": "zYqXPN5GYYc",
+      "fullName": "Carlos",
+      "email": "carlos@gmail.com",
+      "photoUrl": "",
+      "id": "Ie7yvPIe2PQ"
     }
   ],
   "drivers": [
@@ -52,7 +91,35 @@
       "operationalStatus": "ENABLED",
       "ratingAverage": 4.8,
       "ratingCount": 120,
-      "photoUrl": "https://i.pravatar.cc/150?img=33"
+      "photoUrl": "https://i.pravatar.cc/150?img=33",
+      "licenseNumber": "Q12345678",
+      "soatNumber": "S987654321"
+    },
+    {
+      "accountId": "BW010fDLBH8",
+      "fullName": "Carlos Mendoza",
+      "vehicleType": "Mototaxi",
+      "verificationStatus": "ACTIVE",
+      "operationalStatus": "ENABLED",
+      "ratingAverage": 0,
+      "ratingCount": 0,
+      "photoUrl": "",
+      "licenseNumber": "9129391239",
+      "soatNumber": "9129392193912",
+      "id": "ftHMmu2xvx4"
+    },
+    {
+      "accountId": "zYqXPN5GYYc",
+      "fullName": "Carlos",
+      "vehicleType": "Mototaxi",
+      "verificationStatus": "ACTIVE",
+      "operationalStatus": "ENABLED",
+      "ratingAverage": 0,
+      "ratingCount": 0,
+      "photoUrl": "",
+      "licenseNumber": "Q12391293912",
+      "soatNumber": "S19239129312",
+      "id": "BJZSS9Oxt_U"
     }
   ],
   "driverAvailability": [
@@ -63,14 +130,30 @@
       "isAvailable": true,
       "isBusy": false,
       "activeRideId": null
+    },
+    {
+      "id": "Qp5SAMDqhOQ",
+      "driverId": "ftHMmu2xvx4",
+      "currentLocation": "0,0",
+      "isAvailable": true,
+      "isBusy": false,
+      "activeRideId": null
+    },
+    {
+      "id": "1kKLFOYnpFI",
+      "driverId": "BJZSS9Oxt_U",
+      "currentLocation": "0,0",
+      "isAvailable": true,
+      "isBusy": false,
+      "activeRideId": null
     }
   ],
   "rideRequests": [
     {
-      "id": "08AUwsyiVTE",
+      "id": "qDVGCQP-v10",
       "passengerId": "u-001",
-      "origin": "-9.47251,-78.30168",
-      "destination": "-9.47158,-78.29604",
+      "origin": "-9.47114,-78.30307",
+      "destination": "-9.47219,-78.29879",
       "distanceKm": 1,
       "status": "CONFIRMED",
       "estimatedFare": 4,
@@ -78,124 +161,262 @@
       "isExpired": false
     },
     {
-      "id": "Sbi1_WYA93Q",
+      "id": "cyA8HhLskyY",
       "passengerId": "u-001",
-      "origin": "-9.47220,-78.29886",
-      "destination": "-9.47161,-78.29505",
+      "origin": "-9.47002,-78.30195",
+      "destination": "-9.47221,-78.29308",
       "distanceKm": 1,
-      "status": "OPEN",
+      "status": "CONFIRMED",
       "estimatedFare": 4,
-      "selectedDriverId": null,
+      "selectedDriverId": "d-001",
       "isExpired": false
     },
     {
-      "id": "KP1e2wiXIY4",
+      "id": "x8E3N_lMiwk",
       "passengerId": "u-001",
-      "origin": "-9.47277,-78.30154",
-      "destination": "-9.47222,-78.29526",
+      "origin": "-9.15054,-78.28058",
+      "destination": "-9.14751,-78.28130",
       "distanceKm": 1,
-      "status": "OPEN",
+      "status": "CONFIRMED",
       "estimatedFare": 4,
-      "selectedDriverId": null,
+      "selectedDriverId": "d-001",
       "isExpired": false
+    },
+    {
+      "id": "lUl7_IfzDxE",
+      "passengerId": "2v1oWV0QoFA",
+      "origin": "-9.47055,-78.30161",
+      "destination": "-9.47179,-78.29651",
+      "distanceKm": 1,
+      "status": "CONFIRMED",
+      "estimatedFare": 4,
+      "selectedDriverId": "BJZSS9Oxt_U",
+      "isExpired": false,
+      "createdAt": "2026-06-15T21:23:20.604Z"
+    },
+    {
+      "id": "HVT8O0rByf0",
+      "passengerId": "2v1oWV0QoFA",
+      "origin": "-9.47131,-78.30273",
+      "destination": "-9.47215,-78.29700",
+      "distanceKm": 1,
+      "status": "CONFIRMED",
+      "estimatedFare": 4,
+      "selectedDriverId": "BJZSS9Oxt_U",
+      "isExpired": false,
+      "createdAt": "2026-06-15T21:24:35.851Z"
+    },
+    {
+      "id": "16q2UAA6pvY",
+      "passengerId": "2v1oWV0QoFA",
+      "origin": "-9.47496,-78.30213",
+      "destination": "-9.47350,-78.29509",
+      "distanceKm": 1,
+      "status": "CONFIRMED",
+      "estimatedFare": 4,
+      "selectedDriverId": "BJZSS9Oxt_U",
+      "isExpired": false,
+      "createdAt": "2026-06-15T21:29:59.897Z"
     }
   ],
   "rideCandidates": [
     {
-      "id": "NK1vHHqWlbM",
-      "requestId": "rNCry30v-vg",
+      "id": "C7DoGHyxT9U",
+      "requestId": "qDVGCQP-v10",
       "driverId": "d-001",
       "driverName": "Carlos Mendoza",
       "vehicleType": "Mototaxi",
       "ratingAverage": 4.8,
       "photoUrl": "https://i.pravatar.cc/150?img=33",
       "status": "ACCEPTED",
-      "appliedAt": "2026-05-12T23:57:13.882Z"
+      "appliedAt": "2026-06-15T17:29:10.179Z"
     },
     {
-      "id": "4k7DD2ndXSQ",
-      "requestId": "rr-demo-open",
-      "driverId": "d-001",
-      "driverName": "Carlos Mendoza",
-      "vehicleType": "Mototaxi",
-      "ratingAverage": 4.8,
-      "photoUrl": "https://i.pravatar.cc/150?img=33",
-      "status": "PROPOSED",
-      "appliedAt": "2026-05-12T23:59:44.470Z"
-    },
-    {
-      "id": "WI2dbLvdL98",
-      "requestId": "qTM9206wwb0",
+      "id": "HmM7wIUCz9g",
+      "requestId": "cyA8HhLskyY",
       "driverId": "d-001",
       "driverName": "Carlos Mendoza",
       "vehicleType": "Mototaxi",
       "ratingAverage": 4.8,
       "photoUrl": "https://i.pravatar.cc/150?img=33",
       "status": "ACCEPTED",
-      "appliedAt": "2026-05-13T00:04:16.518Z"
+      "appliedAt": "2026-06-15T17:46:38.955Z"
     },
     {
-      "id": "5UfxOihCqwk",
-      "requestId": "08AUwsyiVTE",
+      "id": "ugIp_ZSxwT8",
+      "requestId": "x8E3N_lMiwk",
       "driverId": "d-001",
       "driverName": "Carlos Mendoza",
       "vehicleType": "Mototaxi",
       "ratingAverage": 4.8,
       "photoUrl": "https://i.pravatar.cc/150?img=33",
       "status": "ACCEPTED",
-      "appliedAt": "2026-05-13T00:15:15.373Z"
+      "appliedAt": "2026-06-15T17:47:41.331Z"
     },
     {
-      "id": "JaWGmqh_Uc0",
-      "requestId": "Sbi1_WYA93Q",
-      "driverId": "d-001",
-      "driverName": "Carlos Mendoza",
+      "id": "-7VK8iIiNuc",
+      "requestId": "lUl7_IfzDxE",
+      "driverId": "BJZSS9Oxt_U",
+      "driverName": "Carlos",
       "vehicleType": "Mototaxi",
-      "ratingAverage": 4.8,
-      "photoUrl": "https://i.pravatar.cc/150?img=33",
-      "status": "PROPOSED",
-      "appliedAt": "2026-05-13T00:45:03.887Z"
+      "ratingAverage": 0,
+      "photoUrl": "",
+      "status": "ACCEPTED",
+      "appliedAt": "2026-06-15T21:23:39.247Z"
+    },
+    {
+      "id": "Mqka6M8hkZo",
+      "requestId": "HVT8O0rByf0",
+      "driverId": "BJZSS9Oxt_U",
+      "driverName": "Carlos",
+      "vehicleType": "Mototaxi",
+      "ratingAverage": 0,
+      "photoUrl": "",
+      "status": "ACCEPTED",
+      "appliedAt": "2026-06-15T21:24:40.448Z"
+    },
+    {
+      "id": "xBNCA1KbtvQ",
+      "requestId": "16q2UAA6pvY",
+      "driverId": "BJZSS9Oxt_U",
+      "driverName": "Carlos",
+      "vehicleType": "Mototaxi",
+      "ratingAverage": 0,
+      "photoUrl": "",
+      "status": "ACCEPTED",
+      "appliedAt": "2026-06-15T21:30:07.299Z"
     }
   ],
   "rides": [
     {
-      "id": "zNdsrkgXOCw",
-      "requestId": "rNCry30v-vg",
+      "id": "X0vuKJtweN0",
+      "requestId": "qDVGCQP-v10",
       "passengerId": "u-001",
       "driverId": "d-001",
-      "origin": "-9.48163,-78.29432",
-      "destination": "-9.47437,-78.29282",
+      "origin": "-9.47114,-78.30307",
+      "destination": "-9.47219,-78.29879",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "CANCELLED",
+      "createdAt": "2026-06-15T17:29:13.219Z",
+      "completedAt": ""
     },
     {
-      "id": "1QovTm74J9g",
-      "requestId": "qTM9206wwb0",
+      "id": "Q_JcEjPDfdU",
+      "requestId": "cyA8HhLskyY",
       "passengerId": "u-001",
       "driverId": "d-001",
-      "origin": "-9.47466,-78.30149",
-      "destination": "-9.47194,-78.29651",
+      "origin": "-9.47002,-78.30195",
+      "destination": "-9.47221,-78.29308",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "CANCELLED",
+      "createdAt": "2026-06-15T17:46:42.172Z",
+      "completedAt": ""
     },
     {
-      "id": "AoCEc0ss2uo",
-      "requestId": "08AUwsyiVTE",
+      "id": "Jko6Gqcrw9w",
+      "requestId": "x8E3N_lMiwk",
       "passengerId": "u-001",
       "driverId": "d-001",
-      "origin": "-9.47251,-78.30168",
-      "destination": "-9.47158,-78.29604",
+      "origin": "-9.15054,-78.28058",
+      "destination": "-9.14751,-78.28130",
       "estimatedFare": 4,
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T17:47:44.016Z",
+      "completedAt": "2026-06-15T17:48:05.846Z"
+    },
+    {
+      "id": "IF-1Ik3v1KQ",
+      "requestId": "lUl7_IfzDxE",
+      "passengerId": "2v1oWV0QoFA",
+      "driverId": "BJZSS9Oxt_U",
+      "origin": "-9.47055,-78.30161",
+      "destination": "-9.47179,-78.29651",
+      "estimatedFare": 4,
+      "status": "CANCELLED",
+      "createdAt": "2026-06-15T21:23:41.515Z",
+      "completedAt": ""
+    },
+    {
+      "id": "matNE-oXwOM",
+      "requestId": "HVT8O0rByf0",
+      "passengerId": "2v1oWV0QoFA",
+      "driverId": "BJZSS9Oxt_U",
+      "origin": "-9.47131,-78.30273",
+      "destination": "-9.47215,-78.29700",
+      "estimatedFare": 4,
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T21:24:43.007Z",
+      "completedAt": "2026-06-15T21:24:58.118Z"
+    },
+    {
+      "id": "NuGWxmGWXZo",
+      "requestId": "16q2UAA6pvY",
+      "passengerId": "2v1oWV0QoFA",
+      "driverId": "BJZSS9Oxt_U",
+      "origin": "-9.47496,-78.30213",
+      "destination": "-9.47350,-78.29509",
+      "estimatedFare": 4,
+      "status": "COMPLETED",
+      "createdAt": "2026-06-15T21:30:10.069Z",
+      "completedAt": "2026-06-15T21:30:26.406Z"
     }
   ],
-  "ratings": [],
+  "ratings": [
+    {
+      "id": "JXiESV1eW6w",
+      "rideId": "Jko6Gqcrw9w",
+      "driverId": "d-001",
+      "passengerId": "u-001",
+      "driverRatingStatus": "RATED",
+      "passengerRatingStatus": "RATED",
+      "driverScore": 2,
+      "passengerScore": 3,
+      "passengerComment": "",
+      "rateableUntil": "2026-06-16T17:48:21.204Z"
+    },
+    {
+      "id": "BQg-avBmDuY",
+      "rideId": "matNE-oXwOM",
+      "driverId": "BJZSS9Oxt_U",
+      "passengerId": "2v1oWV0QoFA",
+      "driverRatingStatus": "RATED",
+      "passengerRatingStatus": "RATED",
+      "driverScore": 5,
+      "passengerScore": 5,
+      "passengerComment": "",
+      "rateableUntil": "2026-06-16T21:25:01.716Z"
+    },
+    {
+      "id": "-0ZqDJZ4HUk",
+      "rideId": "NuGWxmGWXZo",
+      "driverId": "BJZSS9Oxt_U",
+      "passengerId": "2v1oWV0QoFA",
+      "driverRatingStatus": "RATED",
+      "passengerRatingStatus": "RATED",
+      "driverScore": 4,
+      "passengerScore": 2,
+      "passengerComment": "bien",
+      "rateableUntil": "2026-06-16T21:30:34.888Z"
+    }
+  ],
   "wallets": [
     {
       "id": "w-001",
       "driverId": "d-001",
-      "balance": 25.5,
+      "balance": 49.8,
       "status": "ACTIVE"
+    },
+    {
+      "driverId": "ftHMmu2xvx4",
+      "balance": 10,
+      "status": "ACTIVE",
+      "id": "YSchbOLidbI"
+    },
+    {
+      "driverId": "BJZSS9Oxt_U",
+      "balance": 9.6,
+      "status": "ACTIVE",
+      "id": "kWuHwxp46M8"
     }
   ],
   "fareConfig": [
@@ -204,6 +425,62 @@
       "baseFare": 2.5,
       "pricePerKm": 1.2,
       "minimumFare": 4
+    }
+  ],
+  "walletTransactions": [
+    {
+      "walletId": "YSchbOLidbI",
+      "tripId": null,
+      "type": "TOP_UP",
+      "amount": 10,
+      "resultingBalance": 10,
+      "timestamp": "2026-06-15T15:41:05.688Z",
+      "id": "4peZi3tebXI"
+    },
+    {
+      "walletId": "w-001",
+      "tripId": null,
+      "type": "TOP_UP",
+      "amount": 50,
+      "resultingBalance": 50,
+      "timestamp": "2026-06-15T15:56:20.565Z",
+      "id": "8U3Hbx5t7-k"
+    },
+    {
+      "walletId": "w-001",
+      "tripId": "Jko6Gqcrw9w",
+      "type": "COMMISSION",
+      "amount": -0.2,
+      "resultingBalance": 49.8,
+      "timestamp": "2026-06-15T17:48:05.964Z",
+      "id": "vVT8W0qpjPk"
+    },
+    {
+      "walletId": "kWuHwxp46M8",
+      "tripId": null,
+      "type": "TOP_UP",
+      "amount": 10,
+      "resultingBalance": 10,
+      "timestamp": "2026-06-15T21:23:03.698Z",
+      "id": "d9JbjiKOo_4"
+    },
+    {
+      "walletId": "kWuHwxp46M8",
+      "tripId": "matNE-oXwOM",
+      "type": "COMMISSION",
+      "amount": -0.2,
+      "resultingBalance": 9.8,
+      "timestamp": "2026-06-15T21:24:58.183Z",
+      "id": "HK_CkPoSc-s"
+    },
+    {
+      "walletId": "kWuHwxp46M8",
+      "tripId": "NuGWxmGWXZo",
+      "type": "COMMISSION",
+      "amount": -0.2,
+      "resultingBalance": 9.6,
+      "timestamp": "2026-06-15T21:30:26.468Z",
+      "id": "e_G20YzD42c"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

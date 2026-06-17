@@ -1,0 +1,189 @@
+<div class="profile-page" [class.theme--driver]="account()?.role === 'DRIVER'" [class.theme--passenger]="account()?.role === 'PASSENGER'">
+  <!-- Page header -->
+  <div class="page-header">
+    <h1>Mi perfil</h1>
+    <p>Visualiza y edita tu información personal</p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Cargando...</span>
+    </div>
+  }
+
+  <!-- Success message -->
+  @if (message()) {
+    <div class="success-banner" role="status">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ message() }}</span>
+      <button mat-icon-button class="dismiss-btn" (click)="dismissMessage()"
+              aria-label="Cerrar mensaje">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
+  <!-- Error message -->
+  @if (error()) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- EDIT MODE -->
+  @if (editMode()) {
+    <app-profile-edit-form
+      (saved)="onProfileSaved()"
+      (cancelled)="cancelEdit()">
+    </app-profile-edit-form>
+  }
+
+  <!-- VIEW MODE -->
+  @if (!editMode()) {
+    <div class="profile-grid">
+      <!-- Left column: avatar + basic info -->
+      <div class="profile-card">
+        <div class="avatar-section">
+          @if (profile()?.photoUrl && !avatarError) {
+            <img [src]="profile()?.photoUrl" [alt]="'Foto de ' + profile()?.fullName"
+                 class="profile-avatar" (error)="avatarError = true" />
+          } @else {
+            <div class="profile-avatar profile-avatar--fallback">
+              <mat-icon>person</mat-icon>
+            </div>
+          }
+        </div>
+
+        <div class="info-section">
+          <h2 class="profile-name">{{ profile()?.fullName || 'Sin nombre' }}</h2>
+          <span class="profile-role-badge">{{ roleLabel }}</span>
+        </div>
+
+        <button mat-stroked-button color="primary" class="edit-btn"
+                (click)="enableEdit()" aria-label="Editar perfil">
+          <mat-icon>edit</mat-icon>
+          Editar perfil
+        </button>
+      </div>
+
+      <!-- Right column: details -->
+      <div class="details-card">
+        <h3 class="details-title">Información de la cuenta</h3>
+
+        <div class="detail-row">
+          <mat-icon class="detail-icon">email</mat-icon>
+          <div class="detail-text">
+            <span class="detail-label">Correo electrónico</span>
+            <span class="detail-value">{{ profile()?.email || account()?.email || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-divider"></div>
+
+        <div class="detail-row">
+          <mat-icon class="detail-icon">fingerprint</mat-icon>
+          <div class="detail-text">
+            <span class="detail-label">ID de cuenta</span>
+            <span class="detail-value detail-value--mono">{{ account()?.id || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-divider"></div>
+
+        <div class="detail-row">
+          <mat-icon class="detail-icon">shield</mat-icon>
+          <div class="detail-text">
+            <span class="detail-label">Rol</span>
+            <span class="detail-value">{{ roleLabel }}</span>
+          </div>
+        </div>
+
+        @if (account()?.role === 'DRIVER') {
+          <div class="detail-divider"></div>
+
+          <!-- Estado de Verificación -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">verified</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Estado de verificación</span>
+              @if (driver()?.accessStatus === 'ACTIVE' || driver()?.accessStatus === 'APPROVED') {
+                <span class="badge badge--success">Activo</span>
+              } @else if (driver()?.accessStatus === 'RESTRICTED' || driver()?.accessStatus === 'REJECTED') {
+                <span class="badge badge--danger">Restringido</span>
+              } @else {
+                <span class="detail-value">{{ driver()?.accessStatus || '—' }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Estado Operativo -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">settings_applications</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Estado operativo</span>
+              <span class="badge" [class.badge--success]="driver()?.isAvailable"
+                                  [class.badge--danger]="!driver()?.isAvailable">
+                {{ driver()?.isAvailable ? 'Disponible (Online)' : 'Inactivo (Offline)' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Reputación (US-23) -->
+          <app-rating-summary
+            [reputation]="trustStore.driverReputation()"
+            role="DRIVER"
+            [loading]="trustStore.isLoading()">
+          </app-rating-summary>
+
+          <div class="detail-divider"></div>
+
+          <!-- Tipo de Vehículo -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">two_wheeler</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Tipo de vehículo</span>
+              <span class="detail-value">{{ driver()?.vehicleType || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Documentos Registrados (US-04) -->
+          <div class="detail-row">
+            <mat-icon class="detail-icon">description</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Número de Brevete</span>
+              <span class="detail-value">{{ driver()?.licenseNumber || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <div class="detail-row">
+            <mat-icon class="detail-icon">policy</mat-icon>
+            <div class="detail-text">
+              <span class="detail-label">Número de SOAT</span>
+              <span class="detail-value">{{ driver()?.soatNumber || '—' }}</span>
+            </div>
+          </div>
+        }
+
+        @if (account()?.role === 'PASSENGER') {
+          <div class="detail-divider"></div>
+          <app-rating-summary
+            [reputation]="trustStore.passengerReputation()"
+            role="PASSENGER"
+            [loading]="trustStore.isLoading()">
+          </app-rating-summary>
+        }
+      </div>
+    </div>
+  }
+</div>

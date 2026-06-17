@@ -1,0 +1,148 @@
+<div class="register-page">
+  <div class="register-card">
+    <!-- Header -->
+    <div class="register-header">
+      <mat-icon class="header-icon">two_wheeler</mat-icon>
+      <h1 class="header-title">Crear cuenta — Conductor</h1>
+      <p class="header-sub">Regístrate para empezar a recibir solicitudes de viaje.</p>
+    </div>
+
+    <!-- Loading spinner -->
+    @if (store.isLoading()) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+        <span>Creando tu cuenta...</span>
+      </div>
+    }
+
+    <!-- Error message -->
+    @if (store.error()) {
+      <div class="error-banner" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ store.error() }}</span>
+      </div>
+    }
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Full Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre completo</mat-label>
+        <input matInput type="text" formControlName="fullName"
+               placeholder="Carlos Mendoza" autocomplete="name"
+               aria-label="Nombre completo" />
+        <mat-icon matPrefix>badge</mat-icon>
+        @if (fullName.invalid && fullName.touched) {
+          <mat-error>
+            @if (fullName.errors?.['required']) { El nombre es obligatorio. }
+            @if (fullName.errors?.['minlength']) { Mínimo 3 caracteres. }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Email -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Correo electrónico</mat-label>
+        <input matInput type="email" formControlName="email"
+               placeholder="tu@correo.com" autocomplete="email"
+               aria-label="Correo electrónico" />
+        <mat-icon matPrefix>email</mat-icon>
+        @if (email.invalid && email.touched) {
+          <mat-error>
+            @if (email.errors?.['required']) { El correo es obligatorio. }
+            @if (email.errors?.['email']) { Ingresa un correo válido. }
+          </mat-error>
+        }
+      </mat-form-field>
+
+
+
+      <!-- License Number -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Número de Brevete (Licencia)</mat-label>
+        <input matInput type="text" formControlName="licenseNumber"
+               placeholder="Q12345678" aria-label="Número de Brevete" />
+        <mat-icon matPrefix>description</mat-icon>
+        @if (licenseNumber.invalid && licenseNumber.touched) {
+          <mat-error>El número de brevete es obligatorio (mínimo 6 caracteres).</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- SOAT Number -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Número de SOAT vigente</mat-label>
+        <input matInput type="text" formControlName="soatNumber"
+               placeholder="S987654321" aria-label="Número de SOAT" />
+        <mat-icon matPrefix>verified_user</mat-icon>
+        @if (soatNumber.invalid && soatNumber.touched) {
+          <mat-error>El número de SOAT es obligatorio (mínimo 6 caracteres).</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Password -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contraseña</mat-label>
+        <input matInput [type]="passwordVisible ? 'text' : 'password'"
+               formControlName="password" autocomplete="new-password"
+               aria-label="Contraseña" />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button mat-icon-button matSuffix type="button"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+          <mat-icon>{{ passwordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (password.invalid && password.touched) {
+          <mat-error>
+            @if (password.errors?.['required']) { La contraseña es obligatoria. }
+            @if (password.errors?.['minlength']) { Mínimo 4 caracteres. }
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Confirm Password -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirmar contraseña</mat-label>
+        <input matInput [type]="confirmPasswordVisible ? 'text' : 'password'"
+               formControlName="confirmPassword" autocomplete="new-password"
+               aria-label="Confirmar contraseña" />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button mat-icon-button matSuffix type="button"
+                (click)="toggleConfirmPasswordVisibility()"
+                [attr.aria-label]="confirmPasswordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+          <mat-icon>{{ confirmPasswordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (confirmPassword.invalid && confirmPassword.touched) {
+          <mat-error>Debes confirmar tu contraseña.</mat-error>
+        }
+        @if (passwordsMismatch) {
+          <mat-error>Las contraseñas no coinciden.</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Note about verification -->
+      <div class="verification-note">
+        <mat-icon>info</mat-icon>
+        <span>Tu cuenta quedará pendiente de verificación por el administrador. Podrás iniciar sesión una vez aprobado.</span>
+      </div>
+
+      <!-- Submit -->
+      <button mat-flat-button color="primary" type="submit"
+              class="submit-btn" [disabled]="store.isLoading()"
+              aria-label="Crear cuenta de conductor">
+        <mat-icon>how_to_reg</mat-icon>
+        Enviar registro
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="register-footer">
+      <span>¿Ya tienes cuenta?</span>
+      <a routerLink="/login" aria-label="Iniciar sesión">Iniciar sesión</a>
+    </div>
+
+    <div class="register-footer">
+      <span>¿Eres pasajero?</span>
+      <a routerLink="/register/passenger" aria-label="Registrarse como pasajero">Registrarme como pasajero</a>
+    </div>
+  </div>
+</div>

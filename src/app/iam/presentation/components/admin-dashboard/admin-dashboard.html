@@ -1,0 +1,39 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <nav class="admin-sidebar">
+    <div class="sidebar-header">
+      <h2>Admin Panel</h2>
+    </div>
+
+    <div class="user-block">
+      <mat-icon>shield</mat-icon>
+      <div>
+        <span class="user-name">{{ store.currentProfile()?.fullName || store.currentAccount()?.email }}</span>
+        <span class="user-role">Administrador</span>
+      </div>
+    </div>
+
+    <mat-nav-list>
+      <a mat-list-item routerLink="/admin/drivers" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>people</mat-icon>
+        <span matListItemTitle>Conductores</span>
+      </a>
+      <a mat-list-item routerLink="/admin/fare-config" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>payments</mat-icon>
+        <span matListItemTitle>Tarifas</span>
+      </a>
+    </mat-nav-list>
+
+    <div class="sidebar-footer">
+      <button mat-button color="warn" (click)="store.signOut()" aria-label="Cerrar sesión">
+        <mat-icon>logout</mat-icon>
+        Cerrar sesión
+      </button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="admin-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

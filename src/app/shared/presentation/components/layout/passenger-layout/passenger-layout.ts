@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -6,6 +6,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { IamStore } from '../../../../../iam/application/iam.store';
+import { TrustReputationStore } from '../../../../../trust-reputation/application/trust-reputation.store';
+import { ReputationBadgeComponent } from '../../../../../trust-reputation/presentation/components/reputation-badge/reputation-badge';
 
 @Component({
   selector: 'app-passenger-layout',
@@ -18,7 +20,8 @@ import { IamStore } from '../../../../../iam/application/iam.store';
     MatSidenavModule,
     MatListModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    ReputationBadgeComponent,
   ],
   templateUrl: './passenger-layout.html',
   styles: [`
@@ -48,9 +51,14 @@ import { IamStore } from '../../../../../iam/application/iam.store';
     .user-block {
       padding: 16px 20px;
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .user-row {
+      display: flex;
       align-items: center;
       gap: 12px;
-      border-bottom: 1px solid #f5f5f5;
     }
     .avatar {
       width: 40px;
@@ -58,6 +66,22 @@ import { IamStore } from '../../../../../iam/application/iam.store';
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid #e8f0fe;
+    }
+    .avatar-fallback {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #e8f0fe;
+      color: #1a73e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #e8f0fe;
+    }
+    .avatar-fallback mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
     .user-info {
       display: flex;
@@ -104,8 +128,25 @@ import { IamStore } from '../../../../../iam/application/iam.store';
 })
 export class PassengerLayoutComponent {
   private iamStore: IamStore = inject(IamStore);
+  protected trustStore = inject(TrustReputationStore);
 
   profile = this.iamStore.currentProfile;
+  avatarError = false;
+
+  constructor() {
+    effect(() => {
+      const account = this.iamStore.currentAccount();
+      if (account?.id && account.role === 'PASSENGER') {
+        this.trustStore.loadPassengerReputation(account.id);
+      }
+    });
+
+    effect(() => {
+      // Reset error when profile signal changes
+      this.profile();
+      this.avatarError = false;
+    });
+  }
 
   logout(): void {
     this.iamStore.signOut();

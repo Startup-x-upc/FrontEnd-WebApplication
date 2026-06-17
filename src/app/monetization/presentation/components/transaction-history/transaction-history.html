@@ -1,0 +1,63 @@
+<div class="history-card">
+  <!-- Header -->
+  <div class="history-header">
+    <mat-icon>receipt_long</mat-icon>
+    <span>Historial de transacciones</span>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    <button class="filter-btn" [class.filter-btn--active]="activeFilter() === 'ALL'"
+            (click)="filterChange.emit('ALL')" aria-label="Mostrar todas las transacciones">
+      Todas
+    </button>
+    <button class="filter-btn" [class.filter-btn--active]="activeFilter() === 'TOP_UP'"
+            (click)="filterChange.emit('TOP_UP')" aria-label="Filtrar recargas">
+      <mat-icon>add_circle</mat-icon> Recargas
+    </button>
+    <button class="filter-btn" [class.filter-btn--active]="activeFilter() === 'COMMISSION'"
+            (click)="filterChange.emit('COMMISSION')" aria-label="Filtrar comisiones">
+      <mat-icon>remove_circle</mat-icon> Comisiones
+    </button>
+  </div>
+
+  <!-- Transaction list -->
+  <div class="txn-list">
+    @for (txn of transactions(); track txn.id) {
+      <div class="txn-row" [class]="typeClass(txn.type)">
+        <!-- Icon -->
+        <div class="txn-icon">
+          <mat-icon>{{ typeIcon(txn.type) }}</mat-icon>
+        </div>
+
+        <!-- Info -->
+        <div class="txn-info">
+          <span class="txn-type">
+            @if (txn.type === 'TOP_UP') { Recarga }
+            @else if (txn.type === 'COMMISSION') { Comisión }
+            @else { Fallo de recarga }
+          </span>
+          <span class="txn-date">{{ txn.timestamp | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+
+        <!-- Amount -->
+        <div class="txn-amount" [class.txn-amount--positive]="txn.amount >= 0"
+                                [class.txn-amount--negative]="txn.amount < 0">
+          {{ formatAmount(txn.amount) }}
+        </div>
+
+        <!-- Resulting balance -->
+        <div class="txn-balance">
+          <span class="balance-label">Saldo</span>
+          <span class="balance-value">S/ {{ txn.resultingBalance | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    } @empty {
+      <div class="txn-empty">
+        <mat-icon>inbox</mat-icon>
+        <h3>Sin movimientos</h3>
+        <p>Aún no tienes transacciones registradas en tu wallet.</p>
+      </div>
+    }
+  </div>
+</div>

@@ -5,6 +5,29 @@ import { Routes } from '@angular/router';
  * @author Jesús Iván Castillo Vidal
  */
 export const routes: Routes = [
+  // ── Registration (Sprint 3) ────────────────────────────────────────
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./iam/presentation/pages/register-page/register-page').then(
+        (m) => m.RegisterPage,
+      ),
+  },
+  {
+    path: 'register/passenger',
+    loadComponent: () =>
+      import('./iam/presentation/pages/register-page/register-page').then(
+        (m) => m.RegisterPage,
+      ),
+  },
+  {
+    path: 'register/driver',
+    loadComponent: () =>
+      import('./iam/presentation/pages/register-page/register-page').then(
+        (m) => m.RegisterPage,
+      ),
+  },
+  // ── Login ──────────────────────────────────────────────────────────
   {
     path: 'login',
     loadComponent: () =>
@@ -29,6 +52,20 @@ export const routes: Routes = [
             (m) => m.PassengerRequestPageComponent,
           ),
       },
+      {
+        path: 'trips',
+        loadComponent: () =>
+          import('./ride-dispatch/presentation/components/trip-history-page/trip-history-page').then(
+            (m) => m.TripHistoryPage,
+          ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./iam/presentation/components/profile-page/profile-page').then(
+            (m) => m.ProfilePage,
+          ),
+      },
       { path: '', redirectTo: 'request-ride', pathMatch: 'full' }
     ]
   },
@@ -51,15 +88,58 @@ export const routes: Routes = [
             (m) => m.DriverDashboardPageComponent,
           ),
       },
+      {
+        path: 'wallet',
+        loadComponent: () =>
+          import('./monetization/presentation/components/monetization-page/monetization-page').then(
+            (m) => m.MonetizationPageComponent,
+          ),
+      },
+      {
+        path: 'trips',
+        loadComponent: () =>
+          import('./ride-dispatch/presentation/components/trip-history-page/trip-history-page').then(
+            (m) => m.TripHistoryPage,
+          ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./iam/presentation/components/profile-page/profile-page').then(
+            (m) => m.ProfilePage,
+          ),
+      },
       { path: '', redirectTo: 'home', pathMatch: 'full' },
     ],
   },
   {
-    path: 'dashboard/admin',
+    path: 'admin',
     loadComponent: () =>
       import('./iam/presentation/components/admin-dashboard/admin-dashboard').then(
         (m) => m.AdminDashboard,
       ),
+    children: [
+      {
+        path: 'drivers',
+        loadComponent: () =>
+          import('./driver-management/presentation/components/drivers-management-page/drivers-management-page').then(
+            (m) => m.DriversManagementPage,
+          ),
+      },
+      {
+        path: 'fare-config',
+        loadComponent: () =>
+          import('./monetization/presentation/components/admin-fare-config-page/admin-fare-config-page').then(
+            (m) => m.AdminFareConfigPageComponent,
+          ),
+      },
+      { path: '', redirectTo: 'drivers', pathMatch: 'full' },
+    ],
+  },
+  {
+    path: 'dashboard/admin',
+    redirectTo: 'admin',
+    pathMatch: 'full',
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' },

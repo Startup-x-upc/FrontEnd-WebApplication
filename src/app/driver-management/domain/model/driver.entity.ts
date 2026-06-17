@@ -1,6 +1,6 @@
 import { BaseEntity } from '../../../shared/domain/model/base-entity';
 
-export type DriverAccessStatus = 'ACTIVE' | 'PENDING_VERIFICATION' | 'RESTRICTED';
+export type DriverAccessStatus = 'ACTIVE' | 'PENDING_VERIFICATION' | 'RESTRICTED' | 'APPROVED' | 'REJECTED';
 
 export class Driver implements BaseEntity {
   id: string = '';
@@ -8,9 +8,14 @@ export class Driver implements BaseEntity {
   fullName: string = '';
   vehicleType: string = '';
   ratingAverage: number = 0;
+  ratingCount: number = 0;
   photoUrl: string = '';
   isAvailable: boolean = false;
-  accessStatus: DriverAccessStatus = 'PENDING_VERIFICATION';
+  accessStatus: DriverAccessStatus = 'ACTIVE';
+  licenseNumber: string = '';
+  soatNumber: string = '';
+  createdAt: string = '';
+  updatedAt: string = '';
 
 
   approve(): void  { this.accessStatus = 'ACTIVE'; }

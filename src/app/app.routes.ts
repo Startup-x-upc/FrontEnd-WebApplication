@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './shared/infrastructure/auth.guard';
 
 /**
  * @summary Application routes. IAM is the default entry point.
@@ -40,6 +41,8 @@ export const routes: Routes = [
   },
   {
     path: 'passenger',
+    canActivate: [authGuard],
+    data: { role: 'PASSENGER' },
     loadComponent: () =>
       import('./shared/presentation/components/layout/passenger-layout/passenger-layout').then(
         (m) => m.PassengerLayoutComponent,
@@ -76,6 +79,8 @@ export const routes: Routes = [
   },
   {
     path: 'driver',
+    canActivate: [authGuard],
+    data: { role: 'DRIVER' },
     loadComponent: () =>
       import('./shared/presentation/components/layout/driver-layout/driver-layout').then(
         (m) => m.DriverLayoutComponent,
@@ -114,6 +119,8 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
+    canActivate: [authGuard],
+    data: { role: 'ADMIN' },
     loadComponent: () =>
       import('./iam/presentation/components/admin-dashboard/admin-dashboard').then(
         (m) => m.AdminDashboard,

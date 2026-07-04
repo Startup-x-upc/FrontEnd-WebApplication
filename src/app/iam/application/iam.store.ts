@@ -124,6 +124,8 @@ export class IamStore {
     this.currentProfileSignal.set(null);
     this.errorSignal.set(null);
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('chapatuRuta_access_token');
+    localStorage.removeItem('chapatuRuta_refresh_token');
     this.router.navigate(['/login']);
   }
 

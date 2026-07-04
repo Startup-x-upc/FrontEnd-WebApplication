@@ -1,24 +1,23 @@
-import { AuthResponse } from './auth-response';
 import { Account } from '../domain/model/account.entity';
 
 /**
- * @summary Maps AuthResponse DTOs from the API into Account domain entities.
+ * @summary Maps user responses from the API into Account domain entities.
  * Uses static methods — no @Injectable, no side effects.
  * @author Jesús Iván Castillo Vidal
  */
 export class AccountAssembler {
 
   /**
-   * Converts a raw AuthResponse DTO into an Account domain entity.
+   * Converts a raw user object returned by Spring Boot API into an Account domain entity.
    *
-   * @param response - The raw user object returned by json-server.
+   * @param response - The raw user object (e.g. UserResource).
    * @returns A fully populated Account entity.
    */
-  static toEntity(response: AuthResponse): Account {
+  static toEntity(response: any): Account {
     const account = new Account();
-    account.id = response.id;
-    account.email = response.email;
-    account.role = response.role;
+    account.id = response.id || '';
+    account.email = response.email || '';
+    account.role = response.role || '';
     return account;
   }
 }

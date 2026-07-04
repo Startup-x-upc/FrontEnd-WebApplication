@@ -5,6 +5,7 @@
 export const environment = {
   production: true,
   apiBaseUrl: 'https://fake-api-419p.onrender.com',
+  realApiBaseUrl: 'http://localhost:8080',
   logoProviderApiBaseUrl: 'https://img.logo.dev/',
   logoProviderPublishableKey: 'pk_WGGAjW7qTXKkKp9SS-SlUg',
 };

@@ -27,12 +27,10 @@ import {
 
 import type {
   DriverAvailabilityResponse,
+  DriverListResponse,
   DriverResponse,
-  GetAllDrivers200,
   GetAllDriversParams,
-  RestrictDriver200,
-  RestrictDriverResource,
-  UnrestrictDriver200
+  RestrictDriverResource
 } from '../model';
 
 
@@ -148,10 +146,10 @@ export class DriverManagementService {
 /**
  * @summary Unrestrict a driver (ADMIN only)
  */
- unrestrictDriver<TData = UnrestrictDriver200>(id: string, options?: HttpClientBodyOptions): Observable<TData>;
- unrestrictDriver<TData = UnrestrictDriver200>(id: string, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
- unrestrictDriver<TData = UnrestrictDriver200>(id: string, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
-  unrestrictDriver<TData = UnrestrictDriver200>(
+ unrestrictDriver<TData = DriverResponse>(id: string, options?: HttpClientBodyOptions): Observable<TData>;
+ unrestrictDriver<TData = DriverResponse>(id: string, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
+ unrestrictDriver<TData = DriverResponse>(id: string, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
+  unrestrictDriver<TData = DriverResponse>(
     id: string, options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {
     if (options?.observe === 'events') {
       return this.http.post<TData>(
@@ -220,13 +218,13 @@ export class DriverManagementService {
 /**
  * @summary Restrict a driver (ADMIN only)
  */
- restrictDriver<TData = RestrictDriver200>(id: string,
+ restrictDriver<TData = DriverResponse>(id: string,
     restrictDriverResource: RestrictDriverResource, options?: HttpClientBodyOptions): Observable<TData>;
- restrictDriver<TData = RestrictDriver200>(id: string,
+ restrictDriver<TData = DriverResponse>(id: string,
     restrictDriverResource: RestrictDriverResource, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
- restrictDriver<TData = RestrictDriver200>(id: string,
+ restrictDriver<TData = DriverResponse>(id: string,
     restrictDriverResource: RestrictDriverResource, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
-  restrictDriver<TData = RestrictDriver200>(
+  restrictDriver<TData = DriverResponse>(
     id: string,
     restrictDriverResource: RestrictDriverResource, options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {
     if (options?.observe === 'events') {
@@ -293,10 +291,10 @@ export class DriverManagementService {
 /**
  * @summary Get all drivers (ADMIN only)
  */
- getAllDrivers<TData = GetAllDrivers200>(params?: GetAllDriversParams, options?: HttpClientBodyOptions): Observable<TData>;
- getAllDrivers<TData = GetAllDrivers200>(params?: GetAllDriversParams, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
- getAllDrivers<TData = GetAllDrivers200>(params?: GetAllDriversParams, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
-  getAllDrivers<TData = GetAllDrivers200>(
+ getAllDrivers<TData = DriverListResponse>(params?: GetAllDriversParams, options?: HttpClientBodyOptions): Observable<TData>;
+ getAllDrivers<TData = DriverListResponse>(params?: GetAllDriversParams, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
+ getAllDrivers<TData = DriverListResponse>(params?: GetAllDriversParams, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
+  getAllDrivers<TData = DriverListResponse>(
     params?: GetAllDriversParams, options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {
     const filteredParams = filterParams({...params, ...options?.params}, new Set<string>([]));
 

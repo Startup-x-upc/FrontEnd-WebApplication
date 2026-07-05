@@ -118,6 +118,7 @@
         "tags": [
           "Monetization"
         ],
+        "summary": "Configure global fare policy (ADMIN only)",
         "operationId": "configureFarePolicy",
         "requestBody": {
           "content": {
@@ -131,11 +132,11 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Fare policy updated successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/FarePolicyResponse"
                 }
               }
             }
@@ -712,11 +713,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver unrestricted successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DriverResponse"
                 }
               }
             }
@@ -786,11 +787,11 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver restricted successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DriverResponse"
                 }
               }
             }
@@ -1330,11 +1331,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "All drivers retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DriverListResponse"
                 }
               }
             }
@@ -1622,6 +1623,31 @@
           },
           "commissionRate": {
             "type": "number"
+          }
+        }
+      },
+      "FarePolicyResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseFare": {
+            "type": "number"
+          },
+          "pricePerKm": {
+            "type": "number"
+          },
+          "minimumFare": {
+            "type": "number"
+          },
+          "commissionRate": {
+            "type": "number"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1984,6 +2010,62 @@
           }
         }
       },
+      "DriverResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "vehicleType": {
+            "type": "string"
+          },
+          "accessStatus": {
+            "type": "string"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "ratingAverage": {
+            "type": "number",
+            "format": "double"
+          },
+          "ratingCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "licenseNumber": {
+            "type": "string"
+          },
+          "soatNumber": {
+            "type": "string"
+          },
+          "isBusy": {
+            "type": "boolean"
+          },
+          "activeRideId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "restrictionReason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "DriverAvailabilityResponse": {
         "type": "object",
         "properties": {
@@ -2239,62 +2321,6 @@
         },
         "description": "Request body for login"
       },
-      "DriverResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "userId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "vehicleType": {
-            "type": "string"
-          },
-          "accessStatus": {
-            "type": "string"
-          },
-          "isAvailable": {
-            "type": "boolean"
-          },
-          "ratingAverage": {
-            "type": "number",
-            "format": "double"
-          },
-          "ratingCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "photoUrl": {
-            "type": "string"
-          },
-          "licenseNumber": {
-            "type": "string"
-          },
-          "soatNumber": {
-            "type": "string"
-          },
-          "isBusy": {
-            "type": "boolean"
-          },
-          "activeRideId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "restrictionReason": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "RideRequestListResponse": {
         "type": "object",
         "properties": {
@@ -2381,28 +2407,17 @@
           }
         }
       },
-      "FarePolicyResponse": {
+      "DriverListResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DriverResponse"
+            }
           },
-          "baseFare": {
-            "type": "number"
-          },
-          "pricePerKm": {
-            "type": "number"
-          },
-          "minimumFare": {
-            "type": "number"
-          },
-          "commissionRate": {
-            "type": "number"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
           }
         }
       },

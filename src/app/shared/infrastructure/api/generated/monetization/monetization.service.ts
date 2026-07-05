@@ -30,7 +30,6 @@ import type {
   ApplyCommissionResource,
   CanDriverOperateParams,
   CanOperateResponse,
-  ConfigureFarePolicy200,
   ConfigureFarePolicyResource,
   EstimatedFareResource,
   FarePolicyResponse,
@@ -184,10 +183,13 @@ export class MonetizationService {
       }
     );
   }
- configureFarePolicy<TData = ConfigureFarePolicy200>(configureFarePolicyResource: ConfigureFarePolicyResource, options?: HttpClientBodyOptions): Observable<TData>;
- configureFarePolicy<TData = ConfigureFarePolicy200>(configureFarePolicyResource: ConfigureFarePolicyResource, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
- configureFarePolicy<TData = ConfigureFarePolicy200>(configureFarePolicyResource: ConfigureFarePolicyResource, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
-  configureFarePolicy<TData = ConfigureFarePolicy200>(
+/**
+ * @summary Configure global fare policy (ADMIN only)
+ */
+ configureFarePolicy<TData = FarePolicyResponse>(configureFarePolicyResource: ConfigureFarePolicyResource, options?: HttpClientBodyOptions): Observable<TData>;
+ configureFarePolicy<TData = FarePolicyResponse>(configureFarePolicyResource: ConfigureFarePolicyResource, options?: HttpClientEventOptions): Observable<HttpEvent<TData>>;
+ configureFarePolicy<TData = FarePolicyResponse>(configureFarePolicyResource: ConfigureFarePolicyResource, options?: HttpClientResponseOptions): Observable<AngularHttpResponse<TData>>;
+  configureFarePolicy<TData = FarePolicyResponse>(
     configureFarePolicyResource: ConfigureFarePolicyResource, options?: HttpClientObserveOptions): Observable<TData | HttpEvent<TData> | AngularHttpResponse<TData>> {
     if (options?.observe === 'events') {
       return this.http.put<TData>(

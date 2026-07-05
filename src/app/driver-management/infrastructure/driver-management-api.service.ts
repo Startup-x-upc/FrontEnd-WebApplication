@@ -1,38 +1,25 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { Driver, DriverAccessStatus } from '../domain/model/driver.entity';
 import { DriverAvailability } from '../../ride-dispatch/domain/model/driver-availability.entity';
 import { DriverManagementService } from '../../shared/infrastructure/api/generated/driver-management/driver-management.service';
-import { DriverResponse, DriverAvailabilityResponse } from '../../shared/infrastructure/api/generated/model';
-
-// ponytail: DriverAssembler kept for admin-panel methods that still use json-server DTOs
-import { DriverAssembler } from './driver-assembler';
-
-// Local DTO still used by admin-panel methods not yet migrated
-import { DriverResponse as LocalDriverResponse } from './driver-response';
+import { DriverResponse, DriverAvailabilityResponse, DriverListResponse } from '../../shared/infrastructure/api/generated/model';
 
 /**
  * @summary Infrastructure gateway for the Driver Management bounded context.
- * Core driver queries delegate to the Orval-generated DriverManagementService (real backend).
- * Admin-panel methods (approve/reject/setOperationalStatus) still use json-server pending their migration.
- * @author Sprint 3 — Driver Management Bounded Context
+ * Delegates all queries and commands to the Orval-generated DriverManagementService.
+ * @author Jesús Iván Castillo Vidal
  */
 @Injectable({ providedIn: 'root' })
 export class DriverManagementApiService {
-  private http = inject(HttpClient);
   private driverMgmt = inject(DriverManagementService);
-
-  /** Base URL for the json-server (still used by admin-panel methods). */
-  private baseUrl = environment.apiBaseUrl;
 
   // ── Driver queries ────────────────────────────────────────────────────
 
   /**
    * Retrieves a driver by their linked user/account ID.
-   * Delegates to GET /api/v1/users/{userId}/driver on the real backend.
    */
   getDriverByAccountId(accountId: string): Observable<Driver> {
     return this.driverMgmt.getDriverByUserId(accountId).pipe(
@@ -42,50 +29,63 @@ export class DriverManagementApiService {
 
   /**
    * Retrieves all registered drivers.
-   * ponytail: still uses json-server — admin panel not yet migrated
    */
   getAllDrivers(): Observable<Driver[]> {
-    return this.http
-      .get<LocalDriverResponse[]>(`${this.baseUrl}/drivers`)
-      .pipe(map(responses => responses.map(DriverAssembler.toEntity)));
+    return this.driverMgmt.getAllDrivers({ perPage: 100 }).pipe(
+      map((res: DriverListResponse) => {
+        const items = res.data || [];
+        return items.map(d => this._toEntity(d));
+      })
+    );
   }
 
   /**
-   * Retrieves drivers filtered by verification status.
-   * ponytail: still uses json-server — admin panel not yet migrated
+   * Retrieves drivers filtered by access status.
    */
   getDriversByStatus(verificationStatus: string): Observable<Driver[]> {
-    return this.http
-      .get<LocalDriverResponse[]>(`${this.baseUrl}/drivers?verificationStatus=${verificationStatus}`)
-      .pipe(map(responses => responses.map(DriverAssembler.toEntity)));
+    // Map legacy verificationStatus parameter to accessStatus values
+    let accessStatus = verificationStatus;
+    if (verificationStatus === 'APPROVED') accessStatus = 'ACTIVE';
+    if (verificationStatus === 'REJECTED') accessStatus = 'RESTRICTED';
+
+    return this.driverMgmt.getAllDrivers({ accessStatus, perPage: 100 }).pipe(
+      map((res: DriverListResponse) => {
+        const items = res.data || [];
+        return items.map(d => this._toEntity(d));
+      })
+    );
   }
 
-  // ── Driver verification (US-06) — still json-server ───────────────────
+  // ── Driver restrictions / approvals (Legacy aliases, US-06 & US-26) ────
 
   approveDriver(driverId: string): Observable<Driver> {
-    return this.http
-      .patch<LocalDriverResponse>(`${this.baseUrl}/drivers/${driverId}`, { verificationStatus: 'APPROVED' })
-      .pipe(map(DriverAssembler.toEntity));
+    return this.driverMgmt.unrestrictDriver(driverId).pipe(
+      map((res: DriverResponse) => this._toEntity(res))
+    );
   }
 
   rejectDriver(driverId: string): Observable<Driver> {
-    return this.http
-      .patch<LocalDriverResponse>(`${this.baseUrl}/drivers/${driverId}`, { verificationStatus: 'REJECTED' })
-      .pipe(map(DriverAssembler.toEntity));
+    return this.driverMgmt.restrictDriver(driverId, { reason: 'Documentación rechazada por la administración' }).pipe(
+      map((res: DriverResponse) => this._toEntity(res))
+    );
   }
 
   setDriverOperationalStatus(driverId: string, status: 'ENABLED' | 'DISABLED'): Observable<Driver> {
-    return this.http
-      .patch<LocalDriverResponse>(`${this.baseUrl}/drivers/${driverId}`, { operationalStatus: status })
-      .pipe(map(DriverAssembler.toEntity));
+    if (status === 'ENABLED') {
+      return this.driverMgmt.unrestrictDriver(driverId).pipe(
+        map((res: DriverResponse) => this._toEntity(res))
+      );
+    } else {
+      return this.driverMgmt.restrictDriver(driverId, { reason: 'Deshabilitado por la administración' }).pipe(
+        map((res: DriverResponse) => this._toEntity(res))
+      );
+    }
   }
 
-  // ── Availability (real backend) ───────────────────────────────────────
+  // ── Availability ──────────────────────────────────────────────────────
 
   /**
-   * Toggles driver availability. Lives here (driver-management context) because
-   * toggle-availability is a Driver Management endpoint — keeping bounded contexts clean.
-   * The RideDispatch store calls this via DriverManagementStore, not directly.
+   * Toggles driver availability status.
    */
   toggleAvailability(driverId: string): Observable<DriverAvailability> {
     return this.driverMgmt.toggleAvailability(driverId).pipe(
@@ -105,7 +105,7 @@ export class DriverManagementApiService {
   private _toEntity(res: DriverResponse, fallbackAccountId?: string): Driver {
     const entity = new Driver();
     entity.id = res.id || '';
-    // ponytail: backend returns userId not accountId — map it here
+    // Map userId/accountId correctly to support domain properties
     entity.accountId = (res as any).userId || fallbackAccountId || '';
     entity.fullName = res.fullName || '';
     entity.vehicleType = res.vehicleType || '';

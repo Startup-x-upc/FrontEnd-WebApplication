@@ -62,12 +62,12 @@
           <!-- Action toggle -->
           <td>
             <button mat-stroked-button
-                    [color]="driver.isAvailable ? 'warn' : 'primary'"
+                    [color]="driver.accessStatus === 'ACTIVE' ? 'warn' : 'primary'"
                     [disabled]="loading()"
                     (click)="onToggle(driver)"
-                    [attr.aria-label]="driver.isAvailable ? 'Deshabilitar conductor' : 'Habilitar conductor'">
-              <mat-icon>{{ driver.isAvailable ? 'block' : 'check_circle' }}</mat-icon>
-              {{ driver.isAvailable ? 'Deshabilitar' : 'Habilitar' }}
+                    [attr.aria-label]="driver.accessStatus === 'ACTIVE' ? 'Deshabilitar conductor' : 'Habilitar conductor'">
+              <mat-icon>{{ driver.accessStatus === 'ACTIVE' ? 'block' : 'check_circle' }}</mat-icon>
+              {{ driver.accessStatus === 'ACTIVE' ? 'Deshabilitar' : 'Habilitar' }}
             </button>
           </td>
         </tr>

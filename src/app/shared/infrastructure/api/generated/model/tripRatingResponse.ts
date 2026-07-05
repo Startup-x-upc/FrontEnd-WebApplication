@@ -6,17 +6,16 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface RideResponse {
+export interface TripRatingResponse {
   id?: string;
-  requestId?: string;
-  passengerId?: string;
+  tripId?: string;
   driverId?: string;
-  driverName?: string;
-  passengerName?: string;
-  origin?: string;
-  destination?: string;
-  estimatedFare?: number;
-  status?: string;
+  passengerId?: string;
+  driverRatingStatus?: string;
+  passengerRatingStatus?: string;
+  driverScore?: number;
+  passengerScore?: number;
+  passengerComment?: string;
+  rateableUntil?: string;
   createdAt?: string;
-  completedAt?: string;
 }

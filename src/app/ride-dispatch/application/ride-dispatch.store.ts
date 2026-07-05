@@ -344,25 +344,17 @@ export class RideDispatchStore {
     if (!ride?.id) return;
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.updateRideStatus(ride.id, nextStatus).pipe(
-      switchMap(updated => {
+    this.api.updateRideStatus(ride.id, nextStatus).subscribe({
+      next: updated => {
         this.currentRideSignal.set(updated);
-        // Mark driver free when ride is completed
-        if (nextStatus === RideStatus.COMPLETED && avail?.id) {
-          // Apply 5% platform commission (US-29)
-          this.monetizationStore.applyCommission(
-            ride.driverId,
-            ride.id,
-            ride.estimatedFare
-          );
-          return this.api.markDriverFree(avail.id);
-        }
-        return of(null);
-      })
-    ).subscribe({
-      next: updatedAvail => {
-        if (updatedAvail) {
-          this.driverAvailabilitySignal.set(updatedAvail);
+        if (nextStatus === RideStatus.COMPLETED) {
+          if (avail) {
+            avail.isBusy = false;
+            avail.activeRideId = null;
+            this.driverAvailabilitySignal.set(avail);
+          }
+          // Also clear current ride so dashboard goes back to idle/dashboard view
+          this.currentRideSignal.set(null);
         }
         this.loadingSignal.set(false);
       },
@@ -393,12 +385,11 @@ export class RideDispatchStore {
             switchMap(ride => {
               // Auto-clean: if the ride was cancelled externally, free the driver
               if (ride.status === RideStatus.CANCELLED) {
-                return this.api.markDriverFree(a.id).pipe(
-                  map(updatedAvail => {
-                    this.driverAvailabilitySignal.set(updatedAvail);
-                    return null; // don't set currentRideSignal
-                  })
-                );
+                // ponytail: backend handles cancellation state, we just sync locally
+                a.isBusy = false;
+                a.activeRideId = null;
+                this.driverAvailabilitySignal.set(a);
+                return of(null);
               }
               return of(ride);
             })
@@ -491,17 +482,8 @@ export class RideDispatchStore {
     if (!ride?.id) return;
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    // 1) Mark ride as CANCELLED
-    this.api.updateRideStatus(ride.id, RideStatus.CANCELLED).pipe(
-      // 2) Look up driver availability via the ride's driverId (works for both passenger & driver)
-      switchMap(() => this.api.getDriverAvailability(ride.driverId)),
-      // 3) Free the driver if availability record exists
-      switchMap(avail => (avail?.id ? this.api.markDriverFree(avail.id) : of(null)))
-    ).subscribe({
-      next: updatedAvail => {
-        if (updatedAvail) {
-          this.driverAvailabilitySignal.set(updatedAvail);
-        }
+    this.api.cancelRide(ride.id).subscribe({
+      next: () => {
         // Clear ride context + map inputs so both passenger & driver return to initial state
         this.currentRideSignal.set(null);
         this.currentRequestSignal.set(null);
@@ -511,6 +493,13 @@ export class RideDispatchStore {
         this.destinationSignal.set('');
         this.distanceKmSignal.set(0);
         this.loadingSignal.set(false);
+        // Refresh availability if available locally
+        const avail = this.driverAvailabilitySignal();
+        if (avail) {
+          avail.isBusy = false;
+          avail.activeRideId = null;
+          this.driverAvailabilitySignal.set(avail);
+        }
       },
       error: () => {
         this.loadingSignal.set(false);

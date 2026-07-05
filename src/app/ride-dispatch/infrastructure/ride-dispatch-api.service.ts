@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 
 import { Ride } from '../domain/model/ride.entity';
 import { RideRequest } from '../domain/model/ride-request.entity';
@@ -8,10 +8,10 @@ import { RideCandidate } from '../domain/model/ride-candidate.entity';
 import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideStatus } from '../domain/model/ride.status';
 
-// Import generated services and models
 import { RideDispatchService } from '../../shared/infrastructure/api/generated/ride-dispatch/ride-dispatch.service';
-import { DriverManagementService } from '../../shared/infrastructure/api/generated/driver-management/driver-management.service';
-import { RideCandidateListResponse, SelectCandidateResponse, RideRequestResponse } from '../../shared/infrastructure/api/generated/model';
+// ponytail: toggle lives in DriverManagement context — delegated via its api service
+import { DriverManagementApiService } from '../../driver-management/infrastructure/driver-management-api.service';
+import { RideCandidateListResponse, SelectCandidateResponse, RideRequestResponse, RideRequestListResponse, RideCandidateResponse, DriverAvailabilityResponse, RideResponse, TripHistoryListResponse } from '../../shared/infrastructure/api/generated/model';
 
 import { RideRequestAssembler } from './ride-request-assembler';
 import { RideCandidateAssembler } from './ride-candidate-assembler';
@@ -26,24 +26,22 @@ import { RideAssembler } from './ride-assembler';
 export class RideDispatchApiService {
 
   private rideDispatchService = inject(RideDispatchService);
-  private driverManagementService = inject(DriverManagementService);
+  // ponytail: driver-management context — toggle is owned by DriverManagementApiService
+  private driverManagementApiService = inject(DriverManagementApiService);
 
   // ── Ride Requests ────────────────────────────────────────────────────
 
   /** Returns all OPEN requests visible to available drivers. */
   getOpenRideRequests(): Observable<RideRequest[]> {
-    return this.rideDispatchService.getOpenRideRequests<any>({ status: 'OPEN' }).pipe(
-      map((res: any) => {
-        const data = res.data || [];
-        return data.map(RideRequestAssembler.toEntity);
-      })
+    return this.rideDispatchService.getOpenRideRequests({ status: 'OPEN' }).pipe(
+      map((res: RideRequestListResponse) => (res.data || []).map(RideRequestAssembler.toEntity))
     );
   }
 
   /** Returns a single ride request by its ID. */
   getRideRequestById(requestId: string): Observable<RideRequest> {
-    return this.rideDispatchService.getRideRequestById<any>(requestId).pipe(
-      map(RideRequestAssembler.toEntity)
+    return this.rideDispatchService.getRideRequestById(requestId).pipe(
+      map((res: RideRequestResponse) => RideRequestAssembler.toEntity(res))
     );
   }
 
@@ -86,13 +84,14 @@ export class RideDispatchApiService {
 
   /** Returns the active PROPOSED candidate for a given driver (if any). */
   getDriverActiveCandidate(driverId: string): Observable<RideCandidate | null> {
-    return this.rideDispatchService.getDriverActiveCandidate<any>(driverId).pipe(
-      map(res => res && res.id ? RideCandidateAssembler.toEntity(res) : null)
+    return this.rideDispatchService.getDriverActiveCandidate(driverId).pipe(
+      map((res: RideCandidateResponse) => res && res.id ? RideCandidateAssembler.toEntity(res) : null)
     );
   }
 
   /**
    * Driver applies to a ride request.
+   * The backend enriches the candidate with driver info from the auth context — we map the real response.
    */
   applyAsCandidate(
     requestId: string,
@@ -103,17 +102,7 @@ export class RideDispatchApiService {
     photoUrl: string,
   ): Observable<RideCandidate> {
     return this.rideDispatchService.applyAsCandidate(requestId, {}).pipe(
-      map((res: any) => {
-        const candidate = new RideCandidate();
-        candidate.requestId = requestId;
-        candidate.driverId = driverId;
-        candidate.driverName = driverName;
-        candidate.vehicleType = vehicleType;
-        candidate.ratingAverage = ratingAverage;
-        candidate.photoUrl = photoUrl;
-        candidate.status = 'PROPOSED';
-        return candidate;
-      })
+      map((res: RideCandidateResponse) => RideCandidateAssembler.toEntity(res))
     );
   }
 
@@ -136,8 +125,8 @@ export class RideDispatchApiService {
 
   /** Returns the first active (non-completed, non-cancelled) ride for a driver, or null. */
   getActiveRideForDriver(driverId: string): Observable<Ride | null> {
-    return this.rideDispatchService.getActiveRideForDriver<any>(driverId).pipe(
-      map(res => res && res.id ? RideAssembler.toEntity(res) : null)
+    return this.rideDispatchService.getActiveRideForDriver(driverId).pipe(
+      map((res: RideResponse) => res && res.id ? RideAssembler.toEntity(res) : null)
     );
   }
 
@@ -145,8 +134,8 @@ export class RideDispatchApiService {
 
   /** Returns a single ride by ID. */
   getRideById(rideId: string): Observable<Ride> {
-    return this.rideDispatchService.getRideById<any>(rideId).pipe(
-      map(RideAssembler.toEntity)
+    return this.rideDispatchService.getRideById(rideId).pipe(
+      map((res: RideResponse) => RideAssembler.toEntity(res))
     );
   }
 
@@ -155,7 +144,16 @@ export class RideDispatchApiService {
    */
   updateRideStatus(rideId: string, status: RideStatus): Observable<Ride> {
     return this.rideDispatchService.advanceRideStatus(rideId, { status }).pipe(
-      map((res: any) => RideAssembler.toEntity(res))
+      map((res: RideResponse) => RideAssembler.toEntity(res))
+    );
+  }
+
+  /**
+   * Cancels a ride via the real backend cancelRide endpoint.
+   */
+  cancelRide(rideId: string): Observable<Ride> {
+    return this.rideDispatchService.cancelRide(rideId).pipe(
+      map((res: RideResponse) => RideAssembler.toEntity(res))
     );
   }
 
@@ -163,28 +161,32 @@ export class RideDispatchApiService {
 
   /** Loads driver availability record. */
   getDriverAvailability(driverId: string): Observable<DriverAvailability> {
-    return this.rideDispatchService.getDriverAvailability<any>(driverId).pipe(
-      map(res => {
+    return this.rideDispatchService.getDriverAvailability(driverId).pipe(
+      map((res: DriverAvailabilityResponse) => {
         const domain = new DriverAvailability();
         domain.id = res.id || '';
         domain.driverId = res.driverId || driverId;
         domain.isAvailable = res.isAvailable || false;
         domain.isBusy = res.isBusy || false;
+        domain.activeRideId = res.activeRideId ?? null;
         return domain;
+      }),
+      catchError(() => {
+        // ponytail: If 404 (Not Found), it means the availability record hasn't been created yet.
+        // We return a default offline availability record so the dashboard doesn't crash.
+        const fallback = new DriverAvailability();
+        fallback.driverId = driverId;
+        fallback.isAvailable = false;
+        fallback.isBusy = false;
+        fallback.activeRideId = null;
+        return of(fallback);
       })
     );
   }
 
-  /** Toggles the isAvailable flag. */
+  /** Toggles the isAvailable flag. Delegates to DriverManagementApiService (correct bounded context). */
   toggleDriverAvailability(driverId: string, isAvailable: boolean): Observable<DriverAvailability> {
-    return this.driverManagementService.toggleAvailability(driverId).pipe(
-      map((res: any) => {
-        const domain = new DriverAvailability();
-        domain.driverId = driverId;
-        domain.isAvailable = res.isAvailable;
-        return domain;
-      })
-    );
+    return this.driverManagementApiService.toggleAvailability(driverId);
   }
 
   /** Marks the driver as busy with a specific ride. (Handled automatically by backend). */
@@ -203,8 +205,8 @@ export class RideDispatchApiService {
    * Retrieves completed trips for a passenger.
    */
   getPassengerTrips(passengerId: string): Observable<Ride[]> {
-    return this.rideDispatchService.getPassengerTripHistory<any>(passengerId).pipe(
-      map((res: any) => {
+    return this.rideDispatchService.getPassengerTripHistory(passengerId).pipe(
+      map((res: TripHistoryListResponse) => {
         const data = res.data || [];
         return data.map(RideAssembler.toEntity);
       })
@@ -215,8 +217,8 @@ export class RideDispatchApiService {
    * Retrieves completed trips for a driver.
    */
   getDriverTrips(driverId: string): Observable<Ride[]> {
-    return this.rideDispatchService.getDriverTripHistory<any>(driverId).pipe(
-      map((res: any) => {
+    return this.rideDispatchService.getDriverTripHistory(driverId).pipe(
+      map((res: TripHistoryListResponse) => {
         const data = res.data || [];
         return data.map(RideAssembler.toEntity);
       })

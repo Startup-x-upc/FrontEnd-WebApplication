@@ -1,4 +1,5 @@
-import { Account } from '../domain/model/account.entity';
+import { Account, UserRole } from '../domain/model/account.entity';
+import { UserResource } from '../../shared/infrastructure/api/generated/model';
 
 /**
  * @summary Maps user responses from the API into Account domain entities.
@@ -13,11 +14,11 @@ export class AccountAssembler {
    * @param response - The raw user object (e.g. UserResource).
    * @returns A fully populated Account entity.
    */
-  static toEntity(response: any): Account {
+  static toEntity(response: UserResource): Account {
     const account = new Account();
     account.id = response.id || '';
     account.email = response.email || '';
-    account.role = response.role || '';
+    account.role = (response.role || '') as UserRole;
     return account;
   }
 }

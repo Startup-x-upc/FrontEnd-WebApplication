@@ -5,8 +5,10 @@
  * ChapaTuRuta REST API â Identity & Access Management, Driver Management, and Monetization
  * OpenAPI spec version: 1.0.0
  */
-import type { RideResponse } from './rideResponse';
 
-export interface SelectCandidateResponse {
-  ride?: RideResponse;
+export interface PaginationMeta {
+  page?: number;
+  perPage?: number;
+  total?: number;
+  pages?: number;
 }

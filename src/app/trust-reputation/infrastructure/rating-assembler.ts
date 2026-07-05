@@ -1,53 +1,54 @@
 import { TripRating, RatingStatus } from '../domain/model/trip-rating.entity';
-import { RatingResponse } from './rating-response';
+import { DriverReputation } from '../domain/model/driver-reputation.entity';
+import { PassengerReputation } from '../domain/model/passenger-reputation.entity';
+import { TripRatingResponse, DriverReputationResponse, PassengerReputationResponse } from '../../shared/infrastructure/api/generated/model';
 
 /**
- * @summary Maps RatingResponse DTOs from json-server into TripRating domain entities.
- * Uses static methods — no @Injectable, no side effects.
- * @author Sprint 3 — Trust & Reputation Bounded Context
+ * @summary Maps Trust & Reputation API responses to domain entities.
+ * @author Jesús Iván Castillo Vidal
  */
 export class RatingAssembler {
 
   /**
-   * Converts a raw RatingResponse DTO into a TripRating domain entity.
-   * Maps all fields from the db.json ratings collection.
-   *
-   * @param response - The raw rating object returned by json-server.
-   * @returns A fully populated TripRating entity.
+   * Converts a TripRatingResponse DTO into a TripRating domain entity.
    */
-  static toEntity(response: RatingResponse): TripRating {
+  static toEntity(response: TripRatingResponse): TripRating {
     const entity = new TripRating();
-    entity.id = response.id;
-    entity.tripId = response.rideId;
-    entity.driverId = response.driverId;
-    entity.passengerId = response.passengerId;
-    entity.driverRatingStatus = response.driverRatingStatus as RatingStatus;
-    entity.passengerRatingStatus = response.passengerRatingStatus as RatingStatus;
-    entity.driverScore = response.driverScore;
-    entity.passengerScore = response.passengerScore;
-    entity.passengerComment = response.passengerComment;
-    entity.rateableUntil = response.rateableUntil;
+    entity.id = response.id || '';
+    entity.tripId = response.tripId || '';
+    entity.driverId = response.driverId || '';
+    entity.passengerId = response.passengerId || '';
+    entity.driverRatingStatus = (response.driverRatingStatus || 'PENDING') as RatingStatus;
+    entity.passengerRatingStatus = (response.passengerRatingStatus || 'PENDING') as RatingStatus;
+    entity.driverScore = response.driverScore ?? 0;
+    entity.passengerScore = response.passengerScore ?? 0;
+    entity.passengerComment = response.passengerComment || '';
+    entity.rateableUntil = response.rateableUntil || '';
+    entity.createdAt = response.createdAt || '';
     return entity;
   }
 
   /**
-   * Converts a TripRating entity back into a plain object for POST/PATCH requests.
-   *
-   * @param entity - The TripRating domain entity to serialize.
-   * @returns A plain object matching the db.json ratings schema.
+   * Converts a DriverReputationResponse DTO into a DriverReputation domain entity.
    */
-  static toResponse(entity: TripRating): RatingResponse {
-    return {
-      id: entity.id,
-      rideId: entity.tripId,
-      driverId: entity.driverId,
-      passengerId: entity.passengerId,
-      driverRatingStatus: entity.driverRatingStatus,
-      passengerRatingStatus: entity.passengerRatingStatus,
-      driverScore: entity.driverScore,
-      passengerScore: entity.passengerScore,
-      passengerComment: entity.passengerComment,
-      rateableUntil: entity.rateableUntil,
-    };
+  static toDriverReputation(response: DriverReputationResponse): DriverReputation {
+    const entity = new DriverReputation();
+    entity.id = `drep-${response.driverId}`;
+    entity.driverId = response.driverId || '';
+    entity.averageScore = response.averageScore ?? 0;
+    entity.totalRatings = Number(response.totalRatings ?? 0);
+    return entity;
+  }
+
+  /**
+   * Converts a PassengerReputationResponse DTO into a PassengerReputation domain entity.
+   */
+  static toPassengerReputation(response: PassengerReputationResponse): PassengerReputation {
+    const entity = new PassengerReputation();
+    entity.id = `prep-${response.passengerId}`;
+    entity.passengerId = response.passengerId || '';
+    entity.averageScore = response.averageScore ?? 0;
+    entity.totalRatings = Number(response.totalRatings ?? 0);
+    return entity;
   }
 }

@@ -6,20 +6,20 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * Profile information returned by the API
- */
-export interface ProfileResource {
-  /** Profile UUID */
+export interface DriverResponse {
   id?: string;
-  /** Associated user UUID */
   userId?: string;
-  /** Display name */
   fullName?: string;
-  /** Profile photo URL */
+  vehicleType?: string;
+  accessStatus?: string;
+  isAvailable?: boolean;
+  ratingAverage?: number;
+  ratingCount?: number;
   photoUrl?: string;
-  /** Creation timestamp */
+  licenseNumber?: string;
+  soatNumber?: string;
+  isBusy?: boolean;
+  activeRideId?: string;
+  restrictionReason?: string;
   createdAt?: string;
-  /** Last update timestamp */
-  updatedAt?: string;
 }

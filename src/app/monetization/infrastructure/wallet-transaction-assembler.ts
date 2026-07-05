@@ -1,5 +1,5 @@
 import { WalletTransaction, TransactionType } from '../domain/model/wallet-transaction.entity';
-import { WalletTransactionResponse } from './wallet-transaction-response';
+import { WalletTransactionResponse } from '../../shared/infrastructure/api/generated/model';
 
 /**
  * @summary Maps WalletTransactionResponse DTOs from json-server into
@@ -17,13 +17,13 @@ export class WalletTransactionAssembler {
    */
   static toEntity(response: WalletTransactionResponse): WalletTransaction {
     const entity = new WalletTransaction();
-    entity.id = response.id;
-    entity.walletId = response.walletId;
-    entity.tripId = response.tripId ? String(response.tripId) : '';
-    entity.type = response.type as TransactionType;
-    entity.amount = response.amount;
-    entity.resultingBalance = response.resultingBalance;
-    entity.timestamp = response.timestamp;
+    entity.id = response.id || '';
+    entity.walletId = response.walletId || '';
+    entity.tripId = response.tripId || '';
+    entity.type = (response.type || '') as TransactionType;
+    entity.amount = response.amount ?? 0;
+    entity.resultingBalance = response.resultingBalance ?? 0;
+    entity.timestamp = response.timestamp || '';
     return entity;
   }
 
@@ -49,7 +49,7 @@ export class WalletTransactionAssembler {
     return {
       id: entity.id,
       walletId: entity.walletId,
-      tripId: entity.tripId || null,
+      tripId: entity.tripId || undefined,
       type: entity.type,
       amount: entity.amount,
       resultingBalance: entity.resultingBalance,

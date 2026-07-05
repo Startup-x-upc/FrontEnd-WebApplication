@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Backend-WebApplication",
-    "description": "ChapaTuRuta REST API Ã¢ÂÂ Identity & Access Management, Driver Management, and Monetization",
+    "description": "ChapaTuRuta REST API â Identity & Access Management, Driver Management, and Monetization",
     "contact": {
       "name": "CTR Technologies",
       "url": "https://ctr.pe",
@@ -135,7 +135,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/FarePolicyResponse"
+                  "type": "object"
                 }
               }
             }
@@ -163,11 +163,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Passenger rating skipped successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TripRatingResponse"
                 }
               }
             }
@@ -195,11 +195,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver rating skipped successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TripRatingResponse"
                 }
               }
             }
@@ -237,11 +237,11 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Passenger rated successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TripRatingResponse"
                 }
               }
             }
@@ -279,11 +279,11 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver rated successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TripRatingResponse"
                 }
               }
             }
@@ -311,11 +311,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Ride cancelled successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideResponse"
                 }
               }
             }
@@ -353,11 +353,11 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Ride status advanced successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideResponse"
                 }
               }
             }
@@ -384,11 +384,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Open ride requests retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideRequestListResponse"
                 }
               }
             }
@@ -412,20 +412,10 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "Ride request created successfully",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RideRequestResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RideRequestResponse"
                 }
@@ -464,20 +454,10 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "Driver selected successfully",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SelectCandidateResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SelectCandidateResponse"
                 }
@@ -507,7 +487,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Candidates retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
@@ -545,12 +525,12 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "Applied as candidate successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideCandidateResponse"
                 }
               }
             }
@@ -591,7 +571,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/WalletTransactionResponse"
+                  "type": "object"
                 }
               }
             }
@@ -604,6 +584,7 @@
         "tags": [
           "Monetization"
         ],
+        "summary": "Recharge a driver wallet",
         "operationId": "rechargeWallet",
         "parameters": [
           {
@@ -628,7 +609,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Wallet recharged successfully",
             "content": {
               "*/*": {
                 "schema": {
@@ -673,7 +654,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/WalletTransactionResponse"
+                  "type": "object"
                 }
               }
             }
@@ -763,11 +744,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver availability status toggled",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DriverAvailabilityResponse"
                 }
               }
             }
@@ -965,11 +946,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DriverResponse"
                 }
               }
             }
@@ -1019,11 +1000,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Trip rating details retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TripRatingResponse"
                 }
               }
             }
@@ -1051,11 +1032,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Ride retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideResponse"
                 }
               }
             }
@@ -1083,11 +1064,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Ride request retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideRequestResponse"
                 }
               }
             }
@@ -1143,11 +1124,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Passenger trip history retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TripHistoryListResponse"
                 }
               }
             }
@@ -1192,6 +1173,7 @@
         "tags": [
           "Monetization"
         ],
+        "summary": "Get transaction history for a wallet",
         "operationId": "getTransactionHistory",
         "parameters": [
           {
@@ -1226,11 +1208,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Transaction history retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/WalletTransactionResponse"
                 }
               }
             }
@@ -1282,6 +1264,7 @@
         "tags": [
           "Monetization"
         ],
+        "summary": "Get wallet by driver ID",
         "operationId": "getWalletByDriverId",
         "parameters": [
           {
@@ -1296,7 +1279,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Wallet retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
@@ -1379,11 +1362,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DriverResponse"
                 }
               }
             }
@@ -1439,11 +1422,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver trip history retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TripHistoryListResponse"
                 }
               }
             }
@@ -1503,11 +1486,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Driver availability retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DriverAvailabilityResponse"
                 }
               }
             }
@@ -1535,11 +1518,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Active ride retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideResponse"
                 }
               }
             }
@@ -1567,11 +1550,11 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Active candidate retrieved successfully",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RideCandidateResponse"
                 }
               }
             }
@@ -1615,7 +1598,7 @@
             "minLength": 2,
             "type": "string",
             "description": "New display name",
-            "example": "MarÃ­a Quispe Actualizado"
+            "example": "María Quispe Actualizado"
           },
           "photoUrl": {
             "type": "string",
@@ -1642,28 +1625,47 @@
           }
         }
       },
-      "FarePolicyResponse": {
+      "TripRatingResponse": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "baseFare": {
-            "type": "number"
-          },
-          "pricePerKm": {
-            "type": "number"
-          },
-          "minimumFare": {
-            "type": "number"
-          },
-          "commissionRate": {
-            "type": "number"
-          },
-          "updatedAt": {
+          "tripId": {
             "type": "string",
-            "format": "date-time"
+            "format": "uuid"
+          },
+          "driverId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "passengerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverRatingStatus": {
+            "type": "string"
+          },
+          "passengerRatingStatus": {
+            "type": "string"
+          },
+          "driverScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "passengerScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "passengerComment": {
+            "type": "string"
+          },
+          "rateableUntil": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
           }
         }
       },
@@ -1691,6 +1693,52 @@
             "minimum": 1,
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "RideResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "passengerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverName": {
+            "type": "string"
+          },
+          "passengerName": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "estimatedFare": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "completedAt": {
+            "type": "string"
           }
         }
       },
@@ -1732,6 +1780,48 @@
           }
         }
       },
+      "RideRequestResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "passengerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "passengerName": {
+            "type": "string"
+          },
+          "passengerPhotoUrl": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "distanceKm": {
+            "type": "number",
+            "format": "double"
+          },
+          "estimatedFare": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isExpired": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        }
+      },
       "SelectCandidateResource": {
         "required": [
           "candidateId"
@@ -1739,6 +1829,50 @@
         "type": "object",
         "properties": {
           "candidateId": {
+            "type": "string"
+          }
+        }
+      },
+      "SelectCandidateResponse": {
+        "type": "object",
+        "properties": {
+          "ride": {
+            "$ref": "#/components/schemas/RideResponse"
+          }
+        }
+      },
+      "RideCandidateResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverName": {
+            "type": "string"
+          },
+          "vehicleType": {
+            "type": "string"
+          },
+          "ratingAverage": {
+            "type": "number",
+            "format": "double"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "appliedAt": {
             "type": "string"
           }
         }
@@ -1751,36 +1885,6 @@
           },
           "reason": {
             "type": "string"
-          }
-        }
-      },
-      "WalletTransactionResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "walletId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "tripId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "number"
-          },
-          "resultingBalance": {
-            "type": "number"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       },
@@ -1822,6 +1926,36 @@
           }
         }
       },
+      "WalletTransactionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "walletId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "resultingBalance": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ApplyCommissionResource": {
         "type": "object",
         "properties": {
@@ -1847,6 +1981,37 @@
         "properties": {
           "estimatedFare": {
             "type": "number"
+          }
+        }
+      },
+      "DriverAvailabilityResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "isBusy": {
+            "type": "boolean"
+          },
+          "activeRideId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -1886,7 +2051,7 @@
             "minLength": 2,
             "type": "string",
             "description": "User's full display name",
-            "example": "MarÃ­a Quispe"
+            "example": "María Quispe"
           }
         },
         "description": "Request body for passenger registration"
@@ -1929,7 +2094,7 @@
           "fullName": {
             "type": "string",
             "description": "Display name",
-            "example": "MarÃ­a Quispe"
+            "example": "María Quispe"
           },
           "photoUrl": {
             "type": "string",
@@ -2074,6 +2239,119 @@
         },
         "description": "Request body for login"
       },
+      "DriverResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "vehicleType": {
+            "type": "string"
+          },
+          "accessStatus": {
+            "type": "string"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "ratingAverage": {
+            "type": "number",
+            "format": "double"
+          },
+          "ratingCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "licenseNumber": {
+            "type": "string"
+          },
+          "soatNumber": {
+            "type": "string"
+          },
+          "isBusy": {
+            "type": "boolean"
+          },
+          "activeRideId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "restrictionReason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RideRequestListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RideRequestResponse"
+            }
+          }
+        }
+      },
+      "RideCandidateListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RideCandidateResponse"
+            }
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "perPage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "TripHistoryListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RideResponse"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        }
+      },
       "PassengerReputationResponse": {
         "type": "object",
         "properties": {
@@ -2103,6 +2381,31 @@
           }
         }
       },
+      "FarePolicyResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseFare": {
+            "type": "number"
+          },
+          "pricePerKm": {
+            "type": "number"
+          },
+          "minimumFare": {
+            "type": "number"
+          },
+          "commissionRate": {
+            "type": "number"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "DriverReputationResponse": {
         "type": "object",
         "properties": {
@@ -2117,150 +2420,6 @@
           "totalRatings": {
             "type": "integer",
             "format": "int64"
-          }
-        }
-      },
-      "RideRequestResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "passengerId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "passengerName": {
-            "type": "string"
-          },
-          "passengerPhotoUrl": {
-            "type": "string"
-          },
-          "origin": {
-            "type": "string"
-          },
-          "destination": {
-            "type": "string"
-          },
-          "distanceKm": {
-            "type": "number",
-            "format": "double"
-          },
-          "estimatedFare": {
-            "type": "number",
-            "format": "double"
-          },
-          "status": {
-            "type": "string"
-          },
-          "isExpired": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string"
-          }
-        }
-      },
-      "RideCandidateResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "requestId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "driverId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "driverName": {
-            "type": "string"
-          },
-          "vehicleType": {
-            "type": "string"
-          },
-          "ratingAverage": {
-            "type": "number",
-            "format": "double"
-          },
-          "photoUrl": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "appliedAt": {
-            "type": "string"
-          }
-        }
-      },
-      "RideCandidateListResponse": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RideCandidateResponse"
-            }
-          }
-        }
-      },
-      "RideResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "requestId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "passengerId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "driverId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "driverName": {
-            "type": "string"
-          },
-          "passengerName": {
-            "type": "string"
-          },
-          "origin": {
-            "type": "string"
-          },
-          "destination": {
-            "type": "string"
-          },
-          "estimatedFare": {
-            "type": "number",
-            "format": "double"
-          },
-          "status": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "completedAt": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "SelectCandidateResponse": {
-        "type": "object",
-        "properties": {
-          "ride": {
-            "$ref": "#/components/schemas/RideResponse"
           }
         }
       }

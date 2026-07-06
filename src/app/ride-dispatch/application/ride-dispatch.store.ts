@@ -7,6 +7,7 @@ import { DriverAvailability } from '../domain/model/driver-availability.entity';
 import { RideStatus } from '../domain/model/ride.status';
 import { RideDispatchApiService } from '../infrastructure/ride-dispatch-api.service';
 import { MonetizationStore } from '../../monetization/application/monetization.store';
+import { RealtimeService } from '../../shared/infrastructure/realtime.service';
 
 /**
  * @summary Application service for the Ride Dispatch bounded context.
@@ -20,6 +21,7 @@ import { MonetizationStore } from '../../monetization/application/monetization.s
 export class RideDispatchStore {
   private api = inject(RideDispatchApiService);
   private monetizationStore = inject(MonetizationStore);
+  private realtime = inject(RealtimeService);
 
   // ── Shared signals ────────────────────────────────────────────────────
   private loadingSignal         = signal<boolean>(false);
@@ -80,6 +82,23 @@ export class RideDispatchStore {
         this.deactivateAvailability(wallet.driverId);
       }
     }, { allowSignalWrites: true });
+
+    // Re-sync states when connection is restored
+    this.realtime.reconnect$.subscribe(() => {
+      console.log('[RideDispatchStore] Reconnect event detected. Re-syncing active states.');
+      const req = this.currentRequestSignal();
+      if (req?.id) {
+        this.refreshPassengerRequest();
+      }
+      const ride = this.currentRideSignal();
+      if (ride?.id) {
+        this.refreshPassengerRide();
+      }
+      const avail = this.driverAvailabilitySignal();
+      if (avail?.driverId) {
+        this.loadDriverAvailability(avail.driverId);
+      }
+    });
   }
 
   deactivateAvailability(driverId: string): void {
@@ -132,8 +151,10 @@ export class RideDispatchStore {
     this.api.createRideRequest(passengerId, origin, destination, distanceKm, estimatedFare)
       .subscribe({
         next: req => {
+          localStorage.setItem('chapatuRuta_activeRequestId', req.id);
           this.currentRequestSignal.set(req);
           this.loadingSignal.set(false);
+          this.subscribeToRequestEvents(req.id);
         },
         error: () => {
           this.loadingSignal.set(false);

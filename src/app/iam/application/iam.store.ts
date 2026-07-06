@@ -1,8 +1,9 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Account } from '../domain/model/account.entity';
 import { Profile } from '../domain/model/profile.entity';
 import { IamApiService } from '../infrastructure/iam-api.service';
+import { RealtimeService } from '../../shared/infrastructure/realtime.service';
 
 /** Key used to persist session data in localStorage. */
 const SESSION_KEY = 'chapatuRuta_session';
@@ -21,6 +22,9 @@ export class IamStore {
 
   /** Angular router for role-based redirection. */
   private router = inject(Router);
+
+  /** Realtime service for Ably connection management. */
+  private realtimeService = inject(RealtimeService);
 
   // ─── State signals ────────────────────────────────────────────────────────
 
@@ -65,6 +69,16 @@ export class IamStore {
   constructor() {
     // Rehydrate session from localStorage on startup
     this.rehydrateSession();
+
+    // Auto-connect / disconnect Ably based on auth state
+    effect(() => {
+      const account = this.currentAccountSignal();
+      if (account) {
+        this.realtimeService.connect();
+      } else {
+        this.realtimeService.disconnect();
+      }
+    });
   }
 
   // ─── Actions ──────────────────────────────────────────────────────────────
@@ -120,6 +134,7 @@ export class IamStore {
    * Clears authentication state and session, then navigates to login.
    */
   signOut(): void {
+    this.realtimeService.disconnect();
     this.currentAccountSignal.set(null);
     this.currentProfileSignal.set(null);
     this.errorSignal.set(null);

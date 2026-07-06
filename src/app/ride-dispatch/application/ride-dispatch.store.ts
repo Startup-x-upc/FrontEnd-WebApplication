@@ -153,21 +153,6 @@ export class RideDispatchStore {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    // US-11: Check if the request has expired (>60s since creation)
-    if (req.createdAt && !req.isExpired) {
-      const elapsed = Date.now() - new Date(req.createdAt).getTime();
-      if (elapsed > 60_000) {
-        req.expire();
-        this.currentRequestSignal.update(r =>
-          r ? Object.assign(new RideRequest(), r) : r
-        );
-        // Try to persist expiry to server (fire-and-forget)
-        this.api.patchRideRequestExpiry(req.id).subscribe();
-        this.loadingSignal.set(false);
-        return;
-      }
-    }
-
     this.api.getRideRequestById(req.id).subscribe({
       next: updatedReq => {
         this.currentRequestSignal.set(updatedReq);
@@ -468,6 +453,45 @@ export class RideDispatchStore {
         this.loadingSignal.set(false);
         this.errorSignal.set('No se pudo cargar el historial de viajes.');
       },
+    });
+  }
+
+  // ── Cancel request & candidate withdrawal ─────────────────────────────
+
+  /** Cancels a ride request (passenger-side) */
+  cancelRideRequest(requestId: string): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.api.cancelRideRequest(requestId).subscribe({
+      next: () => {
+        this.currentRequestSignal.set(null);
+        this.candidatesSignal.set([]);
+        this.originSignal.set('');
+        this.destinationSignal.set('');
+        this.distanceKmSignal.set(0);
+        this.loadingSignal.set(false);
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo cancelar la solicitud.');
+      }
+    });
+  }
+
+  /** Withdraws driver candidacy from a request (driver-side) */
+  withdrawCandidacy(requestId: string): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.api.withdrawCandidacy(requestId).subscribe({
+      next: () => {
+        this.activeCandidateSignal.set(null);
+        this.loadingSignal.set(false);
+        this.loadOpenRequests();
+      },
+      error: () => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set('No se pudo retirar la postulación.');
+      }
     });
   }
 

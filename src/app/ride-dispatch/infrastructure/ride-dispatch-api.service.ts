@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
@@ -25,6 +26,7 @@ import { RideAssembler } from './ride-assembler';
  */
 export class RideDispatchApiService {
 
+  private http = inject(HttpClient);
   private rideDispatchService = inject(RideDispatchService);
   // ponytail: driver-management context — toggle is owned by DriverManagementApiService
   private driverManagementApiService = inject(DriverManagementApiService);
@@ -50,6 +52,16 @@ export class RideDispatchApiService {
     // In real backend request expiry isn't manually patched from frontend this way,
     // but we can return an empty model or fetch the request to comply with the interface.
     return this.getRideRequestById(requestId);
+  }
+
+  /** Cancels a ride request (passenger-side) */
+  cancelRideRequest(requestId: string): Observable<any> {
+    return this.http.post<any>(`/api/v1/rides/requests/${requestId}/cancel`, {});
+  }
+
+  /** Withdraws driver candidacy from a request (driver-side) */
+  withdrawCandidacy(requestId: string): Observable<any> {
+    return this.http.delete<any>(`/api/v1/rides/requests/${requestId}/candidates`);
   }
 
   /** Creates a new ride request (status = OPEN). */

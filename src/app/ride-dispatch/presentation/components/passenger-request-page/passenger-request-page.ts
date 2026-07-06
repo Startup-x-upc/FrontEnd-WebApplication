@@ -651,7 +651,15 @@ export class PassengerRequestPageComponent {
     this.monetizationStore.loadFarePolicy();
   }
 
-  // ── Cancel ride (US-18) ─────────────────────────────────────────────
+  // ── Cancel request & ride ───────────────────────────────────────────
+
+  /** Cancel the request before a driver is selected */
+  onCancelRequest(): void {
+    const req = this.rideStore.currentRequest();
+    if (req?.id) {
+      this.rideStore.cancelRideRequest(req.id);
+    }
+  }
 
   /** Cancel ride before it starts. */
   onCancelRide(): void {

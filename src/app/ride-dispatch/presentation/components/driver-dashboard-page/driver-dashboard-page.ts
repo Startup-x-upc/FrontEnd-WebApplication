@@ -726,6 +726,13 @@ export class DriverDashboardPageComponent {
     this.rideStore.loadDriverAvailability(driver.id);
   }
 
+  onWithdrawCandidacy(): void {
+    const candidate = this.rideStore.activeCandidate();
+    if (candidate?.requestId) {
+      this.rideStore.withdrawCandidacy(candidate.requestId);
+    }
+  }
+
   onViewDetails(request: RideRequest): void {
     this.selectedRequest.set(request);
   }

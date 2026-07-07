@@ -50,29 +50,35 @@
     </app-fare-summary-card>
 
     <!-- ③ WAITING_CANDIDATES — pending spinner with manual refresh -->
-    <app-trip-request-status
-      *ngIf="uiState() === 'WAITING_CANDIDATES'"
-      [uiState]="'SEARCHING_DRIVER'"
-      [request]="rideStore.currentRequest()"
-      [isLoading]="rideStore.isLoading()"
-      (refreshRequested)="onRefreshCandidates()">
-    </app-trip-request-status>
+    <div style="display: flex; flex-direction: column; gap: 10px;" *ngIf="uiState() === 'WAITING_CANDIDATES'">
+      <app-trip-request-status
+        [uiState]="'SEARCHING_DRIVER'"
+        [request]="rideStore.currentRequest()">
+      </app-trip-request-status>
+      <button mat-stroked-button class="cancel-ride-btn" 
+              [disabled]="rideStore.isLoading()"
+              (click)="onCancelRequest()" aria-label="Cancelar solicitud">
+        <mat-icon>cancel</mat-icon> Cancelar solicitud
+      </button>
+    </div>
 
     <!-- ④ CANDIDATES_AVAILABLE — list of driver candidates -->
-    <app-ride-candidates-list
-      *ngIf="uiState() === 'CANDIDATES_AVAILABLE'"
-      [candidates]="rideStore.candidates()"
-      (candidateSelected)="onCandidateSelected($event)"
-      (refreshRequested)="onRefreshCandidates()">
-    </app-ride-candidates-list>
+    <div style="display: flex; flex-direction: column; gap: 10px;" *ngIf="uiState() === 'CANDIDATES_AVAILABLE'">
+      <app-ride-candidates-list
+        [candidates]="rideStore.candidates()"
+        (candidateSelected)="onCandidateSelected($event)">
+      </app-ride-candidates-list>
+      <button mat-stroked-button class="cancel-ride-btn" 
+              [disabled]="rideStore.isLoading()"
+              (click)="onCancelRequest()" aria-label="Cancelar solicitud">
+        <mat-icon>cancel</mat-icon> Cancelar solicitud
+      </button>
+    </div>
 
     <!-- ⑤ & ⑥ Unified Tracking Card for DRIVER_SELECTED / RIDE_IN_PROGRESS -->
     <div class="ride-completed-card" *ngIf="uiState() === 'DRIVER_SELECTED' || uiState() === 'RIDE_IN_PROGRESS'">
       <div class="tracking-card-header">
         <h3>Seguimiento del viaje</h3>
-        <button mat-icon-button class="subtle-refresh-btn" (click)="onRefreshRide()" aria-label="Actualizar estado">
-          <mat-icon>refresh</mat-icon>
-        </button>
       </div>
 
       <!-- Driver details -->

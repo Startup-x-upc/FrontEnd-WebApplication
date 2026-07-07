@@ -51,7 +51,7 @@ export class DriversTable {
   onToggle(driver: Driver): void {
     this.toggleStatus.emit({
       driverId: driver.id,
-      enabled: !driver.isAvailable,
+      enabled: driver.accessStatus !== 'ACTIVE',
     });
   }
 }

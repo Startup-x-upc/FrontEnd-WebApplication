@@ -1,130 +1,121 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-import { Driver } from '../domain/model/driver.entity';
-import { DriverResponse } from './driver-response';
-import { DriverAssembler } from './driver-assembler';
+import { Driver, DriverAccessStatus } from '../domain/model/driver.entity';
+import { DriverAvailability } from '../../ride-dispatch/domain/model/driver-availability.entity';
+import { DriverManagementService } from '../../shared/infrastructure/api/generated/driver-management/driver-management.service';
+import { DriverResponse, DriverAvailabilityResponse, DriverListResponse } from '../../shared/infrastructure/api/generated/model';
 
 /**
- * @summary Infrastructure gateway to the Driver Management endpoints on json-server.
- * Handles all HTTP communication for driver profiles, document verification,
- * and operational status management.
- * @author Sprint 3 — Driver Management Bounded Context
+ * @summary Infrastructure gateway for the Driver Management bounded context.
+ * Delegates all queries and commands to the Orval-generated DriverManagementService.
+ * @author Jesús Iván Castillo Vidal
  */
 @Injectable({ providedIn: 'root' })
 export class DriverManagementApiService {
-  /** HttpClient injected via inject() (Angular 21 style). */
-  private http = inject(HttpClient);
-
-  /** Base URL for the fake API, resolved from environment configuration. */
-  private baseUrl = environment.apiBaseUrl;
+  private driverMgmt = inject(DriverManagementService);
 
   // ── Driver queries ────────────────────────────────────────────────────
 
   /**
-   * Retrieves a driver by their linked account ID.
-   *
-   * @param accountId - The account ID linked to the driver profile.
-   * @returns Observable<Driver> or a fallback if not found.
+   * Retrieves a driver by their linked user/account ID.
    */
   getDriverByAccountId(accountId: string): Observable<Driver> {
-    return this.http
-      .get<DriverResponse[]>(`${this.baseUrl}/drivers?accountId=${accountId}`)
-      .pipe(
-        map((responses: DriverResponse[]) => {
-          if (responses.length > 0) return DriverAssembler.toEntity(responses[0]);
-          const fallback = new Driver();
-          fallback.accountId = accountId;
-          fallback.isAvailable = false;
-          return fallback;
-        })
-      );
+    return this.driverMgmt.getDriverByUserId(accountId).pipe(
+      map((res: DriverResponse) => this._toEntity(res, accountId))
+    );
   }
 
   /**
    * Retrieves all registered drivers.
-   * Used by the admin panel (US-26).
-   *
-   * @returns Observable<Driver[]> with all drivers.
    */
   getAllDrivers(): Observable<Driver[]> {
-    return this.http
-      .get<DriverResponse[]>(`${this.baseUrl}/drivers`)
-      .pipe(
-        map((responses: DriverResponse[]) =>
-          responses.map(DriverAssembler.toEntity)
-        )
-      );
+    return this.driverMgmt.getAllDrivers({ perPage: 100 }).pipe(
+      map((res: DriverListResponse) => {
+        const items = res.data || [];
+        return items.map(d => this._toEntity(d));
+      })
+    );
   }
 
   /**
-   * Retrieves drivers filtered by verification status.
-   * Used by the admin verification panel (US-06).
-   *
-   * @param verificationStatus - e.g. 'PENDING_VERIFICATION', 'APPROVED', 'REJECTED'.
-   * @returns Observable<Driver[]> with matching drivers.
+   * Retrieves drivers filtered by access status.
    */
   getDriversByStatus(verificationStatus: string): Observable<Driver[]> {
-    return this.http
-      .get<DriverResponse[]>(
-        `${this.baseUrl}/drivers?verificationStatus=${verificationStatus}`
-      )
-      .pipe(
-        map((responses: DriverResponse[]) =>
-          responses.map(DriverAssembler.toEntity)
-        )
-      );
+    // Map legacy verificationStatus parameter to accessStatus values
+    let accessStatus = verificationStatus;
+    if (verificationStatus === 'APPROVED') accessStatus = 'ACTIVE';
+    if (verificationStatus === 'REJECTED') accessStatus = 'RESTRICTED';
+
+    return this.driverMgmt.getAllDrivers({ accessStatus, perPage: 100 }).pipe(
+      map((res: DriverListResponse) => {
+        const items = res.data || [];
+        return items.map(d => this._toEntity(d));
+      })
+    );
   }
 
-  // ── Driver verification (US-06) ───────────────────────────────────────
+  // ── Driver restrictions / approvals (Legacy aliases, US-06 & US-26) ────
 
-  /**
-   * Approves a driver's documents. Updates verificationStatus to 'APPROVED'.
-   *
-   * @param driverId - The driver ID to approve.
-   * @returns Observable<Driver> with the updated driver entity.
-   */
   approveDriver(driverId: string): Observable<Driver> {
-    return this.http
-      .patch<DriverResponse>(`${this.baseUrl}/drivers/${driverId}`, {
-        verificationStatus: 'APPROVED',
-      })
-      .pipe(map(DriverAssembler.toEntity));
+    return this.driverMgmt.unrestrictDriver(driverId).pipe(
+      map((res: DriverResponse) => this._toEntity(res))
+    );
   }
 
-  /**
-   * Rejects a driver's documents. Updates verificationStatus to 'REJECTED'.
-   *
-   * @param driverId - The driver ID to reject.
-   * @returns Observable<Driver> with the updated driver entity.
-   */
   rejectDriver(driverId: string): Observable<Driver> {
-    return this.http
-      .patch<DriverResponse>(`${this.baseUrl}/drivers/${driverId}`, {
-        verificationStatus: 'REJECTED',
-      })
-      .pipe(map(DriverAssembler.toEntity));
+    return this.driverMgmt.restrictDriver(driverId, { reason: 'Documentación rechazada por la administración' }).pipe(
+      map((res: DriverResponse) => this._toEntity(res))
+    );
   }
 
-  // ── Operational status (US-26) ────────────────────────────────────────
+  setDriverOperationalStatus(driverId: string, status: 'ENABLED' | 'DISABLED'): Observable<Driver> {
+    if (status === 'ENABLED') {
+      return this.driverMgmt.unrestrictDriver(driverId).pipe(
+        map((res: DriverResponse) => this._toEntity(res))
+      );
+    } else {
+      return this.driverMgmt.restrictDriver(driverId, { reason: 'Deshabilitado por la administración' }).pipe(
+        map((res: DriverResponse) => this._toEntity(res))
+      );
+    }
+  }
+
+  // ── Availability ──────────────────────────────────────────────────────
 
   /**
-   * Enables or disables a driver's operational status.
-   *
-   * @param driverId - The driver ID to update.
-   * @param status - 'ENABLED' or 'DISABLED'.
-   * @returns Observable<Driver> with the updated driver entity.
+   * Toggles driver availability status.
    */
-  setDriverOperationalStatus(
-    driverId: string,
-    status: 'ENABLED' | 'DISABLED'
-  ): Observable<Driver> {
-    return this.http
-      .patch<DriverResponse>(`${this.baseUrl}/drivers/${driverId}`, {
-        operationalStatus: status,
+  toggleAvailability(driverId: string): Observable<DriverAvailability> {
+    return this.driverMgmt.toggleAvailability(driverId).pipe(
+      map((res: DriverAvailabilityResponse) => {
+        const domain = new DriverAvailability();
+        domain.id = res.id || '';
+        domain.driverId = res.driverId || driverId;
+        domain.isAvailable = res.isAvailable || false;
+        domain.isBusy = res.isBusy || false;
+        return domain;
       })
-      .pipe(map(DriverAssembler.toEntity));
+    );
+  }
+
+  // ── Private helpers ──────────────────────────────────────────────────
+
+  private _toEntity(res: DriverResponse, fallbackAccountId?: string): Driver {
+    const entity = new Driver();
+    entity.id = res.id || '';
+    // Map userId/accountId correctly to support domain properties
+    entity.accountId = (res as any).userId || fallbackAccountId || '';
+    entity.fullName = res.fullName || '';
+    entity.vehicleType = res.vehicleType || '';
+    entity.ratingAverage = res.ratingAverage ?? 0;
+    entity.ratingCount = res.ratingCount ?? 0;
+    entity.photoUrl = res.photoUrl ?? '';
+    entity.isAvailable = (res as any).isAvailable || false;
+    entity.accessStatus = ((res as any).accessStatus || 'PENDING_VERIFICATION') as DriverAccessStatus;
+    entity.licenseNumber = res.licenseNumber ?? '';
+    entity.soatNumber = res.soatNumber ?? '';
+    return entity;
   }
 }

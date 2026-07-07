@@ -169,11 +169,17 @@ export class MonetizationStore {
       this.errorSignal.set('El monto mínimo de recarga es S/ 5.00.');
       return;
     }
+    const wallet = this.walletSignal();
+    if (!wallet?.id) {
+      this.errorSignal.set('El wallet no ha sido cargado. Intenta recargar la página.');
+      return;
+    }
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-    this.api.rechargeWallet(driverId, amount).subscribe({
-      next: (wallet) => {
-        this.walletSignal.set(wallet);
+    // ponytail: walletId from store signal — avoids a double-fetch GET before POST
+    this.api.rechargeWallet(wallet.id, amount).subscribe({
+      next: (updatedWallet) => {
+        this.walletSignal.set(updatedWallet);
         this.messageSignal.set(
           `Recarga exitosa. Se acreditó S/ ${amount.toFixed(2)}.`
         );
@@ -188,35 +194,9 @@ export class MonetizationStore {
     });
   }
 
-  // ── Commission (US-29, mock) ─────────────────────────────────────────
+  // ponytail: applyCommission removed — backend applies commission automatically
+  // via RideCompletedEventListener when ride status advances to COMPLETED.
 
-  /**
-   * Applies the 5% platform commission when a ride is completed.
-   * Idempotent — safe to call multiple times for the same trip.
-   *
-   * @param driverId - The driver whose wallet to deduct from.
-   * @param tripId - The completed ride ID.
-   * @param rideFare - The fare charged for the ride.
-   */
-  applyCommission(driverId: string, tripId: string, rideFare: number): void {
-    this.loadingSignal.set(true);
-    this.errorSignal.set(null);
-    this.api.applyCommission(driverId, tripId, rideFare).subscribe({
-      next: (wallet) => {
-        const commission = rideFare * FarePolicy.PLATFORM_COMMISSION_RATE;
-        this.walletSignal.set(wallet);
-        this.messageSignal.set(
-          `Viaje completado. Comisión de S/ ${commission.toFixed(2)} descontada.`
-        );
-        this.loadTransactionHistory();
-        this.loadingSignal.set(false);
-      },
-      error: () => {
-        this.loadingSignal.set(false);
-        this.messageSignal.set('Viaje completado, pero no se pudo procesar la comisión. Contacta al administrador.');
-      },
-    });
-  }
 
   // ── Clear ────────────────────────────────────────────────────────────
 

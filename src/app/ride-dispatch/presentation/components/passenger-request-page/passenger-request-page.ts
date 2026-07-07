@@ -554,6 +554,7 @@ export class PassengerRequestPageComponent {
 
   constructor() {
     this.monetizationStore.loadFarePolicy();
+    this.rideStore.rehydratePassengerSession();
   }
 
   // ── Map interaction ─────────────────────────────────────────────────
@@ -622,19 +623,9 @@ export class PassengerRequestPageComponent {
     }
   }
 
-  /** Manual refresh: reloads request status + candidates. */
-  onRefreshCandidates(): void {
-    this.rideStore.refreshPassengerRequest();
-  }
-
   /** Passenger selects a specific candidate. */
   onCandidateSelected(candidate: RideCandidate): void {
     this.rideStore.selectCandidate(candidate);
-  }
-
-  /** Manual refresh: reloads ride status after driver selection. */
-  onRefreshRide(): void {
-    this.rideStore.refreshPassengerRide();
   }
 
   /** Clears expired request to start over. */
@@ -651,7 +642,15 @@ export class PassengerRequestPageComponent {
     this.monetizationStore.loadFarePolicy();
   }
 
-  // ── Cancel ride (US-18) ─────────────────────────────────────────────
+  // ── Cancel request & ride ───────────────────────────────────────────
+
+  /** Cancel the request before a driver is selected */
+  onCancelRequest(): void {
+    const req = this.rideStore.currentRequest();
+    if (req?.id) {
+      this.rideStore.cancelRideRequest(req.id);
+    }
+  }
 
   /** Cancel ride before it starts. */
   onCancelRide(): void {

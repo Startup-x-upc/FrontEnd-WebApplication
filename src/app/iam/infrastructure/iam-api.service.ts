@@ -1,136 +1,76 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { AuthResponse } from './auth-response';
-import { ProfileResponse } from './profile-response';
+import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Account } from '../domain/model/account.entity';
 import { Profile } from '../domain/model/profile.entity';
 import { AccountAssembler } from './account-assembler';
 import { ProfileAssembler } from './profile-assembler';
-import { DriverResponse } from '../../driver-management/infrastructure/driver-response';
+
+// Import generated Orval services
+import { AuthService } from '../../shared/infrastructure/api/generated/auth/auth.service';
+import { ProfilesService } from '../../shared/infrastructure/api/generated/profiles/profiles.service';
+import { AuthResponseResource } from '../../shared/infrastructure/api/generated/model';
 
 @Injectable({ providedIn: 'root' })
 /**
- * @summary Infrastructure gateway to the IAM endpoints on json-server.
- * Handles all HTTP communication for authentication, registration,
- * and profile management.
+ * @summary Infrastructure gateway that delegates to the Orval generated API clients.
+ * Mapped to the real Spring Boot backend endpoints.
  * @author Jesús Iván Castillo Vidal
  */
 export class IamApiService {
 
-  /** HttpClient injected via the inject() function (Angular 21 style). */
-  private http = inject(HttpClient);
-
-  /** Base URL for the fake API, resolved from environment configuration. */
-  private baseUrl = environment.apiBaseUrl;
+  private authService = inject(AuthService);
+  private profilesService = inject(ProfilesService);
 
   /**
-   * Attempts sign-in by querying json-server for a matching user.
-   * json-server supports query params for filtering: /users?email=...
-   *
-   * @param email - The email address provided by the user.
-   * @param password - The plain-text password provided by the user (mock only).
-   * @returns Observable<Account> on success, or an error observable if credentials do not match.
+   * Authenticates the user and stores JWT access and refresh tokens.
    */
   signIn(email: string, password: string): Observable<Account> {
-    return this.http
-      .get<AuthResponse[]>(`${this.baseUrl}/users?email=${encodeURIComponent(email)}`)
-      .pipe(
-        switchMap((users: AuthResponse[]) => {
-          const matched = users.find(u => u.password === password);
-          if (!matched) {
-            return throwError(() => new Error('INVALID_CREDENTIALS'));
-          }
-          return of(AccountAssembler.toEntity(matched));
-        })
-      );
+    return this.authService.login({ email, password }).pipe(
+      map((res: AuthResponseResource) => {
+        if (res.accessToken && res.refreshToken) {
+          localStorage.setItem('chapatuRuta_access_token', res.accessToken);
+          localStorage.setItem('chapatuRuta_refresh_token', res.refreshToken);
+        }
+        return AccountAssembler.toEntity(res.user!);
+      })
+    );
   }
 
   /**
-   * Retrieves the profile linked to a given account ID.
-   *
-   * @param accountId - The account ID to look up in the profiles collection.
-   * @returns Observable<Profile> with the user's profile data.
+   * Retrieves the profile linked to the currently logged in user.
    */
   getProfileByAccountId(accountId: string): Observable<Profile> {
-    return this.http
-      .get<ProfileResponse[]>(`${this.baseUrl}/profiles?accountId=${accountId}`)
-      .pipe(
-        map((profiles: ProfileResponse[]) => {
-          if (!profiles.length) {
-            throw new Error('PROFILE_NOT_FOUND');
-          }
-          return ProfileAssembler.toEntity(profiles[0]);
-        })
-      );
+    // The real backend retrieves the profile from the JWT context
+    return this.profilesService.getMyProfile().pipe(
+      map((profileRes) => ProfileAssembler.toEntity(profileRes))
+    );
   }
 
-  // ── Registration (Sprint 3) ──────────────────────────────────────────
-
   /**
-   * Checks whether an email is already registered in the system.
-   *
-   * @param email - The email address to check.
-   * @returns Observable<boolean> — true if the email already exists.
+   * Stub for duplicate email check in the real backend (handled at registration time).
    */
   checkEmailExists(email: string): Observable<boolean> {
-    return this.http
-      .get<AuthResponse[]>(`${this.baseUrl}/users?email=${encodeURIComponent(email)}`)
-      .pipe(map((users: AuthResponse[]) => users.length > 0));
+    return of(false);
   }
 
   /**
-   * Registers a new passenger account.
-   * Creates a user entry (role: PASSENGER) and a corresponding profile.
-   *
-   * @param email - The email address for the new account.
-   * @param password - The plain-text password (mock only).
-   * @returns Observable<Account> with the newly created account.
-   */
-  /**
-   * Registers a new passenger account.
-   * Creates a user entry (role: PASSENGER) and a corresponding profile.
-   *
-   * @param email - The email address for the new account.
-   * @param password - The plain-text password (mock only).
-   * @param fullName - The passenger's full name.
-   * @returns Observable<Account> with the newly created account.
+   * Registers a new passenger on the real backend and stores authentication tokens.
    */
   registerPassenger(email: string, password: string, fullName: string = ''): Observable<Account> {
-    return this.http
-      .post<AuthResponse>(`${this.baseUrl}/users`, {
-        email,
-        password,
-        role: 'PASSENGER',
+    return this.authService.registerPassenger({ email, password, fullName }).pipe(
+      map((res: AuthResponseResource) => {
+        if (res.accessToken && res.refreshToken) {
+          localStorage.setItem('chapatuRuta_access_token', res.accessToken);
+          localStorage.setItem('chapatuRuta_refresh_token', res.refreshToken);
+        }
+        return AccountAssembler.toEntity(res.user!);
       })
-      .pipe(
-        switchMap((user: AuthResponse) => {
-          return this.http
-            .post<ProfileResponse>(`${this.baseUrl}/profiles`, {
-              accountId: user.id,
-              fullName,
-              email: user.email,
-              photoUrl: '',
-            })
-            .pipe(map(() => AccountAssembler.toEntity(user)));
-        })
-      );
+    );
   }
 
   /**
-   * Registers a new driver account.
-   * Creates a user entry (role: DRIVER), a profile, and a driver record
-   * with PENDING_VERIFICATION status.
-   *
-   * @param email - The email address for the new account.
-   * @param password - The plain-text password (mock only).
-   * @param fullName - The driver's full name.
-   * @param vehicleType - The vehicle type (default: 'Mototaxi').
-   * @param licenseNumber - The driver's license number (Brevete).
-   * @param soatNumber - The driver's SOAT number.
-   * @returns Observable<Account> with the newly created account.
+   * Registers a new driver on the real backend.
    */
   registerDriver(
     email: string,
@@ -140,69 +80,36 @@ export class IamApiService {
     licenseNumber: string = '',
     soatNumber: string = '',
   ): Observable<Account> {
-    return this.http
-      .post<AuthResponse>(`${this.baseUrl}/users`, {
-        email,
-        password,
-        role: 'DRIVER',
+    return this.authService.registerDriver({
+      email,
+      password,
+      fullName,
+      vehicleType,
+      licenseNumber,
+      soatNumber
+    }).pipe(
+      map((res: AuthResponseResource) => {
+        if (res.accessToken && res.refreshToken) {
+          localStorage.setItem('chapatuRuta_access_token', res.accessToken);
+          localStorage.setItem('chapatuRuta_refresh_token', res.refreshToken);
+        }
+        return AccountAssembler.toEntity(res.user!);
       })
-      .pipe(
-        switchMap((user: AuthResponse) => {
-          return this.http
-            .post<ProfileResponse>(`${this.baseUrl}/profiles`, {
-              accountId: user.id,
-              fullName,
-              email: user.email,
-              photoUrl: '',
-            })
-            .pipe(
-              switchMap(() => {
-                return this.http
-                  .post<DriverResponse>(`${this.baseUrl}/drivers`, {
-                    accountId: user.id,
-                    fullName,
-                    vehicleType,
-                    verificationStatus: 'ACTIVE',
-                    operationalStatus: 'ENABLED',
-                    ratingAverage: 0,
-                    ratingCount: 0,
-                    photoUrl: '',
-                    licenseNumber,
-                    soatNumber,
-                  })
-                  .pipe(
-                    switchMap((driver: DriverResponse) => {
-                      // Automatically initialize wallet for the new driver
-                      return this.http
-                        .post(`${this.baseUrl}/wallets`, {
-                          driverId: driver.id,
-                          balance: 0,
-                          status: 'ACTIVE',
-                        })
-                        .pipe(map(() => AccountAssembler.toEntity(user)));
-                    })
-                  );
-              })
-            );
-        })
-      );
+    );
   }
 
-  // ── Profile management (Sprint 3) ────────────────────────────────────
-
   /**
-   * Updates an existing user profile with new data.
-   *
-   * @param profileId - The profile ID to update.
-   * @param data - Partial profile data (fullName, photoUrl).
-   * @returns Observable<Profile> with the updated profile.
+   * Updates the profile using the PUT /profiles/{profileId} endpoint.
    */
   updateProfile(
     profileId: string,
     data: { fullName?: string; photoUrl?: string },
   ): Observable<Profile> {
-    return this.http
-      .patch<ProfileResponse>(`${this.baseUrl}/profiles/${profileId}`, data)
-      .pipe(map(ProfileAssembler.toEntity));
+    return this.profilesService.updateProfile(profileId, {
+      fullName: data.fullName || '',
+      photoUrl: data.photoUrl || ''
+    }).pipe(
+      map((profileRes) => ProfileAssembler.toEntity(profileRes))
+    );
   }
 }

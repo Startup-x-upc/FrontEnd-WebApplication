@@ -52,13 +52,7 @@ import { RideCandidate } from '../../../domain/model/ride-candidate.entity';
         }
       </div>
 
-      <button
-        mat-stroked-button
-        class="refresh-btn"
-        (click)="onRefresh()"
-        aria-label="Actualizar lista de candidatos">
-        <mat-icon>refresh</mat-icon> Actualizar candidatos
-      </button>
+
     </div>
   `,
   styles: [`
@@ -173,14 +167,7 @@ export class RideCandidatesListComponent {
   @Input() candidates: RideCandidate[] = [];
   /** Emitted when the passenger selects a candidate. */
   @Output() candidateSelected = new EventEmitter<RideCandidate>();
-  /** Emitted when the passenger requests a manual refresh. */
-  @Output() refreshRequested  = new EventEmitter<void>();
-
   onSelect(candidate: RideCandidate): void {
     this.candidateSelected.emit(candidate);
-  }
-
-  onRefresh(): void {
-    this.refreshRequested.emit();
   }
 }

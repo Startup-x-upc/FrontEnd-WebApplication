@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Driver } from '../domain/model/driver.entity';
+import { Driver, DriverAccessStatus } from '../domain/model/driver.entity';
 import { DriverManagementApiService } from '../infrastructure/driver-management-api.service';
 
 /**
@@ -198,7 +198,7 @@ export class DriverManagementStore {
         this.allDriversSignal.update((list) =>
           list.map((d) =>
             d.id === driverId
-              ? Object.assign(new Driver(), d, { isAvailable: enabled })
+              ? Object.assign(new Driver(), d, { accessStatus: (enabled ? 'ACTIVE' : 'RESTRICTED') as DriverAccessStatus })
               : d
           )
         );

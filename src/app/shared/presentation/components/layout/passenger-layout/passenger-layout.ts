@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { IamStore } from '../../../../../iam/application/iam.store';
 import { TrustReputationStore } from '../../../../../trust-reputation/application/trust-reputation.store';
 import { ReputationBadgeComponent } from '../../../../../trust-reputation/presentation/components/reputation-badge/reputation-badge';
+import { RealtimeService } from '../../../../infrastructure/realtime.service';
 
 @Component({
   selector: 'app-passenger-layout',
@@ -129,6 +130,7 @@ import { ReputationBadgeComponent } from '../../../../../trust-reputation/presen
 export class PassengerLayoutComponent {
   private iamStore: IamStore = inject(IamStore);
   protected trustStore = inject(TrustReputationStore);
+  private realtime = inject(RealtimeService);
 
   profile = this.iamStore.currentProfile;
   avatarError = false;
@@ -138,6 +140,12 @@ export class PassengerLayoutComponent {
       const account = this.iamStore.currentAccount();
       if (account?.id && account.role === 'PASSENGER') {
         this.trustStore.loadPassengerReputation(account.id);
+
+        const channelName = `passenger:${account.id}`;
+        this.realtime.subscribe(channelName, 'reputation.updated', () => {
+          console.log('[PassengerLayout] Realtime reputation update received');
+          this.trustStore.loadPassengerReputation(account.id);
+        });
       }
     });
 

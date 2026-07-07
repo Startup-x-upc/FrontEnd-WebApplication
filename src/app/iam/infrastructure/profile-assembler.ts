@@ -1,4 +1,3 @@
-import { ProfileResponse } from './profile-response';
 import { Profile } from '../domain/model/profile.entity';
 
 /**
@@ -9,18 +8,20 @@ import { Profile } from '../domain/model/profile.entity';
 export class ProfileAssembler {
 
   /**
-   * Converts a raw ProfileResponse DTO into a Profile domain entity.
+   * Converts a raw profile object returned by Spring Boot API (composed or simple) into a Profile domain entity.
    *
-   * @param response - The raw profile object returned by json-servers.
+   * @param response - The raw profile object from the API.
    * @returns A fully populated Profile entity.
    */
-  static toEntity(response: ProfileResponse): Profile {
+  static toEntity(response: any): Profile {
     const profile = new Profile();
-    profile.id = response.id;
-    profile.accountId = response.accountId;
-    profile.fullName = response.fullName;
-    profile.email = response.email;
-    profile.photoUrl = response.photoUrl;
+    profile.id = response.profileId || response.id || '';
+    profile.accountId = response.userId || response.accountId || '';
+    profile.fullName = response.fullName || '';
+    profile.email = response.email || '';
+    profile.photoUrl = response.photoUrl || '';
+    profile.createdAt = response.createdAt || '';
+    profile.updatedAt = response.updatedAt || '';
     return profile;
   }
 }

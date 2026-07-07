@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,13 +42,6 @@ import { humanizeCoord } from '../../../../shared/utils/maps.utils';
             <span *ngIf="request.distanceKm > 0">{{ request.distanceKm | number:'1.1-1' }} km</span>
           </div>
         </div>
-
-        <button mat-stroked-button color="primary" class="refresh-btn"
-                [disabled]="isLoading"
-                (click)="onRefresh()">
-          <mat-icon>refresh</mat-icon>
-          {{ isLoading ? 'Verificando...' : 'Actualizar estado' }}
-        </button>
       </div>
     </div>
 
@@ -286,12 +279,5 @@ import { humanizeCoord } from '../../../../shared/utils/maps.utils';
 export class TripRequestStatusComponent {
   @Input() uiState: string = '';
   @Input() request: RideRequest | null = null;
-  @Input() isLoading: boolean = false;
-  @Output() refreshRequested = new EventEmitter<void>();
-
   readonly humanizeCoord = humanizeCoord;
-
-  onRefresh(): void {
-    this.refreshRequested.emit();
-  }
 }

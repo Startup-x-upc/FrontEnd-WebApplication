@@ -9,6 +9,7 @@ import { IamStore } from '../../../../../iam/application/iam.store';
 import { DriverManagementStore } from '../../../../../driver-management/application/driver-management.store';
 import { TrustReputationStore } from '../../../../../trust-reputation/application/trust-reputation.store';
 import { ReputationBadgeComponent } from '../../../../../trust-reputation/presentation/components/reputation-badge/reputation-badge';
+import { RealtimeService } from '../../../../infrastructure/realtime.service';
 
 /**
  * @summary Shell layout for the DRIVER role. Provides sidebar navigation,
@@ -136,6 +137,7 @@ export class DriverLayoutComponent {
   private iamStore: IamStore = inject(IamStore);
   private driverMgmtStore = inject(DriverManagementStore);
   protected trustStore = inject(TrustReputationStore);
+  private realtime = inject(RealtimeService);
 
   profile = this.iamStore.currentProfile;
   avatarError = false;
@@ -152,6 +154,12 @@ export class DriverLayoutComponent {
       const driver = this.driverMgmtStore.driver();
       if (driver?.id) {
         this.trustStore.loadDriverReputation(driver.id);
+
+        const channelName = `driver:${driver.id}`;
+        this.realtime.subscribe(channelName, 'reputation.updated', () => {
+          console.log('[DriverLayout] Realtime reputation update received');
+          this.trustStore.loadDriverReputation(driver.id);
+        });
       }
     });
 

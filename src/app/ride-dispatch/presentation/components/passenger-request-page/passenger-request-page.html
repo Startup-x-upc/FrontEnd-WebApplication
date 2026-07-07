@@ -53,9 +53,7 @@
     <div style="display: flex; flex-direction: column; gap: 10px;" *ngIf="uiState() === 'WAITING_CANDIDATES'">
       <app-trip-request-status
         [uiState]="'SEARCHING_DRIVER'"
-        [request]="rideStore.currentRequest()"
-        [isLoading]="rideStore.isLoading()"
-        (refreshRequested)="onRefreshCandidates()">
+        [request]="rideStore.currentRequest()">
       </app-trip-request-status>
       <button mat-stroked-button class="cancel-ride-btn" 
               [disabled]="rideStore.isLoading()"
@@ -68,8 +66,7 @@
     <div style="display: flex; flex-direction: column; gap: 10px;" *ngIf="uiState() === 'CANDIDATES_AVAILABLE'">
       <app-ride-candidates-list
         [candidates]="rideStore.candidates()"
-        (candidateSelected)="onCandidateSelected($event)"
-        (refreshRequested)="onRefreshCandidates()">
+        (candidateSelected)="onCandidateSelected($event)">
       </app-ride-candidates-list>
       <button mat-stroked-button class="cancel-ride-btn" 
               [disabled]="rideStore.isLoading()"
@@ -82,9 +79,6 @@
     <div class="ride-completed-card" *ngIf="uiState() === 'DRIVER_SELECTED' || uiState() === 'RIDE_IN_PROGRESS'">
       <div class="tracking-card-header">
         <h3>Seguimiento del viaje</h3>
-        <button mat-icon-button class="subtle-refresh-btn" (click)="onRefreshRide()" aria-label="Actualizar estado">
-          <mat-icon>refresh</mat-icon>
-        </button>
       </div>
 
       <!-- Driver details -->

@@ -8,6 +8,8 @@ import { RideStatus } from '../domain/model/ride.status';
 import { RideDispatchApiService } from '../infrastructure/ride-dispatch-api.service';
 import { MonetizationStore } from '../../monetization/application/monetization.store';
 import { RealtimeService } from '../../shared/infrastructure/realtime.service';
+import { TrustReputationStore } from '../../trust-reputation/application/trust-reputation.store';
+import { IamStore } from '../../iam/application/iam.store';
 
 /**
  * @summary Application service for the Ride Dispatch bounded context.
@@ -22,6 +24,8 @@ export class RideDispatchStore {
   private api = inject(RideDispatchApiService);
   private monetizationStore = inject(MonetizationStore);
   private realtime = inject(RealtimeService);
+  private trustStore = inject(TrustReputationStore);
+  private iamStore = inject(IamStore);
 
   // ── Shared signals ────────────────────────────────────────────────────
   private loadingSignal         = signal<boolean>(false);
@@ -82,6 +86,13 @@ export class RideDispatchStore {
         this.deactivateAvailability(wallet.driverId);
       }
     }, { allowSignalWrites: true });
+
+    effect(() => {
+      const account = this.iamStore.currentAccount();
+      if (account?.id && account.role === 'PASSENGER') {
+        this.subscribeToPassengerEvents(account.id);
+      }
+    });
 
     // Re-sync states when connection is restored
     this.realtime.reconnect$.subscribe(() => {
@@ -250,6 +261,16 @@ export class RideDispatchStore {
 
   /** Clears the current request and candidates, allowing a new trip to begin. */
   clearCurrentRequest(): void {
+    localStorage.removeItem('chapatuRuta_activeRequestId');
+    localStorage.removeItem('chapatuRuta_activeRideId');
+    const req = this.currentRequestSignal();
+    if (req?.id) {
+      this.unsubscribeFromRequestEvents(req.id);
+    }
+    const ride = this.currentRideSignal();
+    if (ride?.id) {
+      this.unsubscribeFromRideEvents(ride.id);
+    }
     this.currentRequestSignal.set(null);
     this.candidatesSignal.set([]);
     this.currentRideSignal.set(null);
@@ -258,6 +279,12 @@ export class RideDispatchStore {
   /** Clears the driver's active ride context. */
   clearCurrentRide(): void {
     this.currentRideSignal.set(null);
+    this.updateOpenRequestsSubscription();
+  }
+
+  /** Clears the list of open requests in the store. */
+  clearOpenRequests(): void {
+    this.openRequestsSignal.set([]);
   }
 
   // ── Driver flow actions ───────────────────────────────────────────────
@@ -300,6 +327,8 @@ export class RideDispatchStore {
       next: candidate => {
         this.activeCandidateSignal.set(candidate);
         this.loadingSignal.set(false);
+        this.updateOpenRequestsSubscription();
+        this.subscribeToRequestEventsForDriver(candidate.requestId);
       },
       error: () => {
         this.loadingSignal.set(false);
@@ -359,8 +388,6 @@ export class RideDispatchStore {
             avail.activeRideId = null;
             this.driverAvailabilitySignal.set(avail);
           }
-          // Also clear current ride so dashboard goes back to idle/dashboard view
-          this.currentRideSignal.set(null);
         }
         this.loadingSignal.set(false);
       },
@@ -385,6 +412,10 @@ export class RideDispatchStore {
     this.api.getDriverAvailability(driverId).pipe(
       switchMap(a => {
         this.driverAvailabilitySignal.set(a);
+        
+        // Subscribe to driver channel immediately upon load
+        this.subscribeToDriverEvents(driverId);
+        
         // Use direct activeRideId or fallback to a deep lookup in DB
         if (a.activeRideId) {
           return this.api.getRideById(a.activeRideId).pipe(
@@ -397,11 +428,29 @@ export class RideDispatchStore {
                 this.driverAvailabilitySignal.set(a);
                 return of(null);
               }
+              this.subscribeToRideEventsForDriver(ride.id);
               return of(ride);
             })
           );
         }
-        return this.api.getActiveRideForDriver(driverId);
+        return this.api.getActiveRideForDriver(driverId).pipe(
+          switchMap(ride => {
+            if (ride) {
+              this.subscribeToRideEventsForDriver(ride.id);
+              return of(ride);
+            }
+            // Check for active candidate candidacy
+            return this.api.getDriverActiveCandidate(driverId).pipe(
+              map(cand => {
+                if (cand) {
+                  this.activeCandidateSignal.set(cand);
+                  this.subscribeToRequestEventsForDriver(cand.requestId);
+                }
+                return null;
+              })
+            );
+          })
+        );
       })
     ).subscribe({
       next: ride => {
@@ -409,6 +458,7 @@ export class RideDispatchStore {
           this.currentRideSignal.set(ride);
         }
         this.loadingSignal.set(false);
+        this.updateOpenRequestsSubscription();
       },
       error: () => {
         this.loadingSignal.set(false);
@@ -435,6 +485,7 @@ export class RideDispatchStore {
       next: a => {
         this.driverAvailabilitySignal.set(a);
         this.loadingSignal.set(false);
+        this.updateOpenRequestsSubscription();
       },
       error: () => {
         this.loadingSignal.set(false);
@@ -485,6 +536,8 @@ export class RideDispatchStore {
     this.errorSignal.set(null);
     this.api.cancelRideRequest(requestId).subscribe({
       next: () => {
+        localStorage.removeItem('chapatuRuta_activeRequestId');
+        this.unsubscribeFromRequestEvents(requestId);
         this.currentRequestSignal.set(null);
         this.candidatesSignal.set([]);
         this.originSignal.set('');
@@ -505,9 +558,10 @@ export class RideDispatchStore {
     this.errorSignal.set(null);
     this.api.withdrawCandidacy(requestId).subscribe({
       next: () => {
+        this.unsubscribeFromRequestEventsForDriver(requestId);
         this.activeCandidateSignal.set(null);
         this.loadingSignal.set(false);
-        this.loadOpenRequests();
+        this.updateOpenRequestsSubscription();
       },
       error: () => {
         this.loadingSignal.set(false);
@@ -529,7 +583,10 @@ export class RideDispatchStore {
     this.errorSignal.set(null);
     this.api.cancelRide(ride.id).subscribe({
       next: () => {
-        // Clear ride context + map inputs so both passenger & driver return to initial state
+        localStorage.removeItem('chapatuRuta_activeRideId');
+        localStorage.removeItem('chapatuRuta_activeRequestId');
+        this.unsubscribeFromRideEvents(ride.id);
+
         this.currentRideSignal.set(null);
         this.currentRequestSignal.set(null);
         this.candidatesSignal.set([]);
@@ -551,6 +608,247 @@ export class RideDispatchStore {
         this.errorSignal.set('No se pudo cancelar el viaje.');
       },
     });
+  }
+
+  // ── Ably Realtime Integration & Rehydration ───────────────────────────
+
+  rehydratePassengerSession(): void {
+    const activeRideId = localStorage.getItem('chapatuRuta_activeRideId');
+    const activeRequestId = localStorage.getItem('chapatuRuta_activeRequestId');
+
+    if (activeRideId) {
+      console.log('[RideDispatchStore] Rehydrating active ride:', activeRideId);
+      this.loadingSignal.set(true);
+      this.api.getRideById(activeRideId).subscribe({
+        next: ride => {
+          this.currentRideSignal.set(ride);
+          this.loadingSignal.set(false);
+          this.subscribeToRideEvents(ride.id);
+        },
+        error: () => {
+          console.warn('[RideDispatchStore] Failed to rehydrate ride. Clearing storage.');
+          localStorage.removeItem('chapatuRuta_activeRideId');
+          this.loadingSignal.set(false);
+        }
+      });
+    } else if (activeRequestId) {
+      console.log('[RideDispatchStore] Rehydrating active request:', activeRequestId);
+      this.loadingSignal.set(true);
+      this.api.getRideRequestById(activeRequestId).subscribe({
+        next: req => {
+          if (req.isExpired || req.status === RideStatus.CANCELLED) {
+            console.log('[RideDispatchStore] Rehydrated request is stale/cancelled. Clearing.');
+            localStorage.removeItem('chapatuRuta_activeRequestId');
+            this.loadingSignal.set(false);
+            return;
+          }
+          this.currentRequestSignal.set(req);
+          this.subscribeToRequestEvents(req.id);
+          this.api.getCandidatesForRequest(req.id).subscribe({
+            next: candidates => {
+              this.candidatesSignal.set(candidates);
+              this.loadingSignal.set(false);
+            },
+            error: () => {
+              this.loadingSignal.set(false);
+            }
+          });
+        },
+        error: () => {
+          console.warn('[RideDispatchStore] Failed to rehydrate request. Clearing storage.');
+          localStorage.removeItem('chapatuRuta_activeRequestId');
+          this.loadingSignal.set(false);
+        }
+      });
+    }
+  }
+
+  subscribeToRequestEvents(requestId: string): void {
+    const requestChannel = `ride-request:${requestId}`;
+    
+    this.realtime.subscribe(requestChannel, 'candidate.applied', () => {
+      this.api.getCandidatesForRequest(requestId).subscribe(candidates => {
+        this.candidatesSignal.set(candidates);
+      });
+    });
+
+    this.realtime.subscribe(requestChannel, 'candidate.withdrew', () => {
+      this.api.getCandidatesForRequest(requestId).subscribe(candidates => {
+        this.candidatesSignal.set(candidates);
+      });
+    });
+
+    this.realtime.subscribe(requestChannel, 'ride.assigned', (msg) => {
+      const rideId = msg.data.rideId;
+      if (rideId) {
+        localStorage.removeItem('chapatuRuta_activeRequestId');
+        localStorage.setItem('chapatuRuta_activeRideId', rideId);
+        
+        this.api.getRideById(rideId).subscribe(ride => {
+          this.currentRideSignal.set(ride);
+          this.unsubscribeFromRequestEvents(requestId);
+          this.subscribeToRideEvents(rideId);
+        });
+      }
+    });
+  }
+
+  unsubscribeFromRequestEvents(requestId: string): void {
+    const requestChannel = `ride-request:${requestId}`;
+    this.realtime.unsubscribeChannel(requestChannel);
+  }
+
+  subscribeToRideEvents(rideId: string): void {
+    const rideChannel = `ride:${rideId}`;
+
+    this.realtime.subscribe(rideChannel, 'ride.status-updated', (msg) => {
+      const newStatus = msg.data.status;
+      this.currentRideSignal.update(r => r ? Object.assign(new Ride(), r, { status: newStatus }) : null);
+    });
+
+    this.realtime.subscribe(rideChannel, 'ride.completed', () => {
+      this.currentRideSignal.update(r => r ? Object.assign(new Ride(), r, { status: RideStatus.COMPLETED }) : null);
+      localStorage.removeItem('chapatuRuta_activeRideId');
+      this.unsubscribeFromRideEvents(rideId);
+    });
+
+    this.realtime.subscribe(rideChannel, 'ride.cancelled', () => {
+      localStorage.removeItem('chapatuRuta_activeRideId');
+      this.unsubscribeFromRideEvents(rideId);
+      
+      this.currentRideSignal.set(null);
+      this.currentRequestSignal.set(null);
+      this.candidatesSignal.set([]);
+      this.originSignal.set('');
+      this.destinationSignal.set('');
+      this.distanceKmSignal.set(0);
+    });
+  }
+
+  unsubscribeFromRideEvents(rideId: string): void {
+    const rideChannel = `ride:${rideId}`;
+    this.realtime.unsubscribeChannel(rideChannel);
+  }
+
+  subscribeToDriverEvents(driverId: string): void {
+    const driverChannel = `driver:${driverId}`;
+    
+    this.realtime.subscribe(driverChannel, 'ride.assigned', (msg) => {
+      const rideId = msg.data.rideId;
+      if (rideId) {
+        this.api.getRideById(rideId).subscribe(ride => {
+          const activeCand = this.activeCandidateSignal();
+          if (activeCand) {
+            this.unsubscribeFromRequestEventsForDriver(activeCand.requestId);
+          }
+          this.currentRideSignal.set(ride);
+          this.activeCandidateSignal.set(null);
+          this.unsubscribeFromOpenRequestsChannel();
+          this.subscribeToRideEventsForDriver(rideId);
+        });
+      }
+    });
+
+    this.realtime.subscribe(driverChannel, 'wallet.empty', () => {
+      this.deactivateAvailability(driverId);
+      this.errorSignal.set('Tu billetera tiene saldo 0. Tu disponibilidad ha sido desactivada.');
+    });
+
+    this.realtime.subscribe(driverChannel, 'reputation.updated', () => {
+      console.log(`[RideDispatchStore] Driver reputation update detected. Reloading reputation.`);
+      this.trustStore.loadDriverReputation(driverId);
+    });
+  }
+
+  subscribeToPassengerEvents(passengerId: string): void {
+    const passengerChannel = `passenger:${passengerId}`;
+    this.realtime.subscribe(passengerChannel, 'reputation.updated', () => {
+      console.log(`[RideDispatchStore] Passenger reputation update detected. Reloading reputation.`);
+      this.trustStore.loadPassengerReputation(passengerId);
+    });
+  }
+
+  subscribeToRequestEventsForDriver(requestId: string): void {
+    const requestChannel = `ride-request:${requestId}`;
+    
+    const handleCancellationOrExpiration = () => {
+      console.log(`[RideDispatchStore] Driver notified of request cancellation/expiration for: ${requestId}`);
+      this.unsubscribeFromRequestEventsForDriver(requestId);
+      this.activeCandidateSignal.set(null);
+      this.updateOpenRequestsSubscription();
+      this.loadOpenRequests();
+    };
+
+    this.realtime.subscribe(requestChannel, 'request.cancelled', handleCancellationOrExpiration);
+    this.realtime.subscribe(requestChannel, 'request.expired', handleCancellationOrExpiration);
+  }
+
+  unsubscribeFromRequestEventsForDriver(requestId: string): void {
+    const requestChannel = `ride-request:${requestId}`;
+    this.realtime.unsubscribeChannel(requestChannel);
+  }
+
+  subscribeToRideEventsForDriver(rideId: string): void {
+    const rideChannel = `ride:${rideId}`;
+    
+    this.realtime.subscribe(rideChannel, 'ride.cancelled', () => {
+      this.unsubscribeFromRideEvents(rideId);
+      this.currentRideSignal.set(null);
+      this.activeCandidateSignal.set(null);
+      
+      const avail = this.driverAvailabilitySignal();
+      if (avail) {
+        avail.isBusy = false;
+        avail.activeRideId = null;
+        this.driverAvailabilitySignal.set(avail);
+      }
+      this.updateOpenRequestsSubscription();
+    });
+  }
+
+  updateOpenRequestsSubscription(): void {
+    const avail = this.driverAvailabilitySignal();
+    const activeCand = this.activeCandidateSignal();
+    const activeRide = this.currentRideSignal();
+
+    const shouldSubscribe = avail && avail.isAvailable && !activeRide && !activeCand;
+
+    if (shouldSubscribe) {
+      this.subscribeToOpenRequestsChannel();
+    } else {
+      this.unsubscribeFromOpenRequestsChannel();
+    }
+  }
+
+  subscribeToOpenRequestsChannel(): void {
+    this.realtime.subscribe('ride-request:open', 'request.created', () => {
+      this.loadOpenRequests();
+    });
+
+    this.realtime.subscribe('ride-request:open', 'request.cancelled', (msg) => {
+      const requestId = msg.data.requestId;
+      if (requestId) {
+        this.openRequestsSignal.update(list => list.filter(r => r.id !== requestId));
+      }
+    });
+
+    this.realtime.subscribe('ride-request:open', 'request.expired', (msg) => {
+      const requestId = msg.data.requestId;
+      if (requestId) {
+        this.openRequestsSignal.update(list => list.filter(r => r.id !== requestId));
+      }
+    });
+
+    this.realtime.subscribe('ride-request:open', 'request.assigned', (msg) => {
+      const requestId = msg.data.requestId;
+      if (requestId) {
+        this.openRequestsSignal.update(list => list.filter(r => r.id !== requestId));
+      }
+    });
+  }
+
+  unsubscribeFromOpenRequestsChannel(): void {
+    this.realtime.unsubscribeChannel('ride-request:open');
   }
 
   // ── Shared utilities ──────────────────────────────────────────────────

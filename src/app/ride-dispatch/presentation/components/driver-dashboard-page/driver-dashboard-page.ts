@@ -619,6 +619,7 @@ export class DriverDashboardPageComponent {
 
   onClearActiveRide(): void {
     this.rideStore.clearCurrentRide();
+    this.rideStore.clearOpenRequests();
     this.rideStore.loadOpenRequests();
     this.ratingSubmitted.set(false);
   }
@@ -713,17 +714,6 @@ export class DriverDashboardPageComponent {
     const driver = this.driverMgmtStore.driver();
     if (!driver?.id) return;
     this.rideStore.toggleAvailability(driver.id, this.monetizationStore.hasPositiveBalance());
-  }
-
-  onRefreshRequests(): void {
-    this.rideStore.loadOpenRequests();
-  }
-
-  onRefreshCandidacy(): void {
-    const driver = this.driverMgmtStore.driver();
-    if (!driver?.id) return;
-    this.rideStore.loadDriverActiveCandidate(driver.id);
-    this.rideStore.loadDriverAvailability(driver.id);
   }
 
   onWithdrawCandidacy(): void {

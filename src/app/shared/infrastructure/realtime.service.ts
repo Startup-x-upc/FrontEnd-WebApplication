@@ -69,6 +69,7 @@ export class RealtimeService {
 
   /** Subscribes to a specific event on a channel */
   subscribe(channelName: string, eventName: string, callback: (message: any) => void): void {
+    console.log(`[RealtimeService] Attempting to subscribe to channel: "${channelName}" for event: "${eventName}"`);
     this.connect();
     const channel = this.client!.channels.get(channelName);
     const key = `${channelName}::${eventName}`;
@@ -78,12 +79,34 @@ export class RealtimeService {
       return;
     }
 
+    // Monitor channel state changes
+    channel.on((stateChange) => {
+      console.log(`[RealtimeService] Channel "${channelName}" state transitioned to: ${stateChange.current}`);
+      if (stateChange.reason && (stateChange.current === 'failed' || stateChange.current === 'suspended')) {
+        console.error(`[RealtimeService] Channel "${channelName}" error reason:`, stateChange.reason);
+      }
+    });
+
     const wrappedCallback = (msg: any) => {
       console.log(`[RealtimeService] Event received [${channelName} -> ${eventName}]:`, msg.data);
+      if (msg && typeof msg.data === 'string') {
+        try {
+          msg.data = JSON.parse(msg.data);
+          console.log(`[RealtimeService] Automatically parsed JSON payload:`, msg.data);
+        } catch (e) {
+          // Keep it as raw string if it is not JSON
+        }
+      }
       callback(msg);
     };
 
-    channel.subscribe(eventName, wrappedCallback);
+    try {
+      channel.subscribe(eventName, wrappedCallback);
+      console.log(`[RealtimeService] Registered listener for event "${eventName}" on channel "${channelName}"`);
+    } catch (err) {
+      console.error(`[RealtimeService] Failed to subscribe to channel "${channelName}":`, err);
+    }
+    
     this.activeSubscriptions.set(key, { channel, callback: wrappedCallback });
   }
 

@@ -149,17 +149,32 @@ export class DriverLayoutComponent {
       this.driverMgmtStore.loadDriverByAccountId(account.id);
     }
 
-    // Reactively load reputation once driver entity is available
+    // Reactively load reputation and monitor access status once driver entity is available
     effect(() => {
       const driver = this.driverMgmtStore.driver();
-      if (driver?.id) {
-        this.trustStore.loadDriverReputation(driver.id);
+      if (driver) {
+        if (driver.accessStatus === 'RESTRICTED') {
+          console.warn('[DriverLayout] Driver account is restricted. Logging out...');
+          this.iamStore.signOut();
+          this.iamStore.setError('Tu cuenta de conductor ha sido inhabilitada por la administración.');
+          return;
+        }
 
-        const channelName = `driver:${driver.id}`;
-        this.realtime.subscribe(channelName, 'reputation.updated', () => {
-          console.log('[DriverLayout] Realtime reputation update received');
+        if (driver.id) {
           this.trustStore.loadDriverReputation(driver.id);
-        });
+
+          const channelName = `driver:${driver.id}`;
+          this.realtime.subscribe(channelName, 'reputation.updated', () => {
+            console.log('[DriverLayout] Realtime reputation update received');
+            this.trustStore.loadDriverReputation(driver.id);
+          });
+
+          this.realtime.subscribe(channelName, 'driver.restricted', () => {
+            console.warn('[DriverLayout] Realtime driver restriction event received. Logging out...');
+            this.iamStore.signOut();
+            this.iamStore.setError('Tu cuenta de conductor ha sido inhabilitada por la administración.');
+          });
+        }
       }
     });
 

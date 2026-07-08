@@ -151,6 +151,13 @@ export class IamStore {
     this.errorSignal.set(null);
   }
 
+  /**
+   * Sets the current error signal message.
+   */
+  setError(message: string | null): void {
+    this.errorSignal.set(message);
+  }
+
   /** Clears the current info message. */
   clearMessage(): void {
     this.messageSignal.set(null);

@@ -77,6 +77,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       } else if (error instanceof HttpErrorResponse && error.status === 403) {
         console.warn('[HTTP] 403 Forbidden');
+        if (error.error && error.error.code === 'DRIVER_RESTRICTED') {
+          console.warn('[errorInterceptor] Driver restricted response received. Logging out...');
+          iamStore.signOut();
+          iamStore.setError('Tu cuenta de conductor ha sido inhabilitada por la administración.');
+        }
       } else if (error instanceof HttpErrorResponse && error.status >= 500) {
         console.error(`[HTTP] ${error.status} Server Error`, error.url);
       }
